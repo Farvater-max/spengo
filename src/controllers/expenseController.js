@@ -67,7 +67,10 @@ export async function refreshDataInBackground() {
     } catch (err) {
         console.error('[SpenGo] Background refresh failed:', err);
         const isAuthError = err.message.includes('401') || err.message.includes('auth');
-        if (isAuthError) AuthService.silentSignIn();
+        if (isAuthError) {
+            showToast(getI18nValue('toast.auth_error') + err.message, 'error');
+            showScreen('auth');
+        }
     }
 }
 

@@ -837,7 +837,6 @@ select.form-input {
     border: 1px solid var(--border);
     border-radius: var(--r-lg);
     padding: 24px;
-    margin-bottom: 16px;
 }
 
 h2 {
