@@ -94,7 +94,8 @@ npm run build
 ```
 ├── public/
 │   ├── favicon.svg
-│   ├── main.png
+│   ├── main.webp
+│   ├── ogimage.png
 │   ├── localization.json
 │   └── privacy-policy.html
 ├── src/
