@@ -2,6 +2,10 @@
 
 > Personal expense tracker — powered by Google Sheets, no servers involved.
 
+<a href="https://webspengo.vercel.app">
+  <img src="https://webspengo.vercel.app/ogimage.png" width="750" alt="SpenGo Preview">
+</a>
+
 ---
 
 ## What is SpenGo?
