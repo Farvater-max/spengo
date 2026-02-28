@@ -57,6 +57,11 @@ function _handleInitError(err) {
 }
 
 export async function refreshDataInBackground() {
+    if (!STATE.accessToken) {
+        renderUI();
+        return;
+    }
+
     try {
         const expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
         STATE.expenses = expenses;
