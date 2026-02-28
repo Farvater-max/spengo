@@ -80,7 +80,7 @@ export function showToast(message, type = '') {
     el.textContent = message;
     el.className   = 'toast' + (type ? ' ' + type : '');
     el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2800);
+    setTimeout(() => el.classList.remove('show'), 1500);
 }
 
 /**

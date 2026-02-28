@@ -1,6 +1,5 @@
 import { STATE } from '../../state.js';
 import { STORAGE } from '../constants/storage.js';
-import * as AuthService   from '../services/authService.js';
 import * as SheetsService from '../services/sheetsService.js';
 import { getI18nValue, } from '../i18n/localization.js';
 import { uuid, todayStr, showToast, sleep } from '../utils/helpers.js';
@@ -70,11 +69,15 @@ export async function refreshDataInBackground() {
         if (STATE.currentScreen === 'setup') showScreen('main');
         renderUI();
     } catch (err) {
-        console.error('[SpenGo] Background refresh failed:', err);
-        const isAuthError = err.message.includes('401') || err.message.includes('auth');
+        console.warn('[SpenGo] Background refresh failed:', err);
+        const isAuthError = err.message.includes('401') || err.message.includes('403');
         if (isAuthError) {
-            showToast(getI18nValue('toast.auth_error') + err.message, 'error');
-            showScreen('auth');
+            sessionStorage.removeItem('google_access_token');
+            sessionStorage.removeItem('google_token_expires_at');
+            STATE.accessToken = null;
+            if (STATE.expenses.length === 0) {
+                showScreen('auth');
+            }
         }
     }
 }
@@ -114,14 +117,12 @@ export async function submitExpense() {
 }
 
 export async function deleteExpense(id) {
-    await _animateRemoval(id);
-
-    STATE.expenses = STATE.expenses.filter(e => e.id !== id);
-    localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
-    renderUI();
-
+    _animateRemoval(id);
     try {
         await SheetsService.deleteExpense(STATE.accessToken, STATE.spreadsheetId, id);
+        STATE.expenses = STATE.expenses.filter(e => e.id !== id);
+        localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
+        renderUI();
         showToast(getI18nValue('toast.deleted'), 'success');
     } catch {
         showToast(getI18nValue('toast.delete_error'), 'error');

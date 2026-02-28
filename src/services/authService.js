@@ -1,23 +1,3 @@
-/**
- * authService.js
- *
- * Owns the entire Google OAuth2 token lifecycle:
- *   init → (silent sign-in attempt) → signIn / signOut
- *
- * Public API
- * ----------
- *  init(callbacks)   – load SDKs, wire up token client, fire onReady / onSilentFail
- *  signIn()          – open the consent popup
- *  signOut()         – revoke token, clear local state, fire onSignOut
- *
- * Callbacks (all optional)
- * -------------------------
- *  onReady()                  – SDKs loaded, app can enable the sign-in button
- *  onSignIn({ accessToken })  – user obtained a valid token
- *  onSignOut()                – token revoked, session cleared
- *  onSilentFail()             – silent re-auth was attempted but failed
- *  onError(message: string)   – unrecoverable error, show UI feedback
- */
 
 import { CONFIG } from '../constants/config.js';
 import { revokeToken, initGapiClient } from '../api/client/googleClient.js';
@@ -54,25 +34,6 @@ let _callbacks = {
     onError:      () => {},
 };
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-/**
- * @typedef {object} AuthCallbacks
- * @property {() => void}                    [onReady]
- * @property {(data: {accessToken:string}) => void} [onSignIn]
- * @property {() => void}                    [onSignOut]
- * @property {() => void}                    [onSilentFail]
- * @property {(message: string) => void}     [onError]
- */
-
-/**
- * Bootstraps the auth layer. Must be called once on app start.
- *
- * @param {AuthCallbacks} callbacks
- * @returns {Promise<void>}
- */
 export async function init(callbacks = {}) {
     _callbacks = { ..._callbacks, ...callbacks };
 
@@ -95,8 +56,17 @@ export function signIn() {
         _callbacks.onError('Google API is still loading — please try again in a moment.');
         return;
     }
-
     _pendingFlowType = 'interactive';
+    _tokenClient.requestAccessToken({ prompt: '' });
+}
+
+/**
+ * Attempts a silent token refresh without showing a popup.
+ * On success fires onSignIn, on failure fires onSilentFail.
+ */
+export function silentRefresh() {
+    if (!_tokenClient) return;
+    _pendingFlowType = 'silent';
     _tokenClient.requestAccessToken({ prompt: '' });
 }
 
@@ -113,7 +83,7 @@ export async function signOut() {
     _accessToken = null;
     _pendingFlowType = null;
     sessionStorage.removeItem('google_access_token');
-
+    sessionStorage.removeItem('google_token_expires_at');
     _callbacks.onSignOut();
 }
 
@@ -151,9 +121,17 @@ function _onTokenResponse(response) {
     }
 
     _accessToken = response.access_token;
+    const expiresAt = Date.now() + (response.expires_in - 60) * 1000;
     sessionStorage.setItem('google_access_token', _accessToken);
+    sessionStorage.setItem('google_token_expires_at', String(expiresAt));
 
     _callbacks.onSignIn({ accessToken: _accessToken });
+}
+
+export function isTokenExpired() {
+    const expiresAt = sessionStorage.getItem('google_token_expires_at');
+    if (!expiresAt) return true;
+    return Date.now() > Number(expiresAt);
 }
 
 /**

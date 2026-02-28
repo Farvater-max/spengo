@@ -13,8 +13,9 @@
 
 import { STATE } from '../../state.js';
 import { STORAGE } from '../constants/storage.js';
+import * as AuthService from '../services/authService.js';
 import { initSpreadsheet, refreshDataInBackground } from './expenseController.js';
-import { showScreen, setNavEnabled } from '../ui/navigation.js';
+import {showScreen, setNavEnabled, setSetupText} from '../ui/navigation.js';
 import { renderUI, updateAvatarUI } from '../ui/renderer.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { showToast } from '../utils/helpers.js';
@@ -30,11 +31,34 @@ import { showToast } from '../utils/helpers.js';
  * the sign-in screen.
  */
 export function onAuthReady() {
-    const savedSheetId  = localStorage.getItem(STORAGE.SHEET_ID);
-    const cachedToken   = sessionStorage.getItem('google_access_token');
+    const savedSheetId = localStorage.getItem(STORAGE.SHEET_ID);
+    const cachedToken  = sessionStorage.getItem('google_access_token');
 
     if (savedSheetId && cachedToken) {
-        _restoreSession({ accessToken: cachedToken, spreadsheetId: savedSheetId });
+        if (AuthService.isTokenExpired()) {
+            STATE.spreadsheetId = savedSheetId;
+            STATE.accessToken   = null;
+            setNavEnabled(true);
+
+            if (STATE.expenses.length > 0) {
+                // Есть кеш — показываем его пока ждём токен
+                showScreen('main');
+                renderUI();
+            } else {
+                showScreen('setup');
+                setSetupText('Restoring session…', '');
+            }
+            AuthService.silentRefresh();
+
+        } else {
+            _restoreSession({ accessToken: cachedToken, spreadsheetId: savedSheetId });
+        }
+
+    } else if (savedSheetId && !cachedToken) {
+        STATE.spreadsheetId = savedSheetId;
+        setNavEnabled(false);
+        AuthService.silentRefresh();
+
     } else {
         _showSignInScreen();
     }
@@ -46,6 +70,8 @@ export function onAuthReady() {
  */
 export function onSilentFail() {
     sessionStorage.removeItem('google_access_token');
+    sessionStorage.removeItem('google_token_expires_at');
+    STATE.accessToken = null;
     _showSignInScreen();
 }
 
@@ -57,12 +83,17 @@ export function onSilentFail() {
 export async function onSignIn({ accessToken }) {
     STATE.accessToken = accessToken;
     sessionStorage.setItem('google_access_token', accessToken);
-
     setNavEnabled(true);
     updateAvatarUI();
-    showScreen('setup');
 
-    await initSpreadsheet();
+    const alreadyHasSheet = !!STATE.spreadsheetId;
+
+    if (alreadyHasSheet) {
+        await refreshDataInBackground();
+    } else {
+        showScreen('setup');
+        await initSpreadsheet();
+    }
 }
 
 /**
@@ -103,8 +134,7 @@ function _restoreSession({ accessToken, spreadsheetId }) {
     } else {
         showScreen('setup');
     }
-
-    refreshDataInBackground();
+    AuthService.silentRefresh();
 }
 
 /** Transitions to the unauthenticated state. */
