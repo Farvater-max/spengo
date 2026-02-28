@@ -97,6 +97,9 @@ npm run build
 │   ├── main.webp
 │   ├── ogimage.png
 │   ├── localization.json
+│   ├── sitemap.xml
+│   ├── robots.txt
+│   ├── llms.txt
 │   └── privacy-policy.html
 ├── src/
 │   ├── controllers/
