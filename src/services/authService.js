@@ -6,12 +6,6 @@ import {
     isSilentAuthError,
     formatAuthError,
 } from '../helpers/authHelpers.js';
-import {
-    saveSession,
-    clearSession,
-    getLoginHint,
-    isTokenExpired,
-} from './storageService.js';
 
 // ---------------------------------------------------------------------------
 // Internal state
@@ -39,6 +33,14 @@ let _pendingFlowType = null;
 let _silentRefreshTimer = null;
 
 const SILENT_REFRESH_TIMEOUT_MS = 5000;
+
+/**
+ * Queue of resolve functions waiting for a fresh token.
+ * Populated by waitForToken() when a silentRefresh is in flight.
+ * Drained in _onTokenResponse once the new token arrives.
+ * @type {Array<{ resolve: Function, reject: Function }>}
+ */
+let _tokenWaiters = [];
 
 /** @type {Required<AuthCallbacks>} */
 let _callbacks = {
@@ -95,31 +97,61 @@ export function silentRefresh() {
         }
     }, SILENT_REFRESH_TIMEOUT_MS);
 
-    _tokenClient.requestAccessToken({ prompt: '', login_hint: getLoginHint() });
+    const hint = localStorage.getItem('google_login_hint') ?? '';
+    _tokenClient.requestAccessToken({ prompt: '', login_hint: hint });
+}
+
+/**
+ * Returns a Promise that resolves with a valid access token.
+ *
+ * - If the current token is still valid → resolves immediately.
+ * - If a silentRefresh is already in flight → waits for it to complete.
+ * - If the token is expired and no refresh is running → starts one.
+ *
+ * This lets API callers (submitExpense, deleteExpense, etc.) simply
+ * `await AuthService.waitForToken()` instead of hoping the token is ready.
+ *
+ * @returns {Promise<string>} A valid access token
+ */
+export function waitForToken() {
+    if (_accessToken && !isTokenExpired()) {
+        return Promise.resolve(_accessToken);
+    }
+
+    return new Promise((resolve, reject) => {
+        _tokenWaiters.push({ resolve, reject });
+
+        if (_pendingFlowType !== 'silent') {
+            silentRefresh();
+        }
+    });
 }
 
 /**
  * Revokes the current access token and clears all session state.
- * Storage cleanup is handled by storageService.clearAll() in onSignOut.
+ *
  * @returns {Promise<void>}
  */
 export async function signOut() {
     if (_accessToken) {
         await revokeToken(_accessToken);
     }
-    _accessToken     = null;
+
+    _accessToken = null;
     _pendingFlowType = null;
-    clearSession();
+    sessionStorage.removeItem('google_access_token');
+    sessionStorage.removeItem('google_token_expires_at');
     _callbacks.onSignOut();
 }
-
-// Re-export so authController doesn't need its own storage import for this check
-export { isTokenExpired };
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Creates and stores the GIS token client.
+ * Separated from `init` so it can be reasoned about independently.
+ */
 function _clearSilentTimer() {
     if (_silentRefreshTimer !== null) {
         clearTimeout(_silentRefreshTimer);
@@ -139,6 +171,8 @@ function _initTokenClient() {
 }
 
 /**
+ * Handles a successful (or errored) token response from GIS.
+ *
  * @param {google.accounts.oauth2.TokenResponse} response
  */
 function _onTokenResponse(response) {
@@ -154,14 +188,25 @@ function _onTokenResponse(response) {
 
     _accessToken = response.access_token;
     const expiresAt = Date.now() + (response.expires_in - 60) * 1000;
+    sessionStorage.setItem('google_access_token', _accessToken);
+    sessionStorage.setItem('google_token_expires_at', String(expiresAt));
 
-    // Single call — storageService owns both writes
-    saveSession(_accessToken, expiresAt);
+    // Resolve any callers that were waiting for a fresh token
+    const waiters = _tokenWaiters.splice(0);
+    waiters.forEach(w => w.resolve(_accessToken));
 
     _callbacks.onSignIn({ accessToken: _accessToken });
 }
 
+export function isTokenExpired() {
+    const expiresAt = sessionStorage.getItem('google_token_expires_at');
+    if (!expiresAt) return true;
+    return Date.now() > Number(expiresAt);
+}
+
 /**
+ * Handles errors fired via the `error_callback` channel of GIS.
+ *
  * @param {{ error?: string, type?: string, message?: string }} err
  */
 function _onTokenError(err) {
@@ -180,10 +225,17 @@ function _onTokenError(err) {
 }
 
 /**
+ * Routes a failed auth flow to the appropriate callback depending on
+ * whether it was a silent background attempt or an interactive one.
+ *
  * @param {'silent' | 'interactive' | null} flowType
  * @param {string} errorMessage
  */
 function _handleFailedFlow(flowType, errorMessage) {
+    // Reject any callers waiting for a token so they don't hang forever
+    const waiters = _tokenWaiters.splice(0);
+    waiters.forEach(w => w.reject(new Error(errorMessage)));
+
     if (flowType === 'silent') {
         _callbacks.onSilentFail();
     } else {
