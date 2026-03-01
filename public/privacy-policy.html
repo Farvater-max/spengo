@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="description" content="SpenGo Privacy Policy — how we handle your data, Google API access, and why your expenses stay yours.">
-  <!-- Open Graph -->
   <meta property="og:type"        content="website">
   <meta property="og:url"         content="https://webspengo.vercel.app/">
   <meta property="og:title"       content="SpenGo — Expense Tracker">
   <meta property="og:description" content="Personal expense tracker. No servers, no ads. Track spending by day, week or month.">
   <meta property="og:image"       content="https://webspengo.vercel.app/ogimage.png">
-  <!-- Twitter / Telegram large card -->
   <meta name="twitter:card"        content="summary_large_image">
   <meta name="twitter:title"       content="SpenGo — Expense Tracker">
   <meta name="twitter:description" content="Personal expense tracker. No servers, no ads.">
@@ -51,7 +49,6 @@
       padding: 48px 24px 80px;
     }
 
-    /* Header */
     .header {
       display: flex;
       align-items: center;
@@ -80,10 +77,7 @@
       margin-left: auto;
     }
 
-    /* Title block */
-    .title-block {
-      margin-bottom: 40px;
-    }
+    .title-block { margin-bottom: 40px; }
 
     h1 {
       font-family: var(--font-display);
@@ -94,12 +88,8 @@
       margin-bottom: 10px;
     }
 
-    .updated {
-      font-size: 13px;
-      color: var(--muted);
-    }
+    .updated { font-size: 13px; color: var(--muted); }
 
-    /* Sections */
     .section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -118,21 +108,20 @@
       margin-bottom: 12px;
     }
 
-    p {
-      color: #b0b0c0;
-      font-size: 14px;
-      line-height: 1.75;
-    }
-
+    p { color: #b0b0c0; font-size: 14px; line-height: 1.75; }
     p + p { margin-top: 10px; }
 
-    a {
-      color: var(--accent);
-      text-decoration: none;
-    }
+    a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    /* Highlight pill */
+    code {
+      background: var(--surface2);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text);
+    }
+
     .pill-row {
       display: flex;
       flex-wrap: wrap;
@@ -152,7 +141,31 @@
     .pill.good { border-color: #c8f13540; color: var(--accent); }
     .pill.bad  { border-color: #ff4d6d40; color: #ff4d6d; }
 
-    /* Footer */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      background: var(--surface2);
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 12px;
+      color: #b0b0c0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
     .footer {
       margin-top: 48px;
       text-align: center;
@@ -175,61 +188,159 @@
   </div>
 
   <div class="title-block">
-    <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: February 2026</p>
+    <h1>Privacy Policy &amp; Terms of Use</h1>
+    <p class="updated">Last updated: March 2026</p>
   </div>
 
+  <!-- 1. Overview -->
   <div class="section">
     <h2>Overview</h2>
-    <p>SpenGo is a personal expense tracker that stores all your data directly in your own Google Spreadsheet. We do not operate any servers, databases, or backend infrastructure that handles your personal or financial information.</p>
+    <p>SpenGo is a personal expense tracker that stores all your financial data directly in your own Google Spreadsheet. We do not operate any servers, databases, or backend infrastructure that stores, processes, or transmits your personal or financial information.</p>
+    <p>This policy explains what Google user data SpenGo accesses, why, how it is used, and how you can delete it.</p>
   </div>
 
+  <!-- 2. Data Accessed -->
   <div class="section">
-    <h2>What we access</h2>
-    <p>When you sign in with Google, SpenGo requests permission to:</p>
+    <h2>Data Accessed</h2>
+    <p>When you sign in with Google, SpenGo requests the following permissions:</p>
+
+    <table>
+      <thead>
+      <tr>
+        <th>Scope</th>
+        <th>Data accessed</th>
+        <th>Why it is needed</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>spreadsheets</code></td>
+        <td>One specific Google Spreadsheet created by SpenGo</td>
+        <td>To read, write, and delete your expense records</td>
+      </tr>
+      <tr>
+        <td><code>drive.file</code></td>
+        <td>Files created by SpenGo only — not your entire Drive</td>
+        <td>To search for an existing SpenGo spreadsheet and to permanently delete it when you request a reset</td>
+      </tr>
+      <tr>
+        <td><code>userinfo.profile</code></td>
+        <td>Your display name and profile photo</td>
+        <td>To show your name and avatar inside the app</td>
+      </tr>
+      <tr>
+        <td><code>userinfo.email</code></td>
+        <td>Your Google account email address</td>
+        <td>To pre-select the correct account on subsequent sign-ins, avoiding the account picker popup</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:14px;">SpenGo requests only the minimum scopes necessary to provide its functionality. We do not request access to Gmail, Calendar, Contacts, or any other Google service.</p>
+  </div>
+
+  <!-- 3. Data Usage -->
+  <div class="section">
+    <h2>Data Usage</h2>
+    <p>Data obtained via Google APIs is used <strong>solely</strong> to provide SpenGo's expense tracking functionality:</p>
     <div class="pill-row">
-      <span class="pill">Create a Google Spreadsheet</span>
-      <span class="pill">Read & edit that spreadsheet</span>
-      <span class="pill">Search Drive for that file</span>
+      <span class="pill good">Read &amp; display your expenses</span>
+      <span class="pill good">Write new expense records</span>
+      <span class="pill good">Delete individual expense rows</span>
+      <span class="pill good">Show your name &amp; avatar</span>
+      <span class="pill good">Restore your session silently</span>
     </div>
-    <p style="margin-top:14px;">We request only the minimum scopes necessary: <code style="background:var(--surface2);padding:2px 6px;border-radius:6px;font-size:12px;">spreadsheets</code> and <code style="background:var(--surface2);padding:2px 6px;border-radius:6px;font-size:12px;">drive.file</code>. The <code style="background:var(--surface2);padding:2px 6px;border-radius:6px;font-size:12px;">drive.file</code> scope grants access only to files created by SpenGo — not your entire Drive.</p>
+    <p style="margin-top:14px;">Your email address is stored locally in your browser solely to avoid the Google account-picker popup when you reload the app. It is not transmitted to any server, used for communication, or shared with any third party.</p>
+    <p>SpenGo does not use Google user data to train AI or machine learning models, for advertising, or for any purpose beyond what is described in this policy. This complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank">Google API Services User Data Policy</a> Limited Use requirements.</p>
   </div>
 
+  <!-- 4. Data Sharing -->
   <div class="section">
-    <h2>What we never do</h2>
+    <h2>Data Sharing</h2>
+    <p>SpenGo does not share your Google user data with any third parties. There are no analytics services, advertising networks, data brokers, or external APIs involved in processing your data.</p>
+    <p>All communication happens directly between your browser and Google's APIs (Sheets API, Drive API, People API, Google Identity Services). No intermediate server or proxy is involved.</p>
     <div class="pill-row">
-      <span class="pill bad">Sell your data</span>
-      <span class="pill bad">Share with third parties</span>
-      <span class="pill bad">Use for advertising</span>
-      <span class="pill bad">Access other Drive files</span>
-      <span class="pill bad">Store data on our servers</span>
+      <span class="pill bad">Not sold</span>
+      <span class="pill bad">Not shared with third parties</span>
+      <span class="pill bad">Not used for advertising</span>
+      <span class="pill bad">Not used for AI/ML training</span>
     </div>
   </div>
 
+  <!-- 5. Data Storage & Protection -->
   <div class="section">
-    <h2>Your data stays yours</h2>
-    <p>All expense records are written exclusively to a Google Spreadsheet in your personal Google Drive account. You own this file and can view, edit, export, or delete it at any time directly in Google Sheets.</p>
-    <p>If you stop using SpenGo, your data remains in your Drive untouched. Revoking SpenGo's access in your <a href="https://myaccount.google.com/permissions" target="_blank">Google Account settings</a> immediately removes our ability to read or modify the file.</p>
+    <h2>Data Storage &amp; Protection</h2>
+    <p><strong>Google Drive:</strong> Your expense records are stored exclusively in a Google Spreadsheet in your personal Google Drive account. This file is protected by Google's own security infrastructure and your Google account credentials.</p>
+    <p><strong>Browser localStorage:</strong> SpenGo caches the following data locally in your browser to enable offline viewing and faster load times:</p>
+    <table>
+      <thead>
+      <tr><th>Key</th><th>Contents</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>spengo_sheet_id</code></td>
+        <td>Your spreadsheet ID</td>
+        <td>Restore session without searching Drive on every load</td>
+      </tr>
+      <tr>
+        <td><code>spengo_expenses</code></td>
+        <td>A copy of your recent expenses</td>
+        <td>Show cached data instantly while fresh data loads</td>
+      </tr>
+      <tr>
+        <td><code>google_login_hint</code></td>
+        <td>Your Google account email</td>
+        <td>Skip the account picker on silent token refresh</td>
+      </tr>
+      <tr>
+        <td><code>spengo_numeric_sheet_id</code></td>
+        <td>Internal Google sheet identifier</td>
+        <td>Optimise delete operations (avoids an extra API call)</td>
+      </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px;"><strong>Browser sessionStorage:</strong> Your OAuth access token and its expiry timestamp are stored in <code>sessionStorage</code> for the duration of your browser session. This data is automatically cleared when the tab or browser is closed.</p>
+    <p>None of this data ever leaves your device. SpenGo has no backend server that receives, stores, or can access it.</p>
   </div>
 
+  <!-- 6. Data Retention & Deletion -->
+  <div class="section">
+    <h2>Data Retention &amp; Deletion</h2>
+    <p><strong>Your expense data</strong> is retained in your Google Drive for as long as the spreadsheet exists. SpenGo never automatically deletes your data.</p>
+    <p><strong>To delete all your data</strong>, you have two options:</p>
+    <div class="pill-row">
+      <span class="pill">Manually delete the file in Google Drive</span>
+      <span class="pill">Clear browser site data in your browser settings</span>
+    </div>
+    <p style="margin-top:14px;">Your spreadsheet can be found in <a href="https://drive.google.com" target="_blank">Google Drive</a> under the name <em>SpenGo</em>. Deleting it there permanently removes all your expense records. Browser-cached data can be cleared separately via your browser's site data settings.</p>
+    <p><strong>To revoke SpenGo's access to your Google account</strong>, visit <a href="https://myaccount.google.com/permissions" target="_blank">myaccount.google.com/permissions</a> and remove SpenGo. This immediately prevents the app from reading or modifying any files. Your existing spreadsheet remains in your Drive unless you delete it manually.</p>
+    <p><strong>Browser localStorage</strong> is cleared automatically when you sign out of SpenGo. You can also clear it at any time via your browser's site data settings.</p>
+  </div>
+
+  <!-- 7. Authentication -->
   <div class="section">
     <h2>Authentication</h2>
-    <p>Sign-in is handled entirely by Google OAuth 2.0. SpenGo never sees, requests, or stores your Google password. Authentication tokens are managed by the browser session and the Google Identity Services library.</p>
+    <p>Sign-in is handled entirely by Google OAuth 2.0 via the Google Identity Services (GIS) library. SpenGo never sees, requests, stores, or transmits your Google password.</p>
+    <p>OAuth access tokens are managed by the browser session. They expire automatically (typically after 1 hour) and are refreshed silently using the GIS library when you are still signed into Google.</p>
   </div>
 
+  <!-- 8. Google API Policy -->
   <div class="section">
-    <h2>Local storage</h2>
-    <p>SpenGo stores your selected language preference and a temporary cache of recent expenses in your browser's <code style="background:var(--surface2);padding:2px 6px;border-radius:6px;font-size:12px;">localStorage</code>. This data never leaves your device and can be cleared at any time by clearing your browser's site data.</p>
+    <h2>Google API Policy</h2>
+    <p>SpenGo's use of Google APIs complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+    <p>Data obtained through Google APIs is used only to provide and improve the expense tracking features described in this policy. It is not transferred to other parties except as necessary to provide those features (i.e., direct API calls to Google's own services).</p>
   </div>
 
+  <!-- 9. Changes to this policy -->
   <div class="section">
-    <h2>Google API policy</h2>
-    <p>SpenGo's use of Google APIs complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank">Google API Services User Data Policy</a>, including the Limited Use requirements. We use data obtained via Google APIs solely to provide the expense tracking functionality described in this policy.</p>
+    <h2>Changes to This Policy</h2>
+    <p>If we make material changes to this Privacy Policy, we will update the "Last updated" date at the top of this page. Continued use of SpenGo after changes are posted constitutes your acceptance of the revised policy.</p>
   </div>
 
+  <!-- 10. Contact -->
   <div class="section">
     <h2>Contact</h2>
-    <p>If you have any questions about this Privacy Policy, feel free to reach out via the <a href="https://github.com/farvater-max/spengo" target="_blank">project repository</a> or open an issue on GitHub.</p>
+    <p>If you have questions about this Privacy Policy or wish to request deletion of your data, please reach out via the <a href="https://github.com/farvater-max/spengo" target="_blank">project repository</a> or open an issue on GitHub.</p>
   </div>
 
   <div class="footer">

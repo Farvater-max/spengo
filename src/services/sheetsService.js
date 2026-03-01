@@ -1,5 +1,5 @@
 import { CONFIG } from '../constants/config.js';
-import { STORAGE } from '../constants/storage.js';
+import * as Storage from '../services/storageService.js';
 import {
     verifySpreadsheet,
     findExistingSpreadsheet,
@@ -12,25 +12,25 @@ import {
 /**
  * Ensures a valid spreadsheet exists.
  * Verifies the cached ID, or creates a fresh one if absent/inaccessible.
- * Persists the resolved ID to localStorage.
+ * Persists the resolved ID via storageService.
  *
  * @param {string} accessToken
  * @returns {Promise<{ spreadsheetId: string, isNew: boolean }>}
  */
 export async function resolveSpreadsheet(accessToken) {
-    let spreadsheetId = localStorage.getItem(STORAGE.SHEET_ID);
+    let spreadsheetId = Storage.getSheetId();
 
     if (spreadsheetId) {
         const ok = await verifySpreadsheet(accessToken, spreadsheetId);
         if (ok) return { spreadsheetId, isNew: false };
 
         spreadsheetId = null;
-        localStorage.removeItem(STORAGE.SHEET_ID);
+        Storage.saveSheetId('');
     }
     spreadsheetId = await findExistingSpreadsheet(accessToken, CONFIG.SPREADSHEET_TITLE);
 
     if (spreadsheetId) {
-        localStorage.setItem(STORAGE.SHEET_ID, spreadsheetId);
+        Storage.saveSheetId(spreadsheetId);
         return { spreadsheetId, isNew: false };
     }
 
@@ -38,21 +38,19 @@ export async function resolveSpreadsheet(accessToken) {
         title:     CONFIG.SPREADSHEET_TITLE,
         sheetName: CONFIG.SHEET_NAME,
     });
-    localStorage.setItem(STORAGE.SHEET_ID, spreadsheetId);
+    Storage.saveSheetId(spreadsheetId);
     return { spreadsheetId, isNew: true };
 }
 
 /**
- * Loads all expenses from the sheet and caches them in localStorage.
+ * Loads all expenses from the sheet. Caching is handled by the caller.
  *
  * @param {string} accessToken
  * @param {string} spreadsheetId
  * @returns {Promise<Array>}
  */
 export async function loadExpenses(accessToken, spreadsheetId) {
-    const expenses = await fetchExpenses(accessToken, spreadsheetId, CONFIG.SHEET_NAME);
-    localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(expenses));
-    return expenses;
+    return await fetchExpenses(accessToken, spreadsheetId, CONFIG.SHEET_NAME);
 }
 
 /**

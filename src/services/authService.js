@@ -6,6 +6,12 @@ import {
     isSilentAuthError,
     formatAuthError,
 } from '../helpers/authHelpers.js';
+import {
+    saveSession,
+    clearSession,
+    getLoginHint,
+    isTokenExpired,
+} from './storageService.js';
 
 // ---------------------------------------------------------------------------
 // Internal state
@@ -89,35 +95,31 @@ export function silentRefresh() {
         }
     }, SILENT_REFRESH_TIMEOUT_MS);
 
-    const hint = localStorage.getItem('google_login_hint') ?? '';
-    _tokenClient.requestAccessToken({ prompt: '', login_hint: hint });
+    _tokenClient.requestAccessToken({ prompt: '', login_hint: getLoginHint() });
 }
 
 /**
  * Revokes the current access token and clears all session state.
- *
+ * Storage cleanup is handled by storageService.clearAll() in onSignOut.
  * @returns {Promise<void>}
  */
 export async function signOut() {
     if (_accessToken) {
         await revokeToken(_accessToken);
     }
-
-    _accessToken = null;
+    _accessToken     = null;
     _pendingFlowType = null;
-    sessionStorage.removeItem('google_access_token');
-    sessionStorage.removeItem('google_token_expires_at');
+    clearSession();
     _callbacks.onSignOut();
 }
+
+// Re-export so authController doesn't need its own storage import for this check
+export { isTokenExpired };
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Creates and stores the GIS token client.
- * Separated from `init` so it can be reasoned about independently.
- */
 function _clearSilentTimer() {
     if (_silentRefreshTimer !== null) {
         clearTimeout(_silentRefreshTimer);
@@ -137,8 +139,6 @@ function _initTokenClient() {
 }
 
 /**
- * Handles a successful (or errored) token response from GIS.
- *
  * @param {google.accounts.oauth2.TokenResponse} response
  */
 function _onTokenResponse(response) {
@@ -154,21 +154,14 @@ function _onTokenResponse(response) {
 
     _accessToken = response.access_token;
     const expiresAt = Date.now() + (response.expires_in - 60) * 1000;
-    sessionStorage.setItem('google_access_token', _accessToken);
-    sessionStorage.setItem('google_token_expires_at', String(expiresAt));
+
+    // Single call — storageService owns both writes
+    saveSession(_accessToken, expiresAt);
 
     _callbacks.onSignIn({ accessToken: _accessToken });
 }
 
-export function isTokenExpired() {
-    const expiresAt = sessionStorage.getItem('google_token_expires_at');
-    if (!expiresAt) return true;
-    return Date.now() > Number(expiresAt);
-}
-
 /**
- * Handles errors fired via the `error_callback` channel of GIS.
- *
  * @param {{ error?: string, type?: string, message?: string }} err
  */
 function _onTokenError(err) {
@@ -187,9 +180,6 @@ function _onTokenError(err) {
 }
 
 /**
- * Routes a failed auth flow to the appropriate callback depending on
- * whether it was a silent background attempt or an interactive one.
- *
  * @param {'silent' | 'interactive' | null} flowType
  * @param {string} errorMessage
  */

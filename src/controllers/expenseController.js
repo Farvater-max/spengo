@@ -1,20 +1,20 @@
 import { STATE } from '../../state.js';
-import { STORAGE } from '../constants/storage.js';
 import * as SheetsService from '../services/sheetsService.js';
-import { getI18nValue, } from '../i18n/localization.js';
+import * as Storage from '../services/storageService.js';
+import * as AuthService from '../services/authService.js';
+import { getI18nValue } from '../i18n/localization.js';
 import { uuid, todayStr, showToast, sleep, parseAmount } from '../utils/helpers.js';
 import { showScreen, setSetupText } from '../ui/navigation.js';
 import { renderUI } from '../ui/renderer.js';
 
 /**
- * Restore expenses from localStorage without request.
+ * Restores cached expenses from storage into STATE on app start.
+ * Called before AuthService.init() so the UI has data immediately.
  */
 export function restoreCachedExpenses() {
-    const savedSheetId = localStorage.getItem(STORAGE.SHEET_ID);
-    if (!savedSheetId) return;
-
-    const cached = localStorage.getItem(STORAGE.EXPENSES);
-    if (cached) STATE.expenses = JSON.parse(cached);
+    if (!Storage.getSheetId()) return;
+    const expenses = Storage.getExpenses();
+    if (expenses.length > 0) STATE.expenses = expenses;
 }
 
 export async function initSpreadsheet() {
@@ -35,14 +35,15 @@ async function _resolveAndSaveSpreadsheet() {
     if (isNew) setSetupText(getI18nValue('setup.creating'), getI18nValue('setup.first_time'));
 
     STATE.spreadsheetId = spreadsheetId;
-    localStorage.setItem(STORAGE.SHEET_ID, spreadsheetId);
+    Storage.saveSheetId(spreadsheetId);
 }
 
 async function _loadAndCacheExpenses() {
     setSetupText(getI18nValue('setup.loading'), getI18nValue('setup.reading'));
 
-    STATE.expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
-    localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
+    const expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
+    STATE.expenses = expenses;
+    Storage.saveExpenses(expenses);
 }
 
 function _handleInitError(err) {
@@ -64,20 +65,20 @@ export async function refreshDataInBackground() {
     try {
         const expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
         STATE.expenses = expenses;
-        localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(expenses));
+        Storage.saveExpenses(expenses);
 
-        if (STATE.currentScreen === 'setup' || STATE.currentScreen === 'auth') showScreen('main');
+        if (STATE.currentScreen === 'setup' || STATE.currentScreen === 'auth') {
+            showScreen('main');
+        }
         renderUI();
     } catch (err) {
         console.warn('[SpenGo] Background refresh failed:', err);
         const isAuthError = err.message.includes('401') || err.message.includes('403');
         if (isAuthError) {
-            sessionStorage.removeItem('google_access_token');
-            sessionStorage.removeItem('google_token_expires_at');
+            Storage.clearSession();
             STATE.accessToken = null;
-            if (STATE.expenses.length === 0) {
-                showScreen('auth');
-            }
+            // Attempt silent re-auth; onSilentFail will redirect if GIS can't help
+            AuthService.silentRefresh();
         }
     }
 }
@@ -98,20 +99,20 @@ export async function submitExpense() {
     };
 
     const btn = document.getElementById('btn-add-submit');
-    btn.disabled = true;
+    btn.disabled    = true;
     btn.textContent = getI18nValue('btn.saving');
 
     try {
         await SheetsService.appendExpense(STATE.accessToken, STATE.spreadsheetId, expense);
         STATE.expenses.push(expense);
-        localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
+        Storage.saveExpenses(STATE.expenses);
         document.getElementById('modal-add').classList.remove('open');
         renderUI();
         showToast(getI18nValue('toast.added'), 'success');
     } catch (err) {
         showToast(getI18nValue('toast.error_prefix') + err.message, 'error');
     } finally {
-        btn.disabled = false;
+        btn.disabled    = false;
         btn.textContent = getI18nValue('btn.add');
     }
 }
@@ -121,7 +122,7 @@ export async function deleteExpense(id) {
     try {
         await SheetsService.deleteExpense(STATE.accessToken, STATE.spreadsheetId, id);
         STATE.expenses = STATE.expenses.filter(e => e.id !== id);
-        localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
+        Storage.saveExpenses(STATE.expenses);
         renderUI();
         showToast(getI18nValue('toast.deleted'), 'success');
     } catch {

@@ -1,6 +1,7 @@
-import {CONFIG } from '../constants/config.js';
+import { CONFIG } from '../constants/config.js';
 import * as SheetsClient from '../api/client/sheetsClient.js';
 import { uuid, parseAmount } from '../utils/helpers.js';
+import { getNumericSheetId, saveNumericSheetId } from '../services/storageService.js';
 
 /**
  * Builds an A1-notation range string.
@@ -175,18 +176,31 @@ export async function insertExpense(accessToken, spreadsheetId, sheetName, expen
  * @returns {Promise<void>}
  */
 export async function removeExpenseRow(accessToken, spreadsheetId, sheetName, expenseId) {
-    const colA = await SheetsClient.get(
-        accessToken,
-        `${CONFIG.SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range(sheetName, 'A2:A1000'))}`
-    );
+    // The numeric sheetId never changes — use cached value when available.
+    // If not cached yet, fetch it in parallel with the ID column lookup.
+    const cachedNumericId = getNumericSheetId();
+
+    const [colA, meta] = await Promise.all([
+        SheetsClient.get(
+            accessToken,
+            `${CONFIG.SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range(sheetName, 'A2:A1000'))}`
+        ),
+        // Skip the metadata request if we already have the numeric sheet ID
+        cachedNumericId !== null
+            ? Promise.resolve(null)
+            : SheetsClient.get(
+                accessToken,
+                `${CONFIG.SHEETS_BASE}/${spreadsheetId}?fields=sheets.properties`
+            ),
+    ]);
+
     const rowIndex = findRowIndex(colA.values || [], expenseId);
     if (rowIndex === -1) return;
 
-    const meta = await SheetsClient.get(
-        accessToken,
-        `${CONFIG.SHEETS_BASE}/${spreadsheetId}?fields=sheets.properties`
-    );
-    const numericSheetId = extractNumericSheetId(meta);
+    const numericSheetId = cachedNumericId ?? extractNumericSheetId(meta);
+
+    // Persist for future deletes
+    if (cachedNumericId === null) saveNumericSheetId(numericSheetId);
 
     await SheetsClient.post(
         accessToken,

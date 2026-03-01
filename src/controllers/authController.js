@@ -3,20 +3,19 @@
  *
  * Bridges authService events to the rest of the application.
  * Responsible for:
- *   – reading / writing session / local storage related to auth
- *   – updating STATE
+ *   – reading / writing session state via storageService
+ *   – updating STATE (including authStatus)
  *   – delegating UI transitions to navigation / renderer helpers
  *
- * It deliberately contains NO direct DOM manipulation beyond calling
- * the dedicated UI helpers, keeping it easy to test in isolation.
+ * It contains NO direct localStorage/sessionStorage calls.
  */
 
 import { STATE } from '../../state.js';
-import { STORAGE } from '../constants/storage.js';
 import * as AuthService from '../services/authService.js';
+import * as Storage from '../services/storageService.js';
 import { fetchUserProfile } from '../api/client/googleClient.js';
 import { initSpreadsheet, refreshDataInBackground } from './expenseController.js';
-import {showScreen, setNavEnabled, setSetupText} from '../ui/navigation.js';
+import { showScreen, setNavEnabled, setSetupText } from '../ui/navigation.js';
 import { renderUI, updateAvatarUI } from '../ui/renderer.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { showToast } from '../utils/helpers.js';
@@ -27,79 +26,63 @@ import { showToast } from '../utils/helpers.js';
 
 /**
  * Called once the Google SDKs have loaded and the token client is ready.
- *
- * Restores a previous session from storage when possible; otherwise shows
- * the sign-in screen.
+ * Reads a single snapshot from storageService and decides what to do.
  */
 export function onAuthReady() {
-    const savedSheetId = localStorage.getItem(STORAGE.SHEET_ID);
-    const cachedToken  = sessionStorage.getItem('google_access_token');
+    const { accessToken, sheetId, expenses, tokenExpired } = Storage.getStoredSession();
 
-    if (savedSheetId && cachedToken) {
-        if (AuthService.isTokenExpired()) {
-            STATE.spreadsheetId = savedSheetId;
-            STATE.accessToken   = null;
-            setNavEnabled(true);
-
-            if (STATE.expenses.length > 0) {
-                // Есть кеш — показываем его пока ждём токен
-                showScreen('main');
-                renderUI();
-            } else {
-                showScreen('setup');
-                setSetupText('Restoring session…', '');
-            }
-            AuthService.silentRefresh();
-
-        } else {
-            _restoreSession({ accessToken: cachedToken, spreadsheetId: savedSheetId });
-        }
-
-    } else if (savedSheetId && !cachedToken) {
-        STATE.spreadsheetId = savedSheetId;
-        setNavEnabled(false);
-        showScreen('auth');
-        document.getElementById('btn-google').disabled = true;
-        AuthService.silentRefresh();
-    } else {
-        _showSignInScreen();
+    // No previous session at all → straight to sign-in
+    if (!sheetId) {
+        _toUnauthenticated();
+        return;
     }
+
+    // Have a sheet but no token → attempt silent refresh
+    if (!accessToken) {
+        _startSilentRestore(sheetId, expenses);
+        return;
+    }
+
+    // Have both but token has expired → show cached data while refreshing
+    if (tokenExpired) {
+        _startSilentRestore(sheetId, expenses);
+        return;
+    }
+
+    // Everything looks good → restore normally
+    _restoreSession({ accessToken, sheetId, expenses });
 }
 
 /**
  * Called when a background (silent) re-authentication attempt fails.
- * Clears the stale token and returns the user to the sign-in screen.
  */
 export function onSilentFail() {
-    sessionStorage.removeItem('google_access_token');
-    sessionStorage.removeItem('google_token_expires_at');
+    Storage.clearSession();
     STATE.accessToken = null;
-    _showSignInScreen();
+    _toUnauthenticated();
 }
 
 /**
- * Called after the user successfully completes the Google consent flow.
+ * Called after the user successfully completes the Google consent flow
+ * OR after a successful silent refresh.
  *
  * @param {{ accessToken: string }} param0
  */
 export async function onSignIn({ accessToken }) {
     STATE.accessToken = accessToken;
-    sessionStorage.setItem('google_access_token', accessToken);
+    // authService already called Storage.saveSession() — no duplicate write here
+    STATE.authStatus = 'ready';
     setNavEnabled(true);
 
-    // Fetch profile once per sign-in and persist the email as login_hint.
-    // login_hint tells GIS which account to use on the next silentRefresh,
-    // preventing the account-picker popup from appearing on page reload.
+    // Fetch profile and persist login_hint to suppress account-picker on reload
     const profile = await fetchUserProfile(accessToken);
     if (profile) {
         STATE.userProfile = profile;
-        localStorage.setItem('google_login_hint', profile.email);
+        Storage.saveLoginHint(profile.email);
         updateAvatarUI();
     }
 
-    const alreadyHasSheet = !!STATE.spreadsheetId;
-
-    if (alreadyHasSheet) {
+    if (STATE.spreadsheetId) {
         await refreshDataInBackground();
     } else {
         showScreen('setup');
@@ -109,18 +92,14 @@ export async function onSignIn({ accessToken }) {
 
 /**
  * Called after the token has been revoked and local state cleared.
- * Resets application state and returns to the sign-in screen.
  */
 export function onSignOut() {
-    STATE.reset();
-    STATE.currentScreen = 'auth';
+    STATE.reset(); // sets authStatus = 'unauthenticated'
     STATE.currentPeriod = 'day';
     STATE.currentCategoryFilter = 'all';
     STATE.selectedCat = null;
 
-    localStorage.removeItem(STORAGE.SHEET_ID);
-    localStorage.removeItem(STORAGE.EXPENSES);
-    localStorage.removeItem('google_login_hint');
+    Storage.clearAll(); // single call wipes everything
 
     setNavEnabled(false);
     document.getElementById('modal-profile').classList.remove('open');
@@ -134,17 +113,46 @@ export function onSignOut() {
 // ---------------------------------------------------------------------------
 
 /**
- * Hydrates STATE from storage and decides which screen to show.
- * Kicks off a background data refresh in either case.
+ * Handles both "no token" and "token expired" cases.
+ * Loads cached expenses into STATE so the UI can show stale data while
+ * the silent refresh is in flight.
  *
- * @param {{ accessToken: string, spreadsheetId: string }} session
+ * @param {string} sheetId
+ * @param {Array}  expenses
  */
-function _restoreSession({ accessToken, spreadsheetId }) {
+function _startSilentRestore(sheetId, expenses) {
+    STATE.spreadsheetId = sheetId;
+    STATE.authStatus    = 'restoring';
+
+    if (expenses.length > 0) {
+        STATE.expenses = expenses;
+        setNavEnabled(true);
+        showScreen('main');
+        renderUI();
+    } else {
+        setNavEnabled(false);
+        showScreen('auth');
+        _disableSignInButton(); // visually indicate background activity
+    }
+
+    AuthService.silentRefresh();
+}
+
+/**
+ * Restores a fully valid session (token present and not expired).
+ * Still kicks off a proactive silent refresh because the token may be
+ * revoked server-side even if the local expiry has not passed.
+ *
+ * @param {{ accessToken: string, sheetId: string, expenses: Array }} session
+ */
+function _restoreSession({ accessToken, sheetId, expenses }) {
     STATE.accessToken   = accessToken;
-    STATE.spreadsheetId = spreadsheetId;
+    STATE.spreadsheetId = sheetId;
+    STATE.authStatus    = 'restoring';
     setNavEnabled(true);
 
-    if (STATE.expenses.length > 0) {
+    if (expenses.length > 0) {
+        STATE.expenses = expenses;
         showScreen('main');
         renderUI();
     } else {
@@ -152,17 +160,14 @@ function _restoreSession({ accessToken, spreadsheetId }) {
         setSetupText('Loading data…', '');
     }
 
-    // Proactively get a fresh token — the cached one may be technically
-    // within its expiry window but already revoked or invalidated server-side
-    // (e.g. manually cleared in devtools, or Google revoked it).
-    // silentRefresh → onSignIn → refreshDataInBackground is the happy path.
-    // If it fails, refreshDataInBackground's 401 handler will call silentRefresh
-    // as a fallback, and onSilentFail will redirect to sign-in if GIS can't help.
+    // Proactive refresh — if the token is invalid server-side, the 401 in
+    // refreshDataInBackground will call silentRefresh as a fallback.
     AuthService.silentRefresh();
 }
 
-/** Transitions to the unauthenticated state. */
-function _showSignInScreen() {
+/** Transitions to the fully unauthenticated state. */
+function _toUnauthenticated() {
+    STATE.authStatus = 'unauthenticated';
     setNavEnabled(false);
     showScreen('auth');
     _enableSignInButton();
@@ -171,4 +176,9 @@ function _showSignInScreen() {
 export function _enableSignInButton() {
     const btn = document.getElementById('btn-google');
     if (btn) btn.disabled = false;
+}
+
+function _disableSignInButton() {
+    const btn = document.getElementById('btn-google');
+    if (btn) btn.disabled = true;
 }

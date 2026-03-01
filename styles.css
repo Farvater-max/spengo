@@ -491,6 +491,7 @@ html, body {
     opacity: 0.3;
     cursor: not-allowed;
     pointer-events: none;
+    color: var(--muted);
 }
 
 /* ─── ADD EXPENSE MODAL ──────────────────────────────── */
