@@ -1,7 +1,7 @@
 import { STATE } from './state.js';
 import * as AuthService from './src/services/authService.js';
 import { loadTranslations, applyTranslations, updateCategoryLabels } from './src/i18n/localization.js';
-import { onAuthReady, onSignIn, onSignOut, onSilentFail } from './src/controllers/authController.js';
+import { onAuthReady, onSignIn, onSignOut, onSilentFail, _enableSignInButton } from './src/controllers/authController.js';
 import { restoreCachedExpenses } from './src/controllers/expenseController.js';
 import { showAuthError } from './src/ui/navigation.js';
 import { bindEvents } from './src/ui/events.js';
@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         onSilentFail: onSilentFail,
         onSignIn:     onSignIn,
         onSignOut:    onSignOut,
-        onError:      showAuthError,
+        onError: (msg) => {
+            showAuthError(msg);
+            _enableSignInButton();
+        },
     });
 });

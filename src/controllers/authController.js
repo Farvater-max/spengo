@@ -57,8 +57,9 @@ export function onAuthReady() {
     } else if (savedSheetId && !cachedToken) {
         STATE.spreadsheetId = savedSheetId;
         setNavEnabled(false);
+        showScreen('auth');
+        document.getElementById('btn-google').disabled = true;
         AuthService.silentRefresh();
-
     } else {
         _showSignInScreen();
     }
@@ -102,10 +103,16 @@ export async function onSignIn({ accessToken }) {
  */
 export function onSignOut() {
     STATE.reset();
+    STATE.currentScreen = 'auth';
+    STATE.currentPeriod = 'day';
+    STATE.currentCategoryFilter = 'all';
+    STATE.selectedCat = null;
+
+    localStorage.removeItem(STORAGE.SHEET_ID);
+    localStorage.removeItem(STORAGE.EXPENSES);
+
     setNavEnabled(false);
-
     document.getElementById('modal-profile').classList.remove('open');
-
     showScreen('auth');
     showToast(getI18nValue('toast.signed_out'));
     _enableSignInButton();
@@ -126,14 +133,20 @@ function _restoreSession({ accessToken, spreadsheetId }) {
     STATE.spreadsheetId = spreadsheetId;
     setNavEnabled(true);
 
-    const hasCachedExpenses = STATE.expenses.length > 0;
-
-    if (hasCachedExpenses) {
+    if (STATE.expenses.length > 0) {
         showScreen('main');
         renderUI();
     } else {
         showScreen('setup');
+        setSetupText('Loading data…', '');
     }
+
+    // Proactively get a fresh token — the cached one may be technically
+    // within its expiry window but already revoked or invalidated server-side
+    // (e.g. manually cleared in devtools, or Google revoked it).
+    // silentRefresh → onSignIn → refreshDataInBackground is the happy path.
+    // If it fails, refreshDataInBackground's 401 handler will call silentRefresh
+    // as a fallback, and onSilentFail will redirect to sign-in if GIS can't help.
     AuthService.silentRefresh();
 }
 
@@ -144,7 +157,7 @@ function _showSignInScreen() {
     _enableSignInButton();
 }
 
-function _enableSignInButton() {
+export function _enableSignInButton() {
     const btn = document.getElementById('btn-google');
     if (btn) btn.disabled = false;
 }

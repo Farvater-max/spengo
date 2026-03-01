@@ -1,6 +1,7 @@
 import { LANG } from '../i18n/localization.js';
-import {parseISO, isSameDay, isSameMonth, isSameWeek, format} from 'date-fns';
+import { parseISO, isSameDay, isSameMonth, isSameWeek, format } from 'date-fns';
 import { ru, enUS, es } from 'date-fns/locale';
+import Big from 'big.js';
 const LOCALE_MAP = { ru: 'ru-RU', en: 'en-US', es: 'es-ES' };
 const DATE_FNS_LOCALES = {
     'ru-RU': ru,
@@ -69,12 +70,15 @@ export function formatMoney(amount, locale = 'en-US') {
         return '0';
     }
     try {
+        // Show up to 2 decimal places but only when needed:
+        // 10 → "10", 10.5 → "10.5", 10.55 → "10.55"
         return new Intl.NumberFormat(locale, {
-            maximumFractionDigits: 0,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
         }).format(amount);
     } catch (error) {
         console.error(`[formatMoney]: Formatting failed for locale "${locale}"`, error);
-        return amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        return amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
 }
 
@@ -150,4 +154,35 @@ export function setText(id, value) {
 export function setHTML(id, value) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = value;
+}
+
+/**
+ * Parses a user-typed amount string, accepting both dot and comma as the
+ * decimal separator ("10,5" and "10.5" both become 10.5).
+ * Returns 0 if the input is empty, non-numeric, or negative.
+ *
+ * @param {string|number} raw
+ * @returns {number} Plain JS number rounded to 2 decimal places.
+ */
+export function parseAmount(raw) {
+    try {
+        const normalised = String(raw).trim().replace(',', '.');
+        const big = new Big(normalised);
+        if (big.lte(0)) return 0;
+        return Number(big.toFixed(2));
+    } catch {
+        return 0;
+    }
+}
+
+/**
+ * Sums an array of expense amounts using Big.js to avoid float drift.
+ * 0.1 + 0.2 → 0.3 (not 0.30000000000000004)
+ *
+ * @param {Array<{ amount: number }>} expenses
+ * @returns {number} Rounded to 2 decimal places.
+ */
+export function sumAmounts(expenses) {
+    const total = expenses.reduce((acc, e) => acc.plus(new Big(e.amount)), new Big(0));
+    return Number(total.toFixed(2));
 }

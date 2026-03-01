@@ -144,10 +144,11 @@ function _onTokenError(err) {
     _pendingFlowType = null;
 
     if (isSilentAuthError(err)) {
-        // User closed the popup — not an error worth surfacing.
+        if (flowType === 'silent') return;
+        if (err?.type === 'popup_closed') return;
+        _callbacks.onError('Access was denied. Please grant the required permissions.');
         return;
     }
-
     _handleFailedFlow(flowType, `OAuth error: ${formatAuthError(err)}`);
 }
 

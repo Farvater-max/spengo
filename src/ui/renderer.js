@@ -1,6 +1,6 @@
 import { STATE } from '../../state.js';
 import { CATEGORIES } from '../constants/categories.js';
-import { formatMoney, formatDate, isInPeriod, getFilteredExpenses, setText } from '../utils/helpers.js';
+import { formatMoney, formatDate, isInPeriod, getFilteredExpenses, setText, sumAmounts } from '../utils/helpers.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { deleteExpense } from '../controllers/expenseController.js';
 import { setCategoryFilter, selectCategory } from './actions.js';
@@ -14,7 +14,7 @@ export function renderUI() {
 }
 
 export function renderSummary() {
-    const total = getFilteredExpenses(STATE).reduce((sum, e) => sum + e.amount, 0);
+    const total = sumAmounts(getFilteredExpenses(STATE));
     document.getElementById('summary-num').textContent   = formatMoney(total);
     document.getElementById('summary-label').textContent = _periodLabel(STATE.currentPeriod);
 }
@@ -72,7 +72,7 @@ export function renderCategorySelectGrid() {
 
 export function renderStatistics() {
     const monthExpenses = STATE.expenses.filter(e => isInPeriod(e.date, 'month'));
-    const total = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const total = sumAmounts(monthExpenses);
 
     document.getElementById('stats-total').textContent = formatMoney(total);
     document.getElementById('stats-sub').textContent   = `${monthExpenses.length} ${getI18nValue('stats.ops')}`;
@@ -124,7 +124,7 @@ function _expenseItemHTML(item, index) {
                 <div class="expense-name">${item.comment || cat.label}</div>
                 <div class="expense-meta">
                     <span class="expense-cat">${cat.label}</span>
-                    <span class="expense-date">· ${formatDate(item.date)}</span>
+                    <span class="expense-date">${formatDate(item.date)}</span>
                 </div>
             </div>
             <div class="expense-amount">${formatMoney(item.amount)}</div>
@@ -134,7 +134,7 @@ function _expenseItemHTML(item, index) {
 
 function _groupByCategory(expenses) {
     return expenses.reduce((acc, e) => {
-        acc[e.category] = (acc[e.category] || 0) + e.amount;
+        acc[e.category] = sumAmounts([{ amount: acc[e.category] || 0 }, { amount: e.amount }]);
         return acc;
     }, {});
 }

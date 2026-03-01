@@ -1,6 +1,6 @@
 import {CONFIG } from '../constants/config.js';
 import * as SheetsClient from '../api/client/sheetsClient.js';
-import { uuid } from '../utils/helpers.js';
+import { uuid, parseAmount } from '../utils/helpers.js';
 
 /**
  * Builds an A1-notation range string.

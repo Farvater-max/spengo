@@ -2,7 +2,7 @@ import { STATE } from '../../state.js';
 import { STORAGE } from '../constants/storage.js';
 import * as SheetsService from '../services/sheetsService.js';
 import { getI18nValue, } from '../i18n/localization.js';
-import { uuid, todayStr, showToast, sleep } from '../utils/helpers.js';
+import { uuid, todayStr, showToast, sleep, parseAmount } from '../utils/helpers.js';
 import { showScreen, setSetupText } from '../ui/navigation.js';
 import { renderUI } from '../ui/renderer.js';
 
@@ -66,7 +66,7 @@ export async function refreshDataInBackground() {
         STATE.expenses = expenses;
         localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(expenses));
 
-        if (STATE.currentScreen === 'setup') showScreen('main');
+        if (STATE.currentScreen === 'setup' || STATE.currentScreen === 'auth') showScreen('main');
         renderUI();
     } catch (err) {
         console.warn('[SpenGo] Background refresh failed:', err);
@@ -83,7 +83,7 @@ export async function refreshDataInBackground() {
 }
 
 export async function submitExpense() {
-    const amount  = parseFloat(document.getElementById('input-amount').value);
+    const amount  = parseAmount(document.getElementById('input-amount').value);
     const comment = document.getElementById('input-comment').value.trim();
 
     if (!amount || amount <= 0) { showToast(getI18nValue('toast.enter_amount'), 'error'); return; }
