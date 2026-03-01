@@ -72,7 +72,7 @@ export function renderCategorySelectGrid() {
 
 export function renderStatistics() {
     const monthExpenses = STATE.expenses.filter(e => isInPeriod(e.date, 'month'));
-    const total         = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const total = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
 
     document.getElementById('stats-total').textContent = formatMoney(total);
     document.getElementById('stats-sub').textContent   = `${monthExpenses.length} ${getI18nValue('stats.ops')}`;

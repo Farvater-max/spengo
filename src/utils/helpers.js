@@ -1,5 +1,13 @@
 import { LANG } from '../i18n/localization.js';
+import {parseISO, isSameDay, isSameMonth, isSameWeek, format} from 'date-fns';
+import { ru, enUS, es } from 'date-fns/locale';
 const LOCALE_MAP = { ru: 'ru-RU', en: 'en-US', es: 'es-ES' };
+const DATE_FNS_LOCALES = {
+    'ru-RU': ru,
+    'en-US': enUS,
+    'es-ES': es
+};
+
 
 /**
  * Generates a random UUID v4.
@@ -25,44 +33,75 @@ export function todayStr() {
 }
 
 /**
- * @param {string} str - ISO date string (YYYY-MM-DD)
- * @returns {string}
+ * Formats an ISO date string to a localized string (e.g., "1 Mar").
+ * Automatically detects the current language if not provided.
+ * * @param {string} dateIsoString - ISO date string (YYYY-MM-DD).
+ * @param dateIsoString
+ * @param {string} [langKey] - Optional language key ('ru', 'en', 'es').
+ * Defaults to global LANG if omitted.
+ * @returns {string} Formatted date or empty string.
  */
-export function formatDate(str) {
-    if (!str) return '';
-    return new Date(str + 'T00:00:00').toLocaleDateString(LOCALE_MAP[LANG], { day: 'numeric', month: 'short' });
+export function formatDate(dateIsoString, langKey) {
+    if (!dateIsoString) return '';
+
+    try {
+        const date = parseISO(dateIsoString);
+        const currentLang = langKey || (typeof LANG !== 'undefined' ? LANG : 'en');
+
+        const localeString = LOCALE_MAP[currentLang] || LOCALE_MAP.en;
+        const dateLocale = DATE_FNS_LOCALES[localeString] || enUS;
+
+        return format(date, 'd MMM', { locale: dateLocale });
+    } catch (error) {
+        console.error(`[formatDate Error]: ${dateIsoString}`, error);
+        return '';
+    }
 }
 
 /**
- * @param {number} n
- * @returns {string}
+ * @param {number} amount - The numeric value to format.
+ * @param {string} [locale='en-US'] - The BCP 47 language tag (e.g., 'en-US', 'ru-RU').
+ * @returns {string} The formatted money string or a fallback if input is invalid.
  */
-export function formatMoney(n) {
-    return n.toLocaleString(LOCALE_MAP[LANG], { maximumFractionDigits: 0 });
+export function formatMoney(amount, locale = 'en-US') {
+    if (typeof amount !== 'number' || Number.isNaN(amount)) {
+        console.warn('[formatMoney]: Invalid input provided, expected a number.');
+        return '0';
+    }
+    try {
+        return new Intl.NumberFormat(locale, {
+            maximumFractionDigits: 0,
+        }).format(amount);
+    } catch (error) {
+        console.error(`[formatMoney]: Formatting failed for locale "${locale}"`, error);
+        return amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+    }
 }
 
 /**
- * @param {string} dateStr - ISO date string (YYYY-MM-DD)
- * @param {'day'|'week'|'month'} period
- * @returns {boolean}
+ * Checks if a given ISO date string falls within the current calendar period
+ * based on the user's local time zone.
+ *
+ * @param {string} dateIsoString - The date to check in ISO format (e.g., "YYYY-MM-DD").
+ * @param {'day' | 'week' | 'month'} period - The time period to validate against.
+ * @returns {boolean} True if the target date matches the current local period, false otherwise.
  */
-export function isInPeriod(dateStr, period) {
-    const d   = new Date(dateStr + 'T00:00:00');
+export function isInPeriod(dateIsoString, period) {
+    if (!dateIsoString) return false;
+
+    const targetDate = parseISO(dateIsoString);
     const now = new Date();
 
-    if (period === 'day') return d.toDateString() === now.toDateString();
-
-    if (period === 'week') {
-        const start = new Date(now);
-        const isoDay = (now.getDay() + 6) % 7;
-        start.setDate(now.getDate() - isoDay);
-        start.setHours(0, 0, 0, 0);
-        return d >= start;
+    switch (period) {
+        case 'day':
+            return isSameDay(targetDate, now);
+        case 'week':
+            return isSameWeek(targetDate, now, { weekStartsOn: 1 });
+        case 'month':
+            return isSameMonth(targetDate, now);
+        default:
+            return false;
     }
-    if (period === 'month') {
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    }
-    return true;
 }
 
 /**
