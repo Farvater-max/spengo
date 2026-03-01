@@ -1,4 +1,3 @@
-
 import { CONFIG } from '../constants/config.js';
 import { revokeToken, initGapiClient } from '../api/client/googleClient.js';
 import {
@@ -24,6 +23,16 @@ let _accessToken = null;
  * @type {'silent' | 'interactive' | null}
  */
 let _pendingFlowType = null;
+
+/**
+ * GIS does not fire error_callback when there is no active Google session
+ * and prompt is empty — it simply stays silent forever. This timer detects
+ * that case and fires onSilentFail so the UI is never left in a stuck state.
+ * @type {ReturnType<typeof setTimeout> | null}
+ */
+let _silentRefreshTimer = null;
+
+const SILENT_REFRESH_TIMEOUT_MS = 5000;
 
 /** @type {Required<AuthCallbacks>} */
 let _callbacks = {
@@ -63,11 +72,25 @@ export function signIn() {
 /**
  * Attempts a silent token refresh without showing a popup.
  * On success fires onSignIn, on failure fires onSilentFail.
+ *
+ * - login_hint: skips the account picker when the user's email is known.
+ * - timeout: GIS never calls error_callback if there is no active session
+ *   and prompt is empty — the timer ensures onSilentFail always fires.
  */
 export function silentRefresh() {
     if (!_tokenClient) return;
+
     _pendingFlowType = 'silent';
-    _tokenClient.requestAccessToken({ prompt: '' });
+
+    _silentRefreshTimer = setTimeout(() => {
+        if (_pendingFlowType === 'silent') {
+            _pendingFlowType = null;
+            _callbacks.onSilentFail();
+        }
+    }, SILENT_REFRESH_TIMEOUT_MS);
+
+    const hint = localStorage.getItem('google_login_hint') ?? '';
+    _tokenClient.requestAccessToken({ prompt: '', login_hint: hint });
 }
 
 /**
@@ -95,6 +118,13 @@ export async function signOut() {
  * Creates and stores the GIS token client.
  * Separated from `init` so it can be reasoned about independently.
  */
+function _clearSilentTimer() {
+    if (_silentRefreshTimer !== null) {
+        clearTimeout(_silentRefreshTimer);
+        _silentRefreshTimer = null;
+    }
+}
+
 function _initTokenClient() {
     _tokenClient = google.accounts.oauth2.initTokenClient(
         buildTokenClientConfig({
@@ -112,6 +142,8 @@ function _initTokenClient() {
  * @param {google.accounts.oauth2.TokenResponse} response
  */
 function _onTokenResponse(response) {
+    _clearSilentTimer();
+
     const flowType = _pendingFlowType;
     _pendingFlowType = null;
 
@@ -140,6 +172,8 @@ export function isTokenExpired() {
  * @param {{ error?: string, type?: string, message?: string }} err
  */
 function _onTokenError(err) {
+    _clearSilentTimer();
+
     const flowType = _pendingFlowType;
     _pendingFlowType = null;
 

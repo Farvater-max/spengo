@@ -14,6 +14,7 @@
 import { STATE } from '../../state.js';
 import { STORAGE } from '../constants/storage.js';
 import * as AuthService from '../services/authService.js';
+import { fetchUserProfile } from '../api/client/googleClient.js';
 import { initSpreadsheet, refreshDataInBackground } from './expenseController.js';
 import {showScreen, setNavEnabled, setSetupText} from '../ui/navigation.js';
 import { renderUI, updateAvatarUI } from '../ui/renderer.js';
@@ -85,7 +86,16 @@ export async function onSignIn({ accessToken }) {
     STATE.accessToken = accessToken;
     sessionStorage.setItem('google_access_token', accessToken);
     setNavEnabled(true);
-    updateAvatarUI();
+
+    // Fetch profile once per sign-in and persist the email as login_hint.
+    // login_hint tells GIS which account to use on the next silentRefresh,
+    // preventing the account-picker popup from appearing on page reload.
+    const profile = await fetchUserProfile(accessToken);
+    if (profile) {
+        STATE.userProfile = profile;
+        localStorage.setItem('google_login_hint', profile.email);
+        updateAvatarUI();
+    }
 
     const alreadyHasSheet = !!STATE.spreadsheetId;
 
@@ -110,6 +120,7 @@ export function onSignOut() {
 
     localStorage.removeItem(STORAGE.SHEET_ID);
     localStorage.removeItem(STORAGE.EXPENSES);
+    localStorage.removeItem('google_login_hint');
 
     setNavEnabled(false);
     document.getElementById('modal-profile').classList.remove('open');

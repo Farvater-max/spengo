@@ -38,3 +38,29 @@ export function initGapiClient(apiKey) {
         });
     });
 }
+/**
+ * Fetches the basic profile of the authenticated user via the People API.
+ * Returns a minimal object with { email, name, picture, letter } or null on failure.
+ *
+ * @param {string} accessToken
+ * @returns {Promise<{ email: string, name: string, picture: string, letter: string }|null>}
+ */
+export async function fetchUserProfile(accessToken) {
+    try {
+        const res = await fetch(
+            'https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,photos',
+            { headers: { Authorization: 'Bearer ' + accessToken } }
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+
+        const email   = data.emailAddresses?.[0]?.value  ?? '';
+        const name    = data.names?.[0]?.displayName      ?? email;
+        const picture = data.photos?.[0]?.url             ?? '';
+        const letter  = (name[0] ?? '?').toUpperCase();
+
+        return { email, name, picture, letter };
+    } catch {
+        return null;
+    }
+}
