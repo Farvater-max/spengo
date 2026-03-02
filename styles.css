@@ -32,6 +32,7 @@ html, body {
     font-size: 15px;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
+    touch-action: pan-y;
 }
 
 /* ─── APP SHELL ──────────────────────────────────────── */
@@ -44,6 +45,7 @@ html, body {
     position: relative;
     overflow: hidden;
     overscroll-behavior-y: none;
+    touch-action: pan-y;
 }
 
 /* desktop: show subtle side borders */
