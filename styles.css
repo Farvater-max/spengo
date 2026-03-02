@@ -461,7 +461,7 @@ html, body {
 /* ─── NEW FAB ──────────────────────────────── */
 .fab {
     position: fixed;
-    bottom: calc(var(--nav-h) + 20px);
+    bottom: calc(var(--nav-h) + 50px);
     right: 20px;
 
     width: 56px;
