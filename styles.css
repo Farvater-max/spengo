@@ -43,6 +43,7 @@ html, body {
     margin: 0 auto;
     position: relative;
     overflow: hidden;
+    overscroll-behavior-y: none;
 }
 
 /* desktop: show subtle side borders */
@@ -182,6 +183,7 @@ html, body {
 
 /* ─── MAIN SCREEN ────────────────────────────────────── */
 #screen-main {
+    height: 100%;
     overflow: hidden;
 }
 
@@ -313,8 +315,10 @@ html, body {
 /* Expense list */
 .expense-list {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    overscroll-behavior: contain;
     padding: 0 16px calc(var(--nav-h) + 16px);
     display: flex;
     flex-direction: column;
@@ -474,6 +478,7 @@ html, body {
 
     transition: transform .15s ease, box-shadow .15s ease;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .fab svg {
