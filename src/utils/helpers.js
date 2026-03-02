@@ -70,10 +70,11 @@ export function formatMoney(amount, locale = 'en-US') {
         return '0';
     }
     try {
-        // Show up to 2 decimal places but only when needed:
-        // 10 → "10", 10.5 → "10.5", 10.55 → "10.55"
+        // Show 2 decimal places if amount has a fractional part, otherwise none:
+        // 10 → "10", 10.5 → "10.50", 10.55 → "10.55"
+        const hasCents = amount % 1 !== 0;
         return new Intl.NumberFormat(locale, {
-            minimumFractionDigits: 0,
+            minimumFractionDigits: hasCents ? 2 : 0,
             maximumFractionDigits: 2,
         }).format(amount);
     } catch (error) {

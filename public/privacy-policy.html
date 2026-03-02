@@ -166,6 +166,41 @@
 
     tr:last-child td { border-bottom: none; }
 
+    @media (max-width: 540px) {
+      table thead { display: none; }
+
+      table tr {
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        padding: 4px 0;
+        background: var(--surface2);
+      }
+
+      table tr:last-child { margin-bottom: 0; }
+
+      table td {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+      }
+
+      table tr td:last-child { border-bottom: none; }
+
+      table td::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+    }
+
     .footer {
       margin-top: 48px;
       text-align: center;
@@ -214,24 +249,24 @@
       </thead>
       <tbody>
       <tr>
-        <td><code>spreadsheets</code></td>
-        <td>One specific Google Spreadsheet created by SpenGo</td>
-        <td>To read, write, and delete your expense records</td>
+        <td data-label="Scope"><code>spreadsheets</code></td>
+        <td data-label="Data accessed">One specific Google Spreadsheet created by SpenGo</td>
+        <td data-label="Why it is needed">To read, write, and delete your expense records</td>
       </tr>
       <tr>
-        <td><code>drive.file</code></td>
-        <td>Files created by SpenGo only — not your entire Drive</td>
-        <td>To search for an existing SpenGo spreadsheet and to permanently delete it when you request a reset</td>
+        <td data-label="Scope"><code>drive.file</code></td>
+        <td data-label="Data accessed">Files created by SpenGo only — not your entire Drive</td>
+        <td data-label="Why it is needed">To search for an existing SpenGo spreadsheet and to permanently delete it when you request a reset</td>
       </tr>
       <tr>
-        <td><code>userinfo.profile</code></td>
-        <td>Your display name and profile photo</td>
-        <td>To show your name and avatar inside the app</td>
+        <td data-label="Scope"><code>userinfo.profile</code></td>
+        <td data-label="Data accessed">Your display name and profile photo</td>
+        <td data-label="Why it is needed">To show your name and avatar inside the app</td>
       </tr>
       <tr>
-        <td><code>userinfo.email</code></td>
-        <td>Your Google account email address</td>
-        <td>To pre-select the correct account on subsequent sign-ins, avoiding the account picker popup</td>
+        <td data-label="Scope"><code>userinfo.email</code></td>
+        <td data-label="Data accessed">Your Google account email address</td>
+        <td data-label="Why it is needed">To pre-select the correct account on subsequent sign-ins, avoiding the account picker popup</td>
       </tr>
       </tbody>
     </table>
@@ -278,24 +313,24 @@
       </thead>
       <tbody>
       <tr>
-        <td><code>spengo_sheet_id</code></td>
-        <td>Your spreadsheet ID</td>
-        <td>Restore session without searching Drive on every load</td>
+        <td data-label="Key"><code>spengo_sheet_id</code></td>
+        <td data-label="Contents">Your spreadsheet ID</td>
+        <td data-label="Purpose">Restore session without searching Drive on every load</td>
       </tr>
       <tr>
-        <td><code>spengo_expenses</code></td>
-        <td>A copy of your recent expenses</td>
-        <td>Show cached data instantly while fresh data loads</td>
+        <td data-label="Key"><code>spengo_expenses</code></td>
+        <td data-label="Contents">A copy of your recent expenses</td>
+        <td data-label="Purpose">Show cached data instantly while fresh data loads</td>
       </tr>
       <tr>
-        <td><code>google_login_hint</code></td>
-        <td>Your Google account email</td>
-        <td>Skip the account picker on silent token refresh</td>
+        <td data-label="Key"><code>google_login_hint</code></td>
+        <td data-label="Contents">Your Google account email</td>
+        <td data-label="Purpose">Skip the account picker on silent token refresh</td>
       </tr>
       <tr>
-        <td><code>spengo_numeric_sheet_id</code></td>
-        <td>Internal Google sheet identifier</td>
-        <td>Optimise delete operations (avoids an extra API call)</td>
+        <td data-label="Key"><code>spengo_numeric_sheet_id</code></td>
+        <td data-label="Contents">Internal Google sheet identifier</td>
+        <td data-label="Purpose">Optimise delete operations (avoids an extra API call)</td>
       </tr>
       </tbody>
     </table>
