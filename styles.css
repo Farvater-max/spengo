@@ -409,48 +409,90 @@ html, body {
 .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state p { font-size: 14px; line-height: 1.6; }
 
-/* FAB */
+/* OLD FAB */
+/*.fab {*/
+/*    position: fixed;*/
+/*    bottom: calc(var(--nav-h) + 16px);*/
+/*    right: 50%;*/
+/*    transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px));*/
+
+/*    width: 56px;*/
+/*    height: 56px;*/
+
+/*    background: var(--accent);*/
+/*    color: #0d0d0f;*/
+
+/*    border: none;*/
+/*    border-radius: 50%;*/
+
+/*    cursor: pointer;*/
+
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    justify-content: center;*/
+
+/*    box-shadow: 0 8px 32px #c8f13550;*/
+/*    transition: transform .15s ease, box-shadow .15s ease;*/
+
+/*    z-index: 100;*/
+/*    -webkit-tap-highlight-color: transparent;*/
+/*}*/
+
+/*.fab svg {*/
+/*    width: 24px;*/
+/*    height: 24px;*/
+
+/*    stroke: currentColor;*/
+/*    stroke-width: 2;*/
+/*    stroke-linecap: round;*/
+
+/*    fill: none;*/
+/*}*/
+
+/*.fab:hover { box-shadow: 0 12px 40px #c8f13560;transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px)) scale(1.06);}*/
+/*.fab:active { transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px)) scale(.93);}*/
+
+/* ─── NEW FAB ──────────────────────────────── */
 .fab {
     position: fixed;
-    bottom: calc(var(--nav-h) + 16px);
-    right: 50%;
-    transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px));
+    bottom: calc(var(--nav-h) + 20px);
+    right: 20px;
 
     width: 56px;
     height: 56px;
-
     background: var(--accent);
     color: #0d0d0f;
-
     border: none;
     border-radius: 50%;
-
     cursor: pointer;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     box-shadow: 0 8px 32px #c8f13550;
-    transition: transform .15s ease, box-shadow .15s ease;
 
-    z-index: 100;
+    z-index: 50;
+
+    transition: transform .15s ease, box-shadow .15s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
 .fab svg {
     width: 24px;
     height: 24px;
-
     stroke: currentColor;
     stroke-width: 2;
     stroke-linecap: round;
-
     fill: none;
 }
 
-.fab:hover { box-shadow: 0 12px 40px #c8f13560;transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px)) scale(1.06);}
-.fab:active { transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px)) scale(.93);}
+.fab:hover {box-shadow: 0 12px 40px #c8f13560;transform: scale(1.06);}
+.fab:active {transform: scale(.93);}
+
+@media (min-width: 600px) {
+    .fab {
+        right: calc(50% - (var(--max-w) / 2) + 20px);
+    }
+}
 
 /* Bottom Nav */
 .bottom-nav {
