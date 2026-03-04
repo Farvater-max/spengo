@@ -2,8 +2,8 @@
 
 > Personal expense tracker — powered by Google Sheets, no servers involved.
 
-<a href="https://webspengo.vercel.app">
-  <img src="https://webspengo.vercel.app/ogimage.png" width="750" alt="SpenGo Preview">
+<a href="https://webspengo.xyz">
+  <img src="https://webspengo.xyz/ogimage.png" width="750" alt="SpenGo Preview">
 </a>
 
 ---
@@ -127,7 +127,7 @@ Required environment variables must be set in **Vercel Dashboard → Settings �
 
 ## Privacy
 
-SpenGo does not collect, store, or share any personal data. See the full [Privacy Policy](https://webspengo.vercel.app/privacy-policy/).
+SpenGo does not collect, store, or share any personal data. See the full [Privacy Policy](https://webspengo.xyz/privacy-policy/).
 
 ---
 
