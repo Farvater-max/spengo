@@ -85,8 +85,6 @@ npm run build
 | `VITE_CLIENT_ID` | Google OAuth 2.0 Client ID |
 | `VITE_API_KEY` | Google API Key (for Sheets & Drive) |
 
-> Never commit `.env.local` to version control — it's listed in `.gitignore`.
-
 ---
 
 ## Project Structure
@@ -114,14 +112,6 @@ npm run build
 ├── vite.config.js
 └── vercel.json
 ```
-
----
-
-## Deployment
-
-The app is deployed on Vercel. Each push to `main` triggers an automatic redeploy.
-
-Required environment variables must be set in **Vercel Dashboard → Settings → Environment Variables**.
 
 ---
 
