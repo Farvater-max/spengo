@@ -26,8 +26,8 @@ SpenGo is a lightweight, mobile-first web application for tracking personal expe
 
 ## Pages
 
-- [App](https://webspengo.vercel.app/): Main expense tracker interface. All features available after sign in via Google.
-- [Privacy Policy](https://webspengo.vercel.app/privacy-policy/): Data usage and privacy information
+- [App](https://www.webspengo.xyz/): Main expense tracker interface. All features available after sign in via Google.
+- [Privacy Policy](https://www.webspengo.xyz/privacy-policy/): Data usage and privacy information
 
 ## Privacy
 
