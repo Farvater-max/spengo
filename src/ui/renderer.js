@@ -2,7 +2,7 @@ import { STATE } from '../../state.js';
 import { CATEGORIES } from '../constants/categories.js';
 import { formatMoney, formatDate, isInPeriod, getFilteredExpenses, setText, sumAmounts } from '../utils/helpers.js';
 import { getI18nValue } from '../i18n/localization.js';
-import { deleteExpense } from '../controllers/expenseController.js';
+import { openEditModal } from '../controllers/expenseController.js';
 import { setCategoryFilter, selectCategory } from './actions.js';
 
 export function renderUI() {
@@ -34,14 +34,12 @@ export function renderExpenseList() {
 
     list.innerHTML = expenses.map((item, i) => _expenseItemHTML(item, i)).join('');
 
-    list.querySelectorAll('[data-delete-id]').forEach(btn => {
+    list.querySelectorAll('[data-edit-id]').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
-            deleteExpense(btn.dataset.deleteId);
+            openEditModal(btn.dataset.editId);
         });
     });
-
-    list.querySelectorAll('.expense-item').forEach(_attachSwipeToReveal);
 }
 
 export function renderCategoryFilter() {
@@ -128,7 +126,12 @@ function _expenseItemHTML(item, index) {
                 </div>
             </div>
             <div class="expense-amount">${formatMoney(item.amount)}</div>
-            <div class="expense-delete" data-delete-id="${item.id}">🗑</div>
+            <div class="expense-edit" data-edit-id="${item.id}" title="Edit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </div>
         </div>`;
 }
 
@@ -160,14 +163,4 @@ function _statsBarsHTML(byCategory) {
                 </div>
             </div>`;
     }).join('');
-}
-
-function _attachSwipeToReveal(el) {
-    let startX;
-    el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
-    el.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - startX;
-        if (dx < -50)  el.classList.add('swiped');
-        else if (dx > 20) el.classList.remove('swiped');
-    });
 }
