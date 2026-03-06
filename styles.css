@@ -394,19 +394,6 @@ html, body {
     flex-shrink: 0;
 }
 
-.expense-delete {
-    position: absolute;
-    right: -60px;
-    top: 0; bottom: 0;
-    width: 60px;
-    background: var(--danger);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    transition: right .25s ease;
-    cursor: pointer;
-}
-.expense-item.swiped .expense-delete { right: 0; }
-
 .empty-state {
     text-align: center;
     padding: 48px 24px;
@@ -414,49 +401,6 @@ html, body {
 }
 .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state p { font-size: 14px; line-height: 1.6; }
-
-/* OLD FAB */
-/*.fab {*/
-/*    position: fixed;*/
-/*    bottom: calc(var(--nav-h) + 16px);*/
-/*    right: 50%;*/
-/*    transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px));*/
-
-/*    width: 56px;*/
-/*    height: 56px;*/
-
-/*    background: var(--accent);*/
-/*    color: #0d0d0f;*/
-
-/*    border: none;*/
-/*    border-radius: 50%;*/
-
-/*    cursor: pointer;*/
-
-/*    display: flex;*/
-/*    align-items: center;*/
-/*    justify-content: center;*/
-
-/*    box-shadow: 0 8px 32px #c8f13550;*/
-/*    transition: transform .15s ease, box-shadow .15s ease;*/
-
-/*    z-index: 100;*/
-/*    -webkit-tap-highlight-color: transparent;*/
-/*}*/
-
-/*.fab svg {*/
-/*    width: 24px;*/
-/*    height: 24px;*/
-
-/*    stroke: currentColor;*/
-/*    stroke-width: 2;*/
-/*    stroke-linecap: round;*/
-
-/*    fill: none;*/
-/*}*/
-
-/*.fab:hover { box-shadow: 0 12px 40px #c8f13560;transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px)) scale(1.06);}*/
-/*.fab:active { transform: translateX(calc(min(50vw, var(--max-w) / 2) - 28px)) scale(.93);}*/
 
 /* ─── NEW FAB ──────────────────────────────── */
 .fab {
@@ -832,6 +776,91 @@ html, body {
 .lang-btn.active {
     background: var(--accent);
     color: #0d0d0f;
+}
+
+/* ─── EXPENSE EDIT BUTTON ────────────────────────────── */
+.expense-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background .15s, border-color .15s, transform .15s;
+    -webkit-tap-highlight-color: transparent;
+    color: var(--muted);
+    font-size: 14px;
+}
+.expense-edit:hover {
+    background: var(--border);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(1.1);
+}
+.expense-edit:active { transform: scale(.93); }
+
+/* ─── EDIT MODAL ACTIONS ─────────────────────────────── */
+.edit-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.btn-edit-delete {
+    background: transparent !important;
+    border: 1.5px solid var(--danger) !important;
+    color: var(--danger) !important;
+    box-shadow: none !important;
+}
+.btn-edit-delete:hover {
+    background: #ff4d6d18 !important;
+    transform: translateY(-1px) !important;
+}
+.btn-edit-delete:active { transform: scale(.97) !important; }
+
+.btn-edit-update {
+    background: var(--accent);
+    color: #0d0d0f;
+}
+.btn-edit-update:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ─── MODAL LOADING OVERLAY ──────────────────────────── */
+.modal-loading-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    background: rgba(13, 13, 15, 0.75);
+    backdrop-filter: blur(3px);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+}
+.modal-loading-overlay.visible {
+    display: flex;
+}
+.modal-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+}
+
+/* Make modal-sheet position relative for the overlay */
+.modal-sheet {
+    position: relative;
 }
 
 /* ─── UTIL ───────────────────────────────────────────── */

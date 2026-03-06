@@ -6,6 +6,7 @@ import {
     createSpreadsheet,
     fetchExpenses,
     insertExpense,
+    updateExpenseRow,
     removeExpenseRow,
 } from '../helpers/sheetsHelpers.js';
 
@@ -63,6 +64,18 @@ export async function loadExpenses(accessToken, spreadsheetId) {
  */
 export async function appendExpense(accessToken, spreadsheetId, expense) {
     await insertExpense(accessToken, spreadsheetId, CONFIG.SHEET_NAME, expense);
+}
+
+/**
+ * Updates an existing expense row in the sheet.
+ *
+ * @param {string} accessToken
+ * @param {string} spreadsheetId
+ * @param {{ id, date, category, amount, comment }} expense
+ * @returns {Promise<void>}
+ */
+export async function editExpense(accessToken, spreadsheetId, expense) {
+    await updateExpenseRow(accessToken, spreadsheetId, CONFIG.SHEET_NAME, expense);
 }
 
 /**

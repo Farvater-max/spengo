@@ -1,7 +1,7 @@
 import * as AuthService from '../services/authService.js';
 import { navigate, openModal, handleOverlayClick } from './navigation.js';
 import { openAddModal, openGoogleSheet, changeLang, setPeriod } from './actions.js';
-import { submitExpense } from '../controllers/expenseController.js';
+import { submitExpense, updateExpense, deleteExpenseFromEdit } from '../controllers/expenseController.js';
 
 export function bindEvents() {
     on('btn-google', 'click', () => AuthService.signIn());
@@ -20,6 +20,9 @@ export function bindEvents() {
     on('btn-add-submit', 'click', submitExpense);
     on('modal-add',     'click', e => handleOverlayClick(e, 'modal-add'));
     on('modal-profile', 'click', e => handleOverlayClick(e, 'modal-profile'));
+    on('modal-edit',      'click', e => handleOverlayClick(e, 'modal-edit'));
+    on('btn-edit-submit', 'click', updateExpense);
+    on('btn-edit-delete', 'click', deleteExpenseFromEdit);
 }
 
 function on(id, event, handler) {

@@ -167,6 +167,36 @@ export async function insertExpense(accessToken, spreadsheetId, sheetName, expen
 }
 
 /**
+ * Updates the row matching the given expense ID with new values.
+ * Makes two API calls: one to locate the row, one to update it.
+ * @param {string} accessToken
+ * @param {string} spreadsheetId
+ * @param {string} sheetName
+ * @param {Object} expense - Full updated expense object
+ * @returns {Promise<void>}
+ */
+export async function updateExpenseRow(accessToken, spreadsheetId, sheetName, expense) {
+    const colA = await SheetsClient.get(
+        accessToken,
+        `${CONFIG.SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range(sheetName, 'A2:A1000'))}`
+    );
+
+    const rowIndex = findRowIndex(colA.values || [], expense.id);
+    if (rowIndex === -1) throw new Error('Row not found in spreadsheet');
+
+    // findRowIndex returns offset+1 (0-based sheet coords, header=0).
+    // In 1-based A1 notation: header=row1, first data=row2, so sheetRow = rowIndex + 1
+    const sheetRow    = rowIndex + 1;
+    const targetRange = encodeURIComponent(range(sheetName, `A${sheetRow}:E${sheetRow}`));
+
+    await SheetsClient.put(
+        accessToken,
+        `${CONFIG.SHEETS_BASE}/${spreadsheetId}/values/${targetRange}?valueInputOption=RAW`,
+        { values: [expenseToRow(expense)] }
+    );
+}
+
+/**
  * Deletes the row matching the given expense ID.
  * Makes two API calls: one to locate the row, one to delete it.
  * @param {string} accessToken
