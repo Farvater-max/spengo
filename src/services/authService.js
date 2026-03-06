@@ -144,10 +144,6 @@ export async function signOut() {
     _callbacks.onSignOut();
 }
 
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
 /**
  * Creates and stores the GIS token client.
  * Separated from `init` so it can be reasoned about independently.

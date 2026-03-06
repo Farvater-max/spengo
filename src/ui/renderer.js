@@ -89,7 +89,7 @@ export function updateAvatarUI() {
     setText('profile-avatar-letter', profile.letter);
 
     if (profile.picture) {
-        document.getElementById('avatar-btn').innerHTML        = `<img src="${profile.picture}"/>`;
+        document.getElementById('avatar-btn').innerHTML = `<img src="${profile.picture}"/>`;
         document.getElementById('profile-avatar-lg').innerHTML = `<img src="${profile.picture}"/>`;
     }
 }

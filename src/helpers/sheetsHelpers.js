@@ -37,9 +37,6 @@ export function expenseToRow(expense) {
  * @returns {{ id, date, category, amount, comment } | null}
  */
 export function rowToExpense(row) {
-    // Use parseAmount instead of parseFloat: handles comma decimal separators
-    // that Sheets returns when the spreadsheet locale uses commas (e.g. ru-RU).
-    // parseFloat("21,54") → 21 (BUG); parseAmount("21,54") → 21.54 (CORRECT)
     const amount = parseAmount(row[3]);
     if (amount <= 0) return null;
     return {
@@ -179,8 +176,6 @@ export async function insertExpense(accessToken, spreadsheetId, sheetName, expen
  * @returns {Promise<void>}
  */
 export async function removeExpenseRow(accessToken, spreadsheetId, sheetName, expenseId) {
-    // The numeric sheetId never changes — use cached value when available.
-    // If not cached yet, fetch it in parallel with the ID column lookup.
     const cachedNumericId = getNumericSheetId();
 
     const [colA, meta] = await Promise.all([
@@ -188,7 +183,6 @@ export async function removeExpenseRow(accessToken, spreadsheetId, sheetName, ex
             accessToken,
             `${CONFIG.SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range(sheetName, 'A2:A1000'))}`
         ),
-        // Skip the metadata request if we already have the numeric sheet ID
         cachedNumericId !== null
             ? Promise.resolve(null)
             : SheetsClient.get(
