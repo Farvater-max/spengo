@@ -79,9 +79,9 @@
         </div>
         <div class="summary-card">
             <div class="summary-period">
-                <button class="period-btn active" id="period-day"></button>
-                <button class="period-btn"        id="period-week"></button>
-                <button class="period-btn"        id="period-month"></button>
+                <button class="period-btn" id="period-day"></button>
+                <button class="period-btn active" id="period-week"></button>
+                <button class="period-btn" id="period-month"></button>
             </div>
             <div class="summary-amount">
                 <span id="summary-num">0</span>
@@ -107,11 +107,31 @@
     </div>
 
     <div id="screen-stats" class="screen">
-        <div class="stats-header" id="stats-header-title"></div>
-        <div class="stats-total-card">
-            <div class="stats-total-label"  id="stats-total-label"></div>
-            <div class="stats-total-amount" id="stats-total"></div>
-            <div class="stats-total-sub"    id="stats-sub"></div>
+        <div class="main-header">
+            <div class="header-logo" id="stats-header-logo"></div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div class="lang-toggle">
+                    <button class="lang-btn chart-period-btn" id="chart-period-week"></button>
+                    <button class="lang-btn chart-period-btn active" id="chart-period-month"></button>
+                    <button class="lang-btn chart-period-btn" id="chart-period-year"></button>
+                </div>
+                <div class="header-avatar" id="stats-avatar-btn">
+                    <span id="stats-avatar-letter">?</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-chart-card">
+            <div class="stats-chart-top">
+                <div class="stats-chart-info">
+                    <div class="stats-total-label" id="stats-total-label"></div>
+                    <div class="stats-total-amount" id="stats-total"></div>
+                    <div class="stats-total-sub" id="stats-sub"></div>
+                </div>
+            </div>
+            <div class="stats-chart-wrap">
+                <canvas id="stats-chart"></canvas>
+            </div>
         </div>
         <div class="stats-bars">
             <div class="stats-bar-title" id="stats-by-cat-title"></div>

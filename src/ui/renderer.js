@@ -4,6 +4,7 @@ import { formatMoney, formatDate, isInPeriod, getFilteredExpenses, setText, sumA
 import { getI18nValue } from '../i18n/localization.js';
 import { openEditModal } from '../controllers/expenseController.js';
 import { setCategoryFilter, selectCategory } from './actions.js';
+import { renderChart } from './statistics-chart.js';
 
 export function renderUI() {
     renderCategoryFilter();
@@ -75,8 +76,10 @@ export function renderStatistics() {
     document.getElementById('stats-total').textContent = formatMoney(total);
     document.getElementById('stats-sub').textContent   = `${monthExpenses.length} ${getI18nValue('stats.ops')}`;
 
+    renderChart();
+
     const byCategory = _groupByCategory(monthExpenses);
-    document.getElementById('stats-bar-content').innerHTML = _statsBarsHTML(byCategory);
+    document.getElementById('stats-bar-content').innerHTML = statsCategoryBars(byCategory);
 }
 
 export function updateAvatarUI() {
@@ -84,11 +87,14 @@ export function updateAvatarUI() {
     if (!profile) return;
 
     setText('avatar-letter',         profile.letter);
+    setText('stats-avatar-letter',   profile.letter);
     setText('profile-avatar-letter', profile.letter);
 
     if (profile.picture) {
-        document.getElementById('avatar-btn').innerHTML = `<img src="${profile.picture}"/>`;
-        document.getElementById('profile-avatar-lg').innerHTML = `<img src="${profile.picture}"/>`;
+        const pic = `<img src="${profile.picture}"/>`;
+        document.getElementById('avatar-btn').innerHTML       = pic;
+        document.getElementById('stats-avatar-btn').innerHTML = pic;
+        document.getElementById('profile-avatar-lg').innerHTML = pic;
     }
 }
 
@@ -142,7 +148,7 @@ function _groupByCategory(expenses) {
     }, {});
 }
 
-function _statsBarsHTML(byCategory) {
+function statsCategoryBars(byCategory) {
     const sorted = Object.entries(byCategory).sort(([, a], [, b]) => b - a);
     if (!sorted.length) {
         return `<div style="color:var(--muted);font-size:13px">${getI18nValue('stats.empty')}</div>`;

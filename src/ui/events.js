@@ -8,19 +8,20 @@ export function bindEvents() {
     on('main-lang-ru', 'click', () => changeLang('ru'));
     on('main-lang-en', 'click', () => changeLang('en'));
     on('main-lang-es', 'click', () => changeLang('es'));
-    on('avatar-btn',          'click', () => openModal('modal-profile'));
+    on('avatar-btn', 'click', () => openModal('modal-profile'));
+    on( 'stats-avatar-btn', 'click', () => openModal('modal-profile'));
     on('profile-open-sheet',  'click', openGoogleSheet);
-    on('profile-sign-out',    'click', () => AuthService.signOut());
-    on('period-day',   'click', e => setPeriod('day',   e.currentTarget));
-    on('period-week',  'click', e => setPeriod('week',  e.currentTarget));
+    on('profile-sign-out', 'click', () => AuthService.signOut());
+    on('period-day', 'click', e => setPeriod('day',   e.currentTarget));
+    on('period-week', 'click', e => setPeriod('week',  e.currentTarget));
     on('period-month', 'click', e => setPeriod('month', e.currentTarget));
-    on('nav-home',  'click', () => navigate('main'));
+    on('nav-home', 'click', () => navigate('main'));
     on('nav-stats', 'click', () => navigate('stats'));
-    on('fab',            'click', openAddModal);
+    on('fab', 'click', openAddModal);
     on('btn-add-submit', 'click', submitExpense);
-    on('modal-add',     'click', e => handleOverlayClick(e, 'modal-add'));
+    on('modal-add', 'click', e => handleOverlayClick(e, 'modal-add'));
     on('modal-profile', 'click', e => handleOverlayClick(e, 'modal-profile'));
-    on('modal-edit',      'click', e => handleOverlayClick(e, 'modal-edit'));
+    on('modal-edit', 'click', e => handleOverlayClick(e, 'modal-edit'));
     on('btn-edit-submit', 'click', updateExpense);
     on('btn-edit-delete', 'click', deleteExpenseFromEdit);
 }
