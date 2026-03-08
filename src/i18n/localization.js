@@ -58,6 +58,7 @@ export function applyTranslations(state = null, onLangChange = null) {
 
     setText('auth-logo',     getI18nValue('auth.logo'));
     setText('header-logo',   getI18nValue('auth.logo'));
+    setText('stats-header-logo', getI18nValue('auth.logo'))
     setText('auth-tagline',  getI18nValue('auth.tagline'));
     setHTML('auth-title',    getI18nValue('auth.title'));
     setText('auth-featureOne',     getI18nValue('auth.featureOne'));

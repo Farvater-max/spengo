@@ -16,7 +16,7 @@ export class AppState {
         /** @type {{ currentScreen: string, currentPeriod: string, categoryFilter: string, selectedCat: string|null }} */
         this.ui = {
             currentScreen:  'auth',
-            currentPeriod:  'day',
+            currentPeriod:  'week',
             categoryFilter: 'all',
             selectedCat:    null,
         };
