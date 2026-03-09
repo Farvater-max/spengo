@@ -1,10 +1,13 @@
 import { STATE } from '../../state.js';
 import { CATEGORIES } from '../constants/categories.js';
-import { formatMoney, formatDate, isInPeriod, getFilteredExpenses, setText, sumAmounts } from '../utils/helpers.js';
+import { formatMoney, formatDate, getFilteredExpenses, setText, sumAmounts } from '../utils/helpers.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { openEditModal } from '../controllers/expenseController.js';
 import { setCategoryFilter, selectCategory } from './actions.js';
-import { renderChart } from './statistics-chart.js';
+import { renderChart } from './statistics/statistics-chart.js';
+import { renderDonutChart } from './statistics/statistics-donut.js';
+import { getPeriod } from './statistics/statistics-state.js';
+
 
 export function renderUI() {
     renderCategoryFilter();
@@ -70,16 +73,8 @@ export function renderCategorySelectGrid() {
 }
 
 export function renderStatistics() {
-    const monthExpenses = STATE.expenses.filter(e => isInPeriod(e.date, 'month'));
-    const total = sumAmounts(monthExpenses);
-
-    document.getElementById('stats-total').textContent = formatMoney(total);
-    document.getElementById('stats-sub').textContent   = `${monthExpenses.length} ${getI18nValue('stats.ops')}`;
-
     renderChart();
-
-    const byCategory = _groupByCategory(monthExpenses);
-    document.getElementById('stats-bar-content').innerHTML = statsCategoryBars(byCategory);
+    renderDonutChart(getPeriod());
 }
 
 export function updateAvatarUI() {
@@ -139,34 +134,4 @@ function _expenseItemHTML(item, index) {
                 </svg>
             </div>
         </div>`;
-}
-
-function _groupByCategory(expenses) {
-    return expenses.reduce((acc, e) => {
-        acc[e.category] = sumAmounts([{ amount: acc[e.category] || 0 }, { amount: e.amount }]);
-        return acc;
-    }, {});
-}
-
-function statsCategoryBars(byCategory) {
-    const sorted = Object.entries(byCategory).sort(([, a], [, b]) => b - a);
-    if (!sorted.length) {
-        return `<div style="color:var(--muted);font-size:13px">${getI18nValue('stats.empty')}</div>`;
-    }
-
-    const max = sorted[0][1];
-    return sorted.map(([catId, amount]) => {
-        const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[5];
-        const pct = Math.round(amount / max * 100);
-        return `
-            <div class="bar-item">
-                <div class="bar-row">
-                    <div class="bar-label">${cat.emoji} ${cat.label}</div>
-                    <div class="bar-value">${formatMoney(amount)}</div>
-                </div>
-                <div class="bar-track">
-                    <div class="bar-fill" style="width:${pct}%;background:${cat.color}"></div>
-                </div>
-            </div>`;
-    }).join('');
 }

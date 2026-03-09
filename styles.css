@@ -118,12 +118,6 @@ html, body {
     gap: 20px;
 }
 
-.auth-features p {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.6;
-    text-align: center;
-}
 .profile-explain {
     color: var(--muted);
     font-size: 14px;
@@ -152,13 +146,6 @@ html, body {
 .btn-google:hover { transform: translateY(-1px); box-shadow: 0 8px 32px #c8f13540; }
 .btn-google:active { transform: scale(.97); }
 .btn-google svg { flex-shrink: 0; }
-
-.auth-note {
-    font-size: 12px;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.5;
-}
 
 /* ─── SETUP SCREEN ───────────────────────────────────── */
 #screen-setup {
@@ -233,6 +220,14 @@ html, body {
     top: -40px; right: -40px;
     width: 160px; height: 160px;
     background: radial-gradient(circle, #c8f13520 0%, transparent 70%);
+    pointer-events: none;
+}
+.summary-card::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, #7b61ff25 0%, transparent 70%);
     pointer-events: none;
 }
 .summary-period {
@@ -563,15 +558,6 @@ html, body {
 
 /* Amount input */
 .amount-wrapper { position: relative; }
-.amount-currency {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: 16px;
-}
-.amount-wrapper .form-input { padding-left: 32px; }
 
 /* Category grid */
 .cat-grid {
@@ -658,6 +644,14 @@ html, body {
     background: radial-gradient(circle, #c8f13514 0%, transparent 70%);
     pointer-events: none;
 }
+.stats-chart-card::after {
+    content: '';
+    position: absolute;
+    bottom: -50px; left: -50px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, #7b61ff25 0%, transparent 70%);
+    pointer-events: none;
+}
 .stats-chart-top {
     display: flex;
     align-items: flex-start;
@@ -685,12 +679,6 @@ html, body {
 }
 .stats-total-sub { font-size: 12px; color: var(--muted); }
 
-.stats-chart-period {
-    display: none;
-}
-.chart-period-btn {
-    /* inherits all styles from .lang-btn */
-}
 .stats-chart-wrap {
     position: relative;
     height: 160px;
@@ -699,13 +687,7 @@ html, body {
     flex-shrink: 0;
 }
 
-.stats-bars {
-    margin: 16px 16px 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--r-lg);
-    padding: 20px;
-}
+/* ─── STATS DONUT CARD ───────────────────────────────── */
 .stats-bar-title {
     font-family: var(--font-display);
     font-size: 12px;
@@ -713,24 +695,64 @@ html, body {
     letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 16px;
 }
-.bar-item { margin-bottom: 14px; }
-.bar-item:last-child { margin-bottom: 0; }
-.bar-row {
+.stats-donut-card {
+    margin: 16px 16px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    flex-shrink: 0;
+}
+.stats-donut-wrap {
+    position: relative;
+    height: 220px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    justify-content: center;
+    margin: 16px 0 20px;
 }
-.bar-label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-.bar-value { font-family: var(--font-display); font-size: 13px; font-weight: 600; }
-.bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-.bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    background: var(--accent);
-    transition: width .6s cubic-bezier(.2,.8,.4,1);
+.stats-donut-wrap canvas {
+    max-width: 220px;
+    max-height: 220px;
+}
+.stats-donut-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.stats-donut-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+}
+.donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+}
+.donut-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.donut-legend-emoji {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.donut-legend-label {
+    flex: 1;
+    color: var(--text);
+}
+.donut-legend-value {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
 }
 
 /* ─── PROFILE MODAL ──────────────────────────────────── */
@@ -785,14 +807,7 @@ html, body {
 .toast.error   { border-color: var(--danger);  color: var(--danger); }
 
 /* ─── SYNC DOT ───────────────────────────────────────── */
-.sync-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--success);
-    position: absolute;
-    top: -1px; right: -1px;
-}
-.sync-dot.pending { background: #f5a623; animation: pulse .8s ease infinite alternate; }
+
 @keyframes pulse { to { opacity: .4; } }
 
 /* ─── LANG TOGGLE ────────────────────────────────────── */
@@ -911,14 +926,6 @@ html, body {
 
 /* ─── UTIL ───────────────────────────────────────────── */
 .hidden { display: none !important; }
-select.form-input {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b7e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 16px;
-    padding-right: 40px;
-}
 
 /* ─── AUTH ERROR BOX ─────────────────────────────────── */
 .auth-error-box {
@@ -957,40 +964,7 @@ select.form-input {
     background: #000;
 }
 
-.auth-features {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    text-align: left;
-}
-.feature-item {
-    font-size: 14px;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.feature-item span {
-    color: var(--accent);
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
 /* Футер со ссылками */
-.auth-footer {
-    margin-top: 24px;
-    display: flex;
-    gap: 16px;
-}
-.auth-footer a {
-    color: var(--muted);
-    font-size: 12px;
-    text-decoration: none;
-    transition: color .2s;
-}
-.auth-footer a:hover {
-    color: var(--accent);
-}
 
 .section {
     background: var(--surface);
