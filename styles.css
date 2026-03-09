@@ -624,7 +624,11 @@ html, body {
 /* ─── STATS SCREEN ───────────────────────────────────── */
 #screen-stats {
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0 0 calc(var(--nav-h) + 16px);
+    flex: 1;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
 .stats-header {
@@ -644,6 +648,7 @@ html, body {
     padding: 20px 20px 16px;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
 }
 .stats-chart-card::before {
     content: '';
@@ -689,7 +694,9 @@ html, body {
 .stats-chart-wrap {
     position: relative;
     height: 160px;
+    min-height: 160px;
     width: 100%;
+    flex-shrink: 0;
 }
 
 .stats-bars {
