@@ -1,34 +1,62 @@
 import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip } from 'chart.js';
-import { formatMoney, sumAmounts } from '../utils/helpers.js';
-import { STATE } from '../../state.js';
-import { getI18nValue } from '../i18n/localization.js';
+import { formatMoney, sumAmounts, isInPeriod } from '../../utils/helpers.js';
+import { STATE } from '../../../state.js';
+import { getI18nValue } from '../../i18n/localization.js';
+import { getPeriod, setPeriod, onPeriodChange } from './statistics-state.js';
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
-const ACCENT     = '#c8f135';
+// ─── Constants ────────────────────────────────────────
+
+const ACCENT      = '#c8f135';
 const ACCENT_DIM  = '#c8f13560';
 const ACCENT2_DIM = '#7b61ff60';
-const GRID_COLOR = '#2a2a3230';
-const TEXT_COLOR = '#6b6b7e';
+const GRID_COLOR  = '#2a2a3230';
+const TEXT_COLOR  = '#6b6b7e';
 
-let chartInstance = null;
-let chartPeriod   = 'month';
+// ─── Module state ─────────────────────────────────────
+
+let _chartInstance = null;
+
+// ─── Public API ───────────────────────────────────────
 
 /**
- * Renders the chart for the given period and binds period-switcher buttons.
- * Safe to call multiple times — destroys the previous Chart instance first.
+ * Initialises the bar chart: binds period buttons, subscribes to period
+ * changes, and renders for the current period.
+ * Safe to call multiple times — re-binds buttons and re-renders.
  */
 export function renderChart() {
     bindPeriodButtons();
-    chartRendering(chartPeriod);
+    renderingChartByPeriod(getPeriod());
+    updateStatsTotals(getPeriod());
 }
 
 /**
- * Returns the currently selected chart period ('week' | 'month' | 'year').
+ * Updates the totals block (label, amount, transaction count)
+ * for the given period.
+ * @param {'week' | 'month' | 'year'} period
  */
-export function getChartPeriod() {
-    return chartPeriod;
+export function updateStatsTotals(period) {
+    const now = new Date();
+
+    const filtered = STATE.expenses.filter(e => {
+        if (period === 'week')  return isInPeriod(e.date, 'week');
+        if (period === 'month') return isInPeriod(e.date, 'month');
+        if (period === 'year')  return new Date(e.date).getFullYear() === now.getFullYear();
+    });
+
+    const labelMap = {
+        week:  getI18nValue('stats.total_label.week'),
+        month: getI18nValue('stats.total_label.month'),
+        year:  getI18nValue('stats.total_label.year'),
+    };
+
+    document.getElementById('stats-total-label').textContent = labelMap[period];
+    document.getElementById('stats-total').textContent       = formatMoney(sumAmounts(filtered));
+    document.getElementById('stats-sub').textContent         = `${filtered.length} ${getI18nValue('stats.ops')}`;
 }
+
+// ─── Period buttons ───────────────────────────────────
 
 function bindPeriodButtons() {
     const map = {
@@ -45,31 +73,33 @@ function bindPeriodButtons() {
         const fresh = btn.cloneNode(true);
         btn.parentNode.replaceChild(fresh, btn);
 
-        document.getElementById('chart-period-week').textContent  = getI18nValue('chart.period.week');
-        document.getElementById('chart-period-month').textContent = getI18nValue('chart.period.month');
-        document.getElementById('chart-period-year').textContent  = getI18nValue('chart.period.year');
-
         document.getElementById(id).addEventListener('click', () => {
-            chartPeriod = period;
             document.querySelectorAll('.chart-period-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            chartRendering(period);
+            setPeriod(period); // notifies all subscribers — chart + donut
         });
     });
+
+    // Set localised button labels
+    document.getElementById('chart-period-week').textContent  = getI18nValue('chart.period.week');
+    document.getElementById('chart-period-month').textContent = getI18nValue('chart.period.month');
+    document.getElementById('chart-period-year').textContent  = getI18nValue('chart.period.year');
 }
 
-function chartRendering(period) {
+// ─── Chart rendering ──────────────────────────────────
+
+function renderingChartByPeriod(period) {
     const canvas = document.getElementById('stats-chart');
     if (!canvas) return;
 
-    const { labels, data, barColors } = buildChartData(period);
+    const { labels, data, barColors } = buildChartDataByPeriod(period);
 
-    if (chartInstance) {
-        chartInstance.destroy();
-        chartInstance = null;
+    if (_chartInstance) {
+        _chartInstance.destroy();
+        _chartInstance = null;
     }
 
-    chartInstance = new Chart(canvas.getContext('2d'), {
+    _chartInstance = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: {
             labels,
@@ -125,17 +155,25 @@ function chartRendering(period) {
     });
 }
 
-function buildChartData(period) {
+// Subscribe once at module load — re-render whenever period changes
+onPeriodChange(period => {
+    renderingChartByPeriod(period);
+    updateStatsTotals(period);
+});
+
+// ─── Data builders ────────────────────────────────────
+
+function buildChartDataByPeriod(period) {
     if (period === 'week')  return buildWeekData();
     if (period === 'month') return buildMonthData();
     if (period === 'year')  return buildYearData();
     return { labels: [], data: [], barColors: [] };
 }
 
-/** 7 bars — Mon through Sun of the current week. Today is highlighted. */
+/** 7 bars — Mon–Sun of the current week. Today is highlighted. */
 function buildWeekData() {
-    const now    = new Date();
-    const monday = getMonday(now);
+    const now      = new Date();
+    const monday   = _getMonday(now);
     const todayIdx = (now.getDay() + 6) % 7; // Mon = 0
 
     const labels = [], data = [];
@@ -143,9 +181,8 @@ function buildWeekData() {
     for (let i = 0; i < 7; i++) {
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
-        const iso = formatToIso(d);
-        labels.push(getDayLabel(d));
-        data.push(sumAmounts(STATE.expenses.filter(e => e.date === iso)));
+        labels.push(_dayLabel(d));
+        data.push(sumAmounts(STATE.expenses.filter(e => e.date === _toIso(d))));
     }
 
     const barColors = data.map((_, i) =>
@@ -154,14 +191,10 @@ function buildWeekData() {
     return { labels, data, barColors };
 }
 
-/**
- * 4 bars — the 3 calendar weeks before the current one + the current week.
- * Each bar = Mon–Sun ISO week, regardless of month boundary.
- * The current (rightmost) bar is highlighted.
- */
+/** 4 bars — 3 previous ISO weeks + current week. Current is highlighted. */
 function buildMonthData() {
-    const now         = new Date();
-    const curMonday   = getMonday(now);
+    const now       = new Date();
+    const curMonday = _getMonday(now);
     const labels = [], data = [];
 
     for (let i = 3; i >= 0; i--) {
@@ -178,7 +211,7 @@ function buildMonthData() {
             })
         );
 
-        labels.push(`${shortDaySign(weekMonday)}–${shortDaySign(weekSunday)}`);
+        labels.push(`${_shortDay(weekMonday)}–${_shortDay(weekSunday)}`);
         data.push(sum);
     }
 
@@ -205,7 +238,7 @@ function buildYearData() {
             })
         );
 
-        labels.push(monthLabelSign(d));
+        labels.push(_monthLabel(d));
         data.push(sum);
     }
 
@@ -215,29 +248,31 @@ function buildYearData() {
     return { labels, data, barColors };
 }
 
-function getMonday(date) {
-    const startDay   = new Date(date);
-    const day = startDay.getDay();
-    startDay.setDate(startDay.getDate() + (day === 0 ? -6 : 1 - day));
-    startDay.setHours(0, 0, 0, 0);
-    return startDay;
+// ─── Date helpers ─────────────────────────────────────
+
+function _getMonday(date) {
+    const d   = new Date(date);
+    const day = d.getDay();
+    d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+    d.setHours(0, 0, 0, 0);
+    return d;
 }
 
-function formatToIso(data) {
-    const year  = data.getFullYear();
-    const month  = String(data.getMonth() + 1).padStart(2, '0');
-    const dayDate = String(data.getDate()).padStart(2, '0');
-    return `${year}-${month}-${dayDate}`;
+function _toIso(d) {
+    const y  = d.getFullYear();
+    const m  = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
 }
 
-function getDayLabel(day) {
-    return day.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase().slice(0, 2);
+function _dayLabel(d) {
+    return d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase().slice(0, 2);
 }
 
-function shortDaySign(day) {
-    return day.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+function _shortDay(d) {
+    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 }
 
-function monthLabelSign(day) {
-    return day.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+function _monthLabel(d) {
+    return d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
 }

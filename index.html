@@ -133,10 +133,17 @@
                 <canvas id="stats-chart"></canvas>
             </div>
         </div>
-        <div class="stats-bars">
+        <div class="stats-donut-card">
             <div class="stats-bar-title" id="stats-by-cat-title"></div>
-            <div id="stats-bar-content"></div>
+            <div class="stats-donut-wrap">
+                <canvas id="stats-donut"></canvas>
+                <div class="stats-donut-empty" style="display:none">
+                    <span style="color:var(--muted);font-size:13px" id="stats-donut-empty-text"></span>
+                </div>
+            </div>
+            <div id="stats-donut-legend" class="stats-donut-legend"></div>
         </div>
+    </div>
     </div>
 
     <nav class="bottom-nav">
