@@ -12,6 +12,9 @@ export function showScreen(name) {
 
     const fabVisible = name === 'main' || name === 'stats';
     document.getElementById('fab').classList.toggle('hidden', !fabVisible);
+
+    const navVisible = name === 'main' || name === 'stats';
+    document.querySelector('.bottom-nav').classList.toggle('hidden', !navVisible);
 }
 
 /**
