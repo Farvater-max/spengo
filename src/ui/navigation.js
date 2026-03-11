@@ -10,9 +10,6 @@ export function showScreen(name) {
     document.getElementById(`screen-${name}`).classList.add('active');
     STATE.currentScreen = name;
 
-    const fabVisible = name === 'main' || name === 'stats';
-    document.getElementById('fab').classList.toggle('hidden', !fabVisible);
-
     const navVisible = name === 'main' || name === 'stats';
     document.querySelector('.bottom-nav').classList.toggle('hidden', !navVisible);
 }
