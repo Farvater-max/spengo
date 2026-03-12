@@ -8,6 +8,14 @@ import { renderChart } from './statistics/statistics-chart.js';
 import { renderDonutChart } from './statistics/statistics-donut.js';
 import { getPeriod } from './statistics/statistics-state.js';
 
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 export function renderUI() {
     renderCategoryFilter();
@@ -120,7 +128,7 @@ function _expenseItemHTML(item, index) {
         <div class="expense-item" style="animation-delay:${index * 30}ms" data-id="${item.id}">
             <div class="expense-icon" style="background:${cat.color}22">${cat.emoji}</div>
             <div class="expense-info">
-                <div class="expense-name">${item.comment || cat.label}</div>
+                <div class="expense-name">${escapeHtml(item.comment || cat.label)}</div>
                 <div class="expense-meta">
                     <span class="expense-cat">${cat.label}</span>
                     <span class="expense-date">${formatDate(item.date)}</span>
