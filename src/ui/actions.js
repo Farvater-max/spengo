@@ -6,7 +6,7 @@ import {
     renderCategoryFilter,
     renderCategorySelectGrid,
     renderStatistics,
-} from './renderer.js';
+} from './renderer.jsx';
 import { openModal } from './navigation.js';
 
 /**

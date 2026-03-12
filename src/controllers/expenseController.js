@@ -6,7 +6,7 @@ import * as AuthService from '../services/authService.js';
 import { getI18nValue, } from '../i18n/localization.js';
 import { uuid, todayStr, showToast, parseAmount } from '../utils/helpers.js';
 import { showScreen, setSetupText, openModal } from '../ui/navigation.js';
-import { renderUI } from '../ui/renderer.js';
+import { renderUI } from '../ui/renderer.jsx';
 
 /**
  * Restore expenses from localStorage without request.

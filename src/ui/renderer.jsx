@@ -7,6 +7,8 @@ import { setCategoryFilter, selectCategory } from './actions.js';
 import { renderChart } from './statistics/statistics-chart.js';
 import { renderDonutChart } from './statistics/statistics-donut.js';
 import { getPeriod } from './statistics/statistics-state.js';
+import { createRoot } from 'react-dom/client';
+import { ExpenseList } from './components/ExpenseList.jsx';
 
 function escapeHtml(str) {
     return String(str)
@@ -31,27 +33,23 @@ export function renderSummary() {
     document.getElementById('summary-label').textContent = _periodLabel(STATE.currentPeriod);
 }
 
-export function renderExpenseList() {
-    const list     = document.getElementById('expense-list');
-    const expenses = getFilteredExpenses(STATE).slice().reverse();
+let _expenseListRoot = null;
 
-    if (!expenses.length) {
-        list.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">🌱</div>
-                <p>${getI18nValue('empty.no_period')}</p>
-            </div>`;
-        return;
+export function renderExpenseList() {
+    const container = document.getElementById('expense-list');
+
+    if (!_expenseListRoot) {
+        _expenseListRoot = createRoot(container);
     }
 
-    list.innerHTML = expenses.map((item, i) => _expenseItemHTML(item, i)).join('');
-
-    list.querySelectorAll('[data-edit-id]').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            openEditModal(btn.dataset.editId);
-        });
-    });
+    _expenseListRoot.render(
+        <ExpenseList
+            expenses={STATE.expenses}
+            currentPeriod={STATE.currentPeriod}
+            currentCategoryFilter={STATE.currentCategoryFilter}
+            onEdit={openEditModal}
+        />
+    );
 }
 
 export function renderCategoryFilter() {

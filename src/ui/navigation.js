@@ -1,6 +1,6 @@
 import { STATE } from '../../state.js';
 import { setText } from '../utils/helpers.js';
-import { renderStatistics } from './renderer.js';
+import { renderStatistics } from './renderer.jsx';
 
 /**
  * @param {'auth'|'setup'|'main'|'stats'} name
