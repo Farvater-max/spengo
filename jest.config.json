@@ -1,0 +1,9 @@
+{
+  "transform": {
+    "^.+\\.js$": "babel-jest"
+  },
+  "testEnvironment": "node",
+  "moduleNameMapper": {
+    "../i18n/localization.js": "<rootDir>/__mocks__/localization.js"
+  }
+}
