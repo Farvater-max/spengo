@@ -100,11 +100,13 @@ npm run build
 │   ├── llms.txt
 │   └── privacy-policy.html
 ├── src/
+│   ├── api/
 │   ├── controllers/
 │   ├── services/
 │   ├── ui/
 │   ├── i18n/
-│   └── constants/
+│   ├── constants/
+│   └── utils/
 ├── app.js
 ├── config.js
 ├── index.html

@@ -16,7 +16,7 @@ import * as Storage from '../services/storageService.js';
 import { fetchUserProfile } from '../api/client/googleClient.js';
 import { initSpreadsheet, refreshDataInBackground } from './expenseController.js';
 import { showScreen, setNavEnabled, setSetupText } from '../ui/navigation.js';
-import { renderUI, updateAvatarUI } from '../ui/renderer.js';
+import { renderUI, updateAvatarUI } from '../ui/renderer.jsx';
 import { getI18nValue } from '../i18n/localization.js';
 import { showToast } from '../utils/helpers.js';
 
