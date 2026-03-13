@@ -5,13 +5,13 @@ import {
     renderExpenseList,
     renderCategoryFilter,
     renderCategorySelectGrid,
+    renderCategoryEditGrid,
     renderStatistics,
 } from './renderer.jsx';
-import { openModal } from './navigation.js';
 
 /**
  * @param {'day'|'week'|'month'} period
- * @param {HTMLElement} btn - clicking button
+ * @param {HTMLElement} btn
  */
 export function setPeriod(period, btn) {
     STATE.currentPeriod = period;
@@ -22,23 +22,13 @@ export function setPeriod(period, btn) {
 }
 
 /**
- * @param {string} catId — category id or 'all'
- * @param {HTMLElement} el — clicking pills
+ * @param {string} catId
  */
-export function setCategoryFilter(catId, el) {
+export function setCategoryFilter(catId) {
     STATE.currentCategoryFilter = catId;
-    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
+    renderCategoryFilter();
     renderExpenseList();
     renderSummary();
-}
-
-/**
- * @param {string} catId - category id
- */
-export function selectCategory(catId) {
-    STATE.selectedCat = catId;
-    renderCategorySelectGrid();
 }
 
 export function changeLang(lang) {
@@ -46,16 +36,10 @@ export function changeLang(lang) {
         renderExpenseList();
         renderStatistics();
         renderCategoryFilter();
+        renderCategorySelectGrid();
+        renderCategoryEditGrid();
+        renderSummary();
     });
-}
-
-export function openAddModal() {
-    STATE.selectedCat = 'food';
-    document.getElementById('input-amount').value  = '';
-    document.getElementById('input-comment').value = '';
-    renderCategorySelectGrid();
-    openModal('modal-add');
-    setTimeout(() => document.getElementById('input-amount').focus(), 350);
 }
 
 export function openGoogleSheet() {

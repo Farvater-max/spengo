@@ -1,46 +1,58 @@
 import { STATE } from '../../state.js';
-import { CATEGORIES } from '../constants/categories.js';
-import { formatMoney, formatDate, getFilteredExpenses, setText, sumAmounts } from '../utils/helpers.js';
-import { getI18nValue } from '../i18n/localization.js';
+import { getFilteredExpenses, setText, sumAmounts } from '../utils/helpers.js';
 import { openEditModal } from '../controllers/expenseController.js';
-import { setCategoryFilter, selectCategory } from './actions.js';
 import { renderChart } from './statistics/statistics-chart.js';
 import { renderDonutChart } from './statistics/statistics-donut.js';
 import { getPeriod } from './statistics/statistics-state.js';
 import { createRoot } from 'react-dom/client';
-import { ExpenseList } from './components/ExpenseList.jsx';
-
-function escapeHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+import { ExpenseList }        from './components/ExpenseList.jsx';
+import { CategoryFilter }     from './components/CategoryFilter.jsx';
+import { CategorySelectGrid } from './components/CategorySelectGrid.jsx';
+import { SummaryCard }        from './components/SummaryCard.jsx';
+import { AddExpenseModal }    from './components/AddExpenseModal.jsx';
+import { EditExpenseModal }   from './components/EditExpenseModal.jsx';
 
 export function renderUI() {
+    renderSummary();
     renderCategoryFilter();
     renderExpenseList();
-    renderSummary();
     renderCategorySelectGrid();
+    renderCategoryEditGrid();
     renderStatistics();
 }
 
+// ─── SummaryCard ──────────────────────────────────────
+
+let _summaryRoot = null;
+
 export function renderSummary() {
+    const container = document.getElementById('summary-card-root');
+    if (!container) return;
+    if (!_summaryRoot) _summaryRoot = createRoot(container);
+
     const total = sumAmounts(getFilteredExpenses(STATE));
-    document.getElementById('summary-num').textContent   = formatMoney(total);
-    document.getElementById('summary-label').textContent = _periodLabel(STATE.currentPeriod);
+
+    _summaryRoot.render(
+        <SummaryCard
+            total={total}
+            currentPeriod={STATE.currentPeriod}
+            onPeriodChange={period => {
+                STATE.currentPeriod = period;
+                renderSummary();
+                renderExpenseList();
+            }}
+        />
+    );
 }
+
+// ─── ExpenseList ──────────────────────────────────────
 
 let _expenseListRoot = null;
 
 export function renderExpenseList() {
     const container = document.getElementById('expense-list');
-
-    if (!_expenseListRoot) {
-        _expenseListRoot = createRoot(container);
-    }
+    if (!container) return;
+    if (!_expenseListRoot) _expenseListRoot = createRoot(container);
 
     _expenseListRoot.render(
         <ExpenseList
@@ -52,31 +64,116 @@ export function renderExpenseList() {
     );
 }
 
-export function renderCategoryFilter() {
-    const row  = document.getElementById('cat-filter-row');
-    const cats = ['all', ...new Set(STATE.expenses.map(e => e.category))];
+// ─── CategoryFilter ───────────────────────────────────
 
-    row.innerHTML = '';
-    cats.forEach(catId => {
-        const pill = _categoryPill(catId);
-        pill.addEventListener('click', () => setCategoryFilter(catId, pill));
-        row.appendChild(pill);
-    });
+let _categoryFilterRoot = null;
+
+export function renderCategoryFilter() {
+    const container = document.getElementById('cat-filter-row');
+    if (!container) return;
+    if (!_categoryFilterRoot) _categoryFilterRoot = createRoot(container);
+
+    _categoryFilterRoot.render(
+        <CategoryFilter
+            expenses={STATE.expenses}
+            activeCat={STATE.currentCategoryFilter}
+            onSelect={catId => {
+                STATE.currentCategoryFilter = catId;
+                renderCategoryFilter();
+                renderExpenseList();
+                renderSummary();
+            }}
+        />
+    );
 }
+
+// ─── CategorySelectGrid (add modal) ───────────────────
+
+let _catSelectRoot = null;
 
 export function renderCategorySelectGrid() {
-    const grid = document.getElementById('cat-select-grid');
-    grid.innerHTML = '';
+    const container = document.getElementById('cat-select-grid');
+    if (!container) return;
+    if (!_catSelectRoot) _catSelectRoot = createRoot(container);
 
-    CATEGORIES.forEach(cat => {
-        const el = document.createElement('div');
-        el.className = `cat-option${STATE.selectedCat === cat.id ? ' selected' : ''}`;
-        el.innerHTML = `<div class="cat-emoji">${cat.emoji}</div><div>${cat.label}</div>`;
-        el.addEventListener('mousedown', e => e.preventDefault());
-        el.addEventListener('click', () => selectCategory(cat.id));
-        grid.appendChild(el);
-    });
+    _catSelectRoot.render(
+        <CategorySelectGrid
+            selectedCat={STATE.selectedCat}
+            onSelect={catId => {
+                STATE.selectedCat = catId;
+                renderCategorySelectGrid();
+                renderCategoryEditGrid();
+            }}
+        />
+    );
 }
+
+// ─── CategoryEditGrid (edit modal) ────────────────────
+
+let _catEditRoot = null;
+
+export function renderCategoryEditGrid() {
+    const container = document.getElementById('cat-edit-grid');
+    if (!container) return;
+    if (!_catEditRoot) _catEditRoot = createRoot(container);
+
+    _catEditRoot.render(
+        <CategorySelectGrid
+            selectedCat={STATE.selectedCat}
+            onSelect={catId => {
+                STATE.selectedCat = catId;
+                renderCategorySelectGrid();
+                renderCategoryEditGrid();
+            }}
+        />
+    );
+}
+
+// ─── AddExpenseModal ──────────────────────────────────
+
+let _addModalRoot = null;
+
+export function renderAddModal({ open = false, loading = false, onSubmit, onClose }) {
+    const container = document.getElementById('modal-add-root');
+    if (!container) return;
+    if (!_addModalRoot) _addModalRoot = createRoot(container);
+
+    if (!open) {
+        _addModalRoot.render(null);
+        return;
+    }
+
+    _addModalRoot.render(
+        <AddExpenseModal
+            initialCat={STATE.selectedCat || 'food'}
+            loading={loading}
+            onSubmit={onSubmit}
+            onClose={onClose}
+        />
+    );
+}
+
+// ─── EditExpenseModal ─────────────────────────────────
+
+let _editModalRoot = null;
+
+export function renderEditModal({ expense = null, loading = false, onUpdate, onDelete, onClose }) {
+    const container = document.getElementById('modal-edit-root');
+    if (!container) return;
+    if (!_editModalRoot) _editModalRoot = createRoot(container);
+
+    _editModalRoot.render(
+        <EditExpenseModal
+            expense={expense}
+            loading={loading}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            onClose={onClose}
+        />
+    );
+}
+
+// ─── Statistics ───────────────────────────────────────
 
 export function renderStatistics() {
     renderChart();
@@ -97,47 +194,4 @@ export function updateAvatarUI() {
         document.getElementById('stats-avatar-btn').innerHTML = pic;
         document.getElementById('profile-avatar-lg').innerHTML = pic;
     }
-}
-
-function _periodLabel(period) {
-    return {
-        day:   getI18nValue('period.label.day'),
-        week:  getI18nValue('period.label.week'),
-        month: getI18nValue('period.label.month'),
-    }[period];
-}
-
-function _categoryPill(catId) {
-    const cat   = CATEGORIES.find(x => x.id === catId);
-    const isAll = catId === 'all';
-    const pill  = document.createElement('div');
-
-    pill.className = `cat-pill${STATE.currentCategoryFilter === catId ? ' active' : ''}`;
-    pill.innerHTML = `
-        <div class="cat-dot" style="background:${isAll ? '#c8f135' : cat?.color || '#888'}"></div>
-        ${isAll ? getI18nValue('cat.all') : (cat?.label || catId)}`;
-
-    return pill;
-}
-
-function _expenseItemHTML(item, index) {
-    const cat = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[5];
-    return `
-        <div class="expense-item" style="animation-delay:${index * 30}ms" data-id="${item.id}">
-            <div class="expense-icon" style="background:${cat.color}22">${cat.emoji}</div>
-            <div class="expense-info">
-                <div class="expense-name">${escapeHtml(item.comment || cat.label)}</div>
-                <div class="expense-meta">
-                    <span class="expense-cat">${cat.label}</span>
-                    <span class="expense-date">${formatDate(item.date)}</span>
-                </div>
-            </div>
-            <div class="expense-amount">${formatMoney(item.amount)}</div>
-            <div class="expense-edit" data-edit-id="${item.id}" title="Edit">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-            </div>
-        </div>`;
 }
