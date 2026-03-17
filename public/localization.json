@@ -28,7 +28,7 @@
     "stats.by_cat.month": "По категориям за этот месяц",
     "stats.by_cat.year":  "По категориям за этот год",
     "stats.ops": "операций",
-    "stats.empty": "Нет данных за этот месяц",
+    "stats.empty":  "Нет данных за этот период",
     "nav.home": "Главная",
     "nav.stats": "Статистика",
     "modal.add.title": "Новый расход",
@@ -65,9 +65,9 @@
     "cat.clothes": "Одежда",
     "cat.school": "Школа",
     "cat.other": "Прочее",
-    "chart.period.week": "неделя",
-    "chart.period.month": "месяц",
-    "chart.period.year": "год"
+    "chart.period.week": "Неделя",
+    "chart.period.month": "Месяц",
+    "chart.period.year": "Год"
   },
   "en": {
     "auth.logo": "SpenGo",
@@ -98,7 +98,7 @@
     "stats.by_cat.month": "By category this month",
     "stats.by_cat.year":  "By category this year",
     "stats.ops": "transactions",
-    "stats.empty": "No data for this month",
+    "stats.empty":  "No data for this period",
     "nav.home": "Home",
     "nav.stats": "Statistics",
     "modal.add.title": "New expense",
@@ -135,9 +135,9 @@
     "cat.clothes": "Clothes",
     "cat.school": "School",
     "cat.other": "Other",
-    "chart.period.week": "week",
-    "chart.period.month": "month",
-    "chart.period.year": "year"
+    "chart.period.week": "Week",
+    "chart.period.month": "Month",
+    "chart.period.year": "Year"
   },
   "es": {
     "auth.logo": "GastoGo",
@@ -168,7 +168,7 @@
     "stats.by_cat.month": "Por categoría este mes",
     "stats.by_cat.year":  "Por categoría este año",
     "stats.ops": "operaciones",
-    "stats.empty": "Sin datos este mes",
+    "stats.empty": "Sin datos este período",
     "nav.home": "Inicio",
     "nav.stats": "Estadística",
     "modal.add.title": "Nuevo gasto",
@@ -205,8 +205,8 @@
     "cat.clothes": "Ropa",
     "cat.school": "Escuela",
     "cat.other": "Otros",
-    "chart.period.week": "semana",
-    "chart.period.month": "mes",
-    "chart.period.year": "año"
+    "chart.period.week": "Semana",
+    "chart.period.month": "Mes",
+    "chart.period.year": "Año"
   }
 }

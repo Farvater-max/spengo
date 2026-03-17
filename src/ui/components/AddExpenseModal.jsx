@@ -2,24 +2,19 @@ import { useState } from 'react';
 import { CategorySelectGrid } from './CategorySelectGrid.jsx';
 import { getI18nValue } from '../../i18n/localization.js';
 import { parseAmount } from '../../utils/helpers.js';
+import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
 
-/**
- * @param {{
- *   initialCat: string,
- *   onSubmit: (amount: number, category: string, comment: string) => void,
- *   onClose: () => void,
- *   loading: boolean
- * }} props
- */
 export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose, loading }) {
     const [amount,   setAmount]   = useState('');
     const [category, setCategory] = useState(initialCat);
     const [comment,  setComment]  = useState('');
 
+    const sheetRef = useSwipeToClose(onClose);
+    const parsedAmount = parseAmount(amount);
+
     function handleSubmit() {
-        const parsed = parseAmount(amount);
-        if (!parsed) return;
-        onSubmit(parsed, category, comment);
+        if (!parsedAmount) return;
+        onSubmit({ amount: parsedAmount, category, comment });
     }
 
     function handleOverlayClick(e) {
@@ -28,7 +23,7 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose, loadin
 
     return (
         <div className="modal-overlay open" id="modal-add" onClick={handleOverlayClick}>
-            <div className="modal-sheet">
+            <div className="modal-sheet" ref={sheetRef}>
                 <div className="modal-handle" />
                 <div className="modal-title">{getI18nValue('modal.add.title')}</div>
 
@@ -67,7 +62,7 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose, loadin
                 <button
                     className="btn-submit"
                     onClick={handleSubmit}
-                    disabled={!parseAmount(amount) || loading}
+                    disabled={!parsedAmount || loading}
                 >
                     {getI18nValue('btn.add')}
                 </button>

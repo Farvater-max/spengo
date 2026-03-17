@@ -2,22 +2,15 @@ import { useState, useEffect } from 'react';
 import { CategorySelectGrid } from './CategorySelectGrid.jsx';
 import { getI18nValue } from '../../i18n/localization.js';
 import { parseAmount } from '../../utils/helpers.js';
+import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
 
-/**
- * @param {{
- *   expense: { id: string, amount: number, category: string, comment: string }|null,
- *   onUpdate: (id: string, amount: number, category: string, comment: string) => void,
- *   onDelete: (id: string) => void,
- *   onClose: () => void,
- *   loading: boolean
- * }} props
- */
 export function EditExpenseModal({ expense, onUpdate, onDelete, onClose, loading }) {
     const [amount,   setAmount]   = useState('');
     const [category, setCategory] = useState('food');
     const [comment,  setComment]  = useState('');
 
-    // populate fields when expense changes
+    const sheetRef = useSwipeToClose(onClose);
+
     useEffect(() => {
         if (!expense) return;
         setAmount(String(expense.amount));
@@ -27,15 +20,16 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose, loading
 
     if (!expense) return null;
 
+    const parsedAmount = parseAmount(amount);
+
     const isDirty =
-        parseAmount(amount) !== expense.amount ||
+        parsedAmount !== expense.amount ||
         category !== expense.category ||
         comment  !== (expense.comment || '');
 
     function handleUpdate() {
-        const parsed = parseAmount(amount);
-        if (!parsed) return;
-        onUpdate(expense.id, parsed, category, comment);
+        if (!parsedAmount) return;
+        onUpdate(expense.id, parsedAmount, category, comment);
     }
 
     function handleOverlayClick(e) {
@@ -44,7 +38,7 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose, loading
 
     return (
         <div className="modal-overlay open" id="modal-edit" onClick={handleOverlayClick}>
-            <div className="modal-sheet">
+            <div className="modal-sheet" ref={sheetRef}>
                 <div className="modal-handle" />
                 <div className="modal-edit-header">
                     <div className="modal-title">{getI18nValue('modal.edit.title')}</div>
@@ -92,7 +86,7 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose, loading
                     <button
                         className="btn-submit btn-edit-update"
                         onClick={handleUpdate}
-                        disabled={!isDirty || !parseAmount(amount) || loading}
+                        disabled={!isDirty || !parsedAmount || loading}
                     >
                         {getI18nValue('btn.update')}
                     </button>

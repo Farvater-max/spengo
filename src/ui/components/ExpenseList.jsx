@@ -19,10 +19,10 @@ export function ExpenseList({ expenses, currentPeriod, currentCategoryFilter, on
 
     if (!filtered.length) {
         return (
-            <>
+            <div className="empty-state">
                 <div className="empty-icon">🌱</div>
                 <p>{getI18nValue('empty.no_period')}</p>
-            </>
+            </div>
         );
     }
 

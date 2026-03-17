@@ -4,8 +4,8 @@ import * as SheetsService from '../services/sheetsService.js';
 import * as AuthService from '../services/authService.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { uuid, todayStr, showToast } from '../utils/helpers.js';
-import { showScreen, setSetupText, openModal } from '../ui/navigation.js';
-import { renderUI, renderAddModal, renderEditModal } from '../ui/renderer.jsx';
+import { showScreen, setSetupText } from '../ui/navigation.js';
+import { renderUI, renderAddModal, renderEditModal, renderSetupScreen } from '../ui/renderer.jsx';
 
 // ─── Init ─────────────────────────────────────────────
 
@@ -16,29 +16,55 @@ export function restoreCachedExpenses() {
     if (cached) STATE.expenses = JSON.parse(cached);
 }
 
+/**
+ * Первый вход — создаём таблицу, грузим данные.
+ * Тексты: setup.creating → setup.first_time → setup.loading → setup.reading → main
+ */
 export async function initSpreadsheet() {
     try {
         await _resolveAndSaveSpreadsheet();
         await _loadAndCacheExpenses();
-        showScreen('main');
-        renderUI();
+        await _transitionToMain();
     } catch (err) {
         _handleInitError(err);
     }
 }
 
 async function _resolveAndSaveSpreadsheet() {
-    setSetupText(getI18nValue('setup.finding'), getI18nValue('setup.checking'));
+    renderSetupScreen({
+        title: getI18nValue('setup.finding'),
+        sub:   getI18nValue('setup.checking'),
+    });
     const { spreadsheetId, isNew } = await SheetsService.resolveSpreadsheet(STATE.accessToken);
-    if (isNew) setSetupText(getI18nValue('setup.creating'), getI18nValue('setup.first_time'));
+
+    if (isNew) {
+        renderSetupScreen({
+            title: getI18nValue('setup.creating'),
+            sub:   getI18nValue('setup.first_time'),
+        });
+    }
+
     STATE.spreadsheetId = spreadsheetId;
     localStorage.setItem(STORAGE.SHEET_ID, spreadsheetId);
 }
 
 async function _loadAndCacheExpenses() {
-    setSetupText(getI18nValue('setup.loading'), getI18nValue('setup.reading'));
+    renderSetupScreen({
+        title: getI18nValue('setup.loading'),
+        sub:   getI18nValue('setup.reading'),
+    });
     STATE.expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
     localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
+}
+
+/**
+ * Рендерим main в фоне пока setup ещё виден,
+ * ждём один paint кадр, затем переключаем — нет чёрного экрана.
+ */
+async function _transitionToMain() {
+    renderUI();
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    showScreen('main');
 }
 
 function _handleInitError(err) {
@@ -46,19 +72,30 @@ function _handleInitError(err) {
     const message = getI18nValue('toast.sheet_error') + err.message;
     showToast(message, 'error');
     showScreen('auth');
-    const el = document.getElementById('auth-error');
-    if (el) { el.textContent = message; el.style.display = 'block'; }
 }
 
+/**
+ * Повторный вход / обновление страницы — грузим свежие данные.
+ * Setup экран уже показан в authController.
+ */
 export async function refreshDataInBackground() {
-    if (!STATE.accessToken) { renderUI(); return; }
+    if (!STATE.accessToken) {
+        await _transitionToMain();
+        return;
+    }
     try {
         STATE.accessToken = await AuthService.waitForToken();
+
+        renderSetupScreen({
+            title: getI18nValue('setup.loading'),
+            sub:   getI18nValue('setup.reading'),
+        });
+
         const expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
         STATE.expenses = expenses;
         localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(expenses));
-        if (STATE.currentScreen === 'setup' || STATE.currentScreen === 'auth') showScreen('main');
-        renderUI();
+
+        await _transitionToMain();
     } catch (err) {
         console.warn('[SpenGo] Background refresh failed:', err);
         const isAuthError = err.message.includes('401') || err.message.includes('403');
@@ -67,6 +104,10 @@ export async function refreshDataInBackground() {
             sessionStorage.removeItem('google_token_expires_at');
             STATE.accessToken = null;
             if (STATE.expenses.length === 0) showScreen('auth');
+            else await _transitionToMain();
+        } else {
+            // ошибка сети — показываем кэш
+            await _transitionToMain();
         }
     }
 }

@@ -1,9 +1,11 @@
 import { STATE } from '../../state.js';
-import { getFilteredExpenses, setText, sumAmounts } from '../utils/helpers.js';
-import { openEditModal } from '../controllers/expenseController.js';
+import { getFilteredExpenses, sumAmounts } from '../utils/helpers.js';
+import { LANG, setLang, getI18nValue } from '../i18n/localization.js';
+import { openEditModal, openAddModal } from '../controllers/expenseController.js';
 import { renderChart } from './statistics/statistics-chart.js';
 import { renderDonutChart } from './statistics/statistics-donut.js';
-import { getPeriod } from './statistics/statistics-state.js';
+import { getPeriod, setPeriod } from './statistics/statistics-state.js';
+import * as AuthService from '../services/authService.js';
 import { createRoot } from 'react-dom/client';
 import { ExpenseList }        from './components/ExpenseList.jsx';
 import { CategoryFilter }     from './components/CategoryFilter.jsx';
@@ -11,14 +13,152 @@ import { CategorySelectGrid } from './components/CategorySelectGrid.jsx';
 import { SummaryCard }        from './components/SummaryCard.jsx';
 import { AddExpenseModal }    from './components/AddExpenseModal.jsx';
 import { EditExpenseModal }   from './components/EditExpenseModal.jsx';
+import { ProfileModal }       from './components/ProfileModal.jsx';
+import { MainHeader }         from './components/MainHeader.jsx';
+import { StatsHeader }        from './components/StatsHeader.jsx';
+import { BottomNav }          from './components/BottomNav.jsx';
+import { AuthScreen }         from './components/AuthScreen.jsx';
+import { SetupScreen }        from './components/SetupScreen.jsx';
+import { StatsScreen }        from './components/StatsScreen.jsx';
+
+// ─── Nav state ────────────────────────────────────────
+
+let _navEnabled = false;
+
+export function setNavEnabled(enabled) {
+    _navEnabled = enabled;
+    renderBottomNav();
+}
+
+// ─── renderUI ─────────────────────────────────────────
 
 export function renderUI() {
+    renderMainHeader();
     renderSummary();
     renderCategoryFilter();
+    renderSectionTitle();
     renderExpenseList();
-    renderCategorySelectGrid();
-    renderCategoryEditGrid();
     renderStatistics();
+    renderBottomNav();
+}
+
+// ─── AuthScreen ───────────────────────────────────────
+
+let _authRoot  = null;
+let _authState = { loading: false, error: null };
+
+export function renderAuthScreen({ loading = false, error = null } = {}) {
+    _authState = { loading, error };
+    const container = document.getElementById('screen-auth-root');
+    if (!container) return;
+    if (!_authRoot) _authRoot = createRoot(container);
+
+    _authRoot.render(
+        <AuthScreen
+            onSignIn={AuthService.signIn}
+            loading={loading}
+            error={error}
+        />
+    );
+}
+
+export function setAuthError(message) {
+    renderAuthScreen({ ..._authState, error: message, loading: false });
+}
+
+export function setAuthLoading(loading) {
+    renderAuthScreen({ ..._authState, loading });
+}
+
+// ─── SetupScreen ──────────────────────────────────────
+
+let _setupRoot = null;
+
+export function renderSetupScreen({ title = '', sub = '' } = {}) {
+    const container = document.getElementById('screen-setup-root');
+    if (!container) return;
+    if (!_setupRoot) _setupRoot = createRoot(container);
+
+    _setupRoot.render(<SetupScreen title={title} sub={sub} />);
+}
+
+// ─── StatsScreen (mounted once — canvases must stay stable) ──
+
+let _statsScreenMounted = false;
+
+export function mountStatsScreen() {
+    if (_statsScreenMounted) return;
+    const container = document.getElementById('stats-screen-root');
+    if (!container) return;
+
+    createRoot(container).render(<StatsScreen />);
+    _statsScreenMounted = true;
+}
+
+// ─── BottomNav ────────────────────────────────────────
+
+let _bottomNavRoot = null;
+
+export function renderBottomNav() {
+    const container = document.getElementById('bottom-nav-root');
+    if (!container) return;
+    if (!_bottomNavRoot) _bottomNavRoot = createRoot(container);
+
+    _bottomNavRoot.render(
+        <BottomNav
+            currentScreen={STATE.currentScreen}
+            enabled={_navEnabled}
+            onHome={() => window.dispatchEvent(new CustomEvent('spengo:navigate', { detail: { name: 'main' } }))}
+            onStats={() => window.dispatchEvent(new CustomEvent('spengo:navigate', { detail: { name: 'stats' } }))}
+            onAdd={openAddModal}
+        />
+    );
+}
+
+// ─── MainHeader ───────────────────────────────────────
+
+let _mainHeaderRoot = null;
+
+export function renderMainHeader() {
+    const container = document.getElementById('main-header-root');
+    if (!container) return;
+    if (!_mainHeaderRoot) _mainHeaderRoot = createRoot(container);
+
+    _mainHeaderRoot.render(
+        <MainHeader
+            currentLang={LANG}
+            onLangChange={lang => {
+                setLang(lang, STATE, () => {
+                    renderUI();
+                    renderStatsHeader();
+                    renderCategorySelectGrid();
+                    renderCategoryEditGrid();
+                });
+                renderMainHeader();
+            }}
+            onAvatarClick={() => renderProfileModal({ open: true })}
+            profile={STATE.userProfile}
+        />
+    );
+}
+
+// ─── StatsHeader ──────────────────────────────────────
+
+let _statsHeaderRoot = null;
+
+export function renderStatsHeader() {
+    const container = document.getElementById('stats-header-root');
+    if (!container) return;
+    if (!_statsHeaderRoot) _statsHeaderRoot = createRoot(container);
+
+    _statsHeaderRoot.render(
+        <StatsHeader
+            currentPeriod={getPeriod()}
+            onPeriodChange={period => { setPeriod(period); renderStatsHeader(); }}
+            onAvatarClick={() => renderProfileModal({ open: true })}
+            profile={STATE.userProfile}
+        />
+    );
 }
 
 // ─── SummaryCard ──────────────────────────────────────
@@ -30,11 +170,9 @@ export function renderSummary() {
     if (!container) return;
     if (!_summaryRoot) _summaryRoot = createRoot(container);
 
-    const total = sumAmounts(getFilteredExpenses(STATE));
-
     _summaryRoot.render(
         <SummaryCard
-            total={total}
+            total={sumAmounts(getFilteredExpenses(STATE))}
             currentPeriod={STATE.currentPeriod}
             onPeriodChange={period => {
                 STATE.currentPeriod = period;
@@ -42,6 +180,22 @@ export function renderSummary() {
                 renderExpenseList();
             }}
         />
+    );
+}
+
+// ─── SectionTitle ─────────────────────────────────────
+
+let _sectionTitleRoot = null;
+
+export function renderSectionTitle() {
+    const container = document.getElementById('section-title-root');
+    if (!container) return;
+    if (!_sectionTitleRoot) _sectionTitleRoot = createRoot(container);
+
+    _sectionTitleRoot.render(
+        <div className="section-title">
+            {getI18nValue('section.expenses')}
+        </div>
     );
 }
 
@@ -87,7 +241,7 @@ export function renderCategoryFilter() {
     );
 }
 
-// ─── CategorySelectGrid (add modal) ───────────────────
+// ─── CategorySelectGrid ───────────────────────────────
 
 let _catSelectRoot = null;
 
@@ -99,16 +253,12 @@ export function renderCategorySelectGrid() {
     _catSelectRoot.render(
         <CategorySelectGrid
             selectedCat={STATE.selectedCat}
-            onSelect={catId => {
-                STATE.selectedCat = catId;
-                renderCategorySelectGrid();
-                renderCategoryEditGrid();
-            }}
+            onSelect={catId => { STATE.selectedCat = catId; renderCategorySelectGrid(); }}
         />
     );
 }
 
-// ─── CategoryEditGrid (edit modal) ────────────────────
+// ─── CategoryEditGrid ─────────────────────────────────
 
 let _catEditRoot = null;
 
@@ -120,11 +270,7 @@ export function renderCategoryEditGrid() {
     _catEditRoot.render(
         <CategorySelectGrid
             selectedCat={STATE.selectedCat}
-            onSelect={catId => {
-                STATE.selectedCat = catId;
-                renderCategorySelectGrid();
-                renderCategoryEditGrid();
-            }}
+            onSelect={catId => { STATE.selectedCat = catId; renderCategoryEditGrid(); }}
         />
     );
 }
@@ -138,10 +284,7 @@ export function renderAddModal({ open = false, loading = false, onSubmit, onClos
     if (!container) return;
     if (!_addModalRoot) _addModalRoot = createRoot(container);
 
-    if (!open) {
-        _addModalRoot.render(null);
-        return;
-    }
+    if (!open) { _addModalRoot.render(null); return; }
 
     _addModalRoot.render(
         <AddExpenseModal
@@ -173,25 +316,46 @@ export function renderEditModal({ expense = null, loading = false, onUpdate, onD
     );
 }
 
+// ─── ProfileModal ─────────────────────────────────────
+
+let _profileModalRoot = null;
+
+export function renderProfileModal({ open = false }) {
+    const container = document.getElementById('modal-profile-root');
+    if (!container) return;
+    if (!_profileModalRoot) _profileModalRoot = createRoot(container);
+
+    if (!open) { _profileModalRoot.render(null); return; }
+
+    _profileModalRoot.render(
+        <ProfileModal
+            profile={STATE.userProfile}
+            onOpenSheet={() => {
+                if (STATE.spreadsheetId) {
+                    window.open(`https://docs.google.com/spreadsheets/d/${STATE.spreadsheetId}`, '_blank');
+                }
+                renderProfileModal({ open: false });
+            }}
+            onSignOut={() => {
+                renderProfileModal({ open: false });
+                AuthService.signOut();
+            }}
+            onClose={() => renderProfileModal({ open: false })}
+        />
+    );
+}
+
 // ─── Statistics ───────────────────────────────────────
 
 export function renderStatistics() {
+    renderStatsHeader();
     renderChart();
     renderDonutChart(getPeriod());
 }
 
+// ─── Avatar ───────────────────────────────────────────
+
 export function updateAvatarUI() {
-    const profile = STATE.userProfile;
-    if (!profile) return;
-
-    setText('avatar-letter',         profile.letter);
-    setText('stats-avatar-letter',   profile.letter);
-    setText('profile-avatar-letter', profile.letter);
-
-    if (profile.picture) {
-        const pic = `<img src="${profile.picture}"/>`;
-        document.getElementById('avatar-btn').innerHTML       = pic;
-        document.getElementById('stats-avatar-btn').innerHTML = pic;
-        document.getElementById('profile-avatar-lg').innerHTML = pic;
-    }
+    renderMainHeader();
+    renderStatsHeader();
 }
