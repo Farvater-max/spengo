@@ -143,7 +143,11 @@ export function sleep(ms) {
  */
 export function setText(id, value) {
     const el = document.getElementById(id);
-    if (el) el.textContent = value;
+    if (!el) {
+        console.trace(`setText: element #${id} not found`);
+        return;
+    }
+    el.textContent = value;
 }
 
 /**
@@ -165,7 +169,8 @@ export function setHTML(id, value) {
  */
 export function parseAmount(raw) {
     try {
-        const normalised = String(raw).trim().replace(',', '.');
+        const normalised = String(raw ?? '').trim().replace(',', '.');
+        if (!normalised || normalised === '.') return 0;
         const big = new Big(normalised);
         if (big.lte(0)) return 0;
         return Number(big.toFixed(2));

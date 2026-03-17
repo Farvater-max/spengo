@@ -1,4 +1,12 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.webspengo.xyz" }],
+      "destination": "https://webspengo.xyz/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/privacy-policy",  "destination": "/privacy-policy.html" },
     { "source": "/privacy-policy/", "destination": "/privacy-policy.html" }

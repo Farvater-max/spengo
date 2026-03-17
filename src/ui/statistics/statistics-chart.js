@@ -26,7 +26,6 @@ let _chartInstance = null;
  * Safe to call multiple times — re-binds buttons and re-renders.
  */
 export function renderChart() {
-    bindPeriodButtons();
     renderingChartByPeriod(getPeriod());
     updateStatsTotals(getPeriod());
 }
@@ -51,39 +50,13 @@ export function updateStatsTotals(period) {
         year:  getI18nValue('stats.total_label.year'),
     };
 
-    document.getElementById('stats-total-label').textContent = labelMap[period];
-    document.getElementById('stats-total').textContent       = formatMoney(sumAmounts(filtered));
-    document.getElementById('stats-sub').textContent         = `${filtered.length} ${getI18nValue('stats.ops')}`;
-}
+    const labelEl = document.getElementById('stats-total-label');
+    const totalEl = document.getElementById('stats-total');
+    const subEl   = document.getElementById('stats-sub');
 
-// ─── Period buttons ───────────────────────────────────
-
-function bindPeriodButtons() {
-    const map = {
-        'chart-period-week':  'week',
-        'chart-period-month': 'month',
-        'chart-period-year':  'year',
-    };
-
-    Object.entries(map).forEach(([id, period]) => {
-        const btn = document.getElementById(id);
-        if (!btn) return;
-
-        // Replace node to wipe stale listeners
-        const fresh = btn.cloneNode(true);
-        btn.parentNode.replaceChild(fresh, btn);
-
-        document.getElementById(id).addEventListener('click', () => {
-            document.querySelectorAll('.chart-period-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            setPeriod(period); // notifies all subscribers — chart + donut
-        });
-    });
-
-    // Set localised button labels
-    document.getElementById('chart-period-week').textContent  = getI18nValue('chart.period.week');
-    document.getElementById('chart-period-month').textContent = getI18nValue('chart.period.month');
-    document.getElementById('chart-period-year').textContent  = getI18nValue('chart.period.year');
+    if (labelEl) labelEl.textContent = labelMap[period];
+    if (totalEl) totalEl.textContent = formatMoney(sumAmounts(filtered));
+    if (subEl)   subEl.textContent   = `${filtered.length} ${getI18nValue('stats.ops')}`;
 }
 
 // ─── Chart rendering ──────────────────────────────────

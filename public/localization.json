@@ -28,7 +28,7 @@
     "stats.by_cat.month": "По категориям за этот месяц",
     "stats.by_cat.year":  "По категориям за этот год",
     "stats.ops": "операций",
-    "stats.empty": "Нет данных за этот месяц",
+    "stats.empty":  "Нет данных за этот период",
     "nav.home": "Главная",
     "nav.stats": "Статистика",
     "modal.add.title": "Новый расход",
@@ -54,8 +54,8 @@
     "toast.sheet_error": "Ошибка при работе с таблицей: ",
     "toast.auth_error": "Ошибка авторизации: ",
     "toast.api_loading": "Google API ещё загружается, попробуйте снова",
-    "empty.no_expenses": "Пока трат нет.<br>Нажмите <strong>+</strong> чтобы добавить первую.",
-    "empty.no_period": "Трат за этот период нет.<br>Нажмите <strong>+</strong> чтобы добавить.",
+    "empty.no_expenses": "Пока трат нет. Нажмите + чтобы добавить первую.",
+    "empty.no_period": "Трат за этот период нет. Нажмите + чтобы добавить.",
     "cat.food": "Еда",
     "cat.transport": "Транспорт",
     "cat.home": "Жильё",
@@ -65,9 +65,9 @@
     "cat.clothes": "Одежда",
     "cat.school": "Школа",
     "cat.other": "Прочее",
-    "chart.period.week": "неделя",
-    "chart.period.month": "месяц",
-    "chart.period.year": "год"
+    "chart.period.week": "Неделя",
+    "chart.period.month": "Месяц",
+    "chart.period.year": "Год"
   },
   "en": {
     "auth.logo": "SpenGo",
@@ -98,7 +98,7 @@
     "stats.by_cat.month": "By category this month",
     "stats.by_cat.year":  "By category this year",
     "stats.ops": "transactions",
-    "stats.empty": "No data for this month",
+    "stats.empty":  "No data for this period",
     "nav.home": "Home",
     "nav.stats": "Statistics",
     "modal.add.title": "New expense",
@@ -125,7 +125,7 @@
     "toast.auth_error": "Auth error: ",
     "toast.api_loading": "Google API is still loading, try again",
     "empty.no_expenses": "No expenses yet.<br>Tap <strong>+</strong> to add your first one.",
-    "empty.no_period": "No expenses for this period.<br>Tap <strong>+</strong> to add one.",
+    "empty.no_period": "No expenses for this period. Tap + to add one.",
     "cat.food": "Food",
     "cat.transport": "Transport",
     "cat.home": "Housing",
@@ -135,9 +135,9 @@
     "cat.clothes": "Clothes",
     "cat.school": "School",
     "cat.other": "Other",
-    "chart.period.week": "week",
-    "chart.period.month": "month",
-    "chart.period.year": "year"
+    "chart.period.week": "Week",
+    "chart.period.month": "Month",
+    "chart.period.year": "Year"
   },
   "es": {
     "auth.logo": "GastoGo",
@@ -168,7 +168,7 @@
     "stats.by_cat.month": "Por categoría este mes",
     "stats.by_cat.year":  "Por categoría este año",
     "stats.ops": "operaciones",
-    "stats.empty": "Sin datos este mes",
+    "stats.empty": "Sin datos este período",
     "nav.home": "Inicio",
     "nav.stats": "Estadística",
     "modal.add.title": "Nuevo gasto",
@@ -195,7 +195,7 @@
     "toast.auth_error": "Error de autenticación: ",
     "toast.api_loading": "Google API aún se está cargando, inténtalo de nuevo",
     "empty.no_expenses": "Aún no hay gastos.<br>Pulsa <strong>+</strong> para añadir el primero.",
-    "empty.no_period": "Sin gastos en este período.<br>Pulsa <strong>+</strong> para añadir uno.",
+    "empty.no_period": "Sin gastos en este período. Pulsa + para añadir uno.",
     "cat.food": "Comida",
     "cat.transport": "Transporte",
     "cat.home": "Vivienda",
@@ -205,8 +205,8 @@
     "cat.clothes": "Ropa",
     "cat.school": "Escuela",
     "cat.other": "Otros",
-    "chart.period.week": "semana",
-    "chart.period.month": "mes",
-    "chart.period.year": "año"
+    "chart.period.week": "Semana",
+    "chart.period.month": "Mes",
+    "chart.period.year": "Año"
   }
 }
