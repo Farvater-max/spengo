@@ -10,6 +10,9 @@ export function showScreen(name) {
     if (authRoot)  authRoot.style.display  = name === 'auth'  ? 'flex' : 'none';
     if (setupRoot) setupRoot.style.display = name === 'setup' ? 'flex' : 'none';
 
+    // expand #app to full width only while auth landing is visible
+    document.getElementById('app')?.classList.toggle('auth-active', name === 'auth');
+
     if (name !== 'auth' && name !== 'setup') {
         const el = document.getElementById(`screen-${name}`);
         if (el) el.classList.add('active');
