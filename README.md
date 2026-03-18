@@ -3,7 +3,7 @@
 > Personal expense tracker — powered by Google Sheets, no servers involved.
 
 <a href="https://webspengo.xyz">
-  <img src="https://webspengo.xyz/ogimage.png" width="750" alt="SpenGo Preview">
+  <img src="https://webspengo.xyz/ogimage.png" width="770" alt="SpenGo Preview">
 </a>
 
 ---
