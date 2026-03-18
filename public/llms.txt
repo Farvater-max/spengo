@@ -11,23 +11,25 @@ SpenGo is a lightweight, mobile-first web application for tracking personal expe
 - Expenses saved directly to user's Google Drive via Google Sheets API
 - Track spending by day, week, or month
 - Categories: Food, Transport, Housing, Health, Entertainment, Sport, Clothes, School, Other
-- Visual analytics with monthly breakdown by category
+- Visual analytics: bar chart by period and donut breakdown by category
 - Multilingual: English, Russian, Spanish
 - Recent expenses cached locally in browser localStorage
 - No ads, no tracking, no servers
 
 ## Tech Stack
 
-- Vanilla JavaScript (ES Modules)
+- React (UI components, rendered via createRoot)
+- Vanilla JavaScript (ES Modules, business logic and state)
 - Vite (build tool)
+- Chart.js (bar chart and donut chart in Statistics screen)
 - Google Identity Services (OAuth 2.0)
 - Google Sheets API v4
 - Hosted on Vercel
 
 ## Pages
 
-- [App](https://www.webspengo.xyz/): Main expense tracker interface. All features available after sign in via Google.
-- [Privacy Policy](https://www.webspengo.xyz/privacy-policy/): Data usage and privacy information
+- [App](https://webspengo.xyz/): Main expense tracker interface. The homepage includes a three-panel landing layout explaining the app's purpose — expense tracking on the left, sign-in in the center, and statistics overview on the right. All tracking features are available after signing in via Google.
+- [Privacy Policy](https://webspengo.xyz/privacy-policy/): Data usage and privacy information
 
 ## Privacy
 

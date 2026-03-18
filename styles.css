@@ -48,13 +48,24 @@ html, body {
     touch-action: pan-y;
 }
 
-/* desktop: show subtle side borders */
+/* desktop: show subtle side borders — but NOT when auth layout is active */
 @media (min-width: 600px) {
     body { background: #070709; }
     #app {
         border-left: 1px solid var(--border);
         border-right: 1px solid var(--border);
         height: 100vh;
+    }
+}
+
+/* Auth screen breaks out of the 480px app shell on desktop */
+@media (min-width: 900px) {
+    #app:has(#screen-auth-root[style*="flex"]),
+    #app:has(#screen-auth-root:not([style*="none"])) {
+        max-width: 100vw;
+        border-left: none;
+        border-right: none;
+        overflow: visible;
     }
 }
 
@@ -80,28 +91,251 @@ html, body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    justify-content: flex-start;
-    align-items: center;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 24px 24px 80px;
-    gap: 16px;
+    scrollbar-width: none;
     background:
             radial-gradient(ellipse 80% 60% at 50% 0%, #c8f13511 0%, transparent 70%),
             radial-gradient(ellipse 60% 40% at 80% 80%, #7b61ff18 0%, transparent 60%),
             var(--bg);
-    scrollbar-width: none;
 }
 #screen-auth-root::-webkit-scrollbar { display: none; }
 
+/* Legacy .auth-screen-inner — kept for safety, not used by new layout */
 .auth-screen-inner {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
     gap: 16px;
+    padding: 24px 24px 80px;
 }
 
+/* ─── AUTH LAYOUT (3-panel) ──────────────────────────── */
+/*
+ * Mobile  (<900px): single column, scrolls top-to-bottom.
+ *   Order: center (sign-in CTA) → left info → right info
+ * Desktop (≥900px): 3 columns side by side, each independently
+ *   scrollable, no full-page scroll.
+ */
+
+.auth-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: min-content;
+}
+
+.auth-panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 32px 24px;
+}
+
+.auth-panel--center { order: 0; }
+.auth-panel--left   { order: 1; border-top: 1px solid var(--border); }
+.auth-panel--right  { order: 2; border-top: 1px solid var(--border); }
+
+.auth-panel-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+.auth-panel-inner--center { align-items: center; }
+
+.auth-panel-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    background: #c8f13515;
+    border: 1px solid #c8f13330;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    align-self: flex-start;
+    margin-bottom: 4px;
+}
+
+.auth-feature-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color .2s;
+}
+.auth-feature-block:hover { border-color: #c8f13540; }
+
+/* Icon is now inline before the title text */
+.auth-feature-icon {
+    font-size: 16px;
+    line-height: 1;
+    margin-right: 7px;
+    flex-shrink: 0;
+}
+
+.auth-feature-title {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.2px;
+    margin: 0;
+    text-transform: none;
+    display: flex;
+    align-items: center;
+}
+
+.auth-feature-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* Screenshot preview in side panels */
+.auth-panel-screenshot {
+    width: 100%;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    flex-shrink: 0;
+}
+.auth-panel-screenshot img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+/* On desktop: show full image, scaled down to save vertical space */
+@media (min-width: 900px) {
+    .auth-panel-screenshot {
+        width: 60%;
+        margin: 0 auto;
+    }
+    .auth-panel-screenshot img {
+        height: auto;
+        object-fit: contain;
+    }
+}
+
+.auth-panel--center .auth-card     { width: 100%; }
+.auth-panel--center .auth-showcase { width: 100%; }
+
+@media (min-width: 900px) {
+    #app {
+        max-width: 100vw !important;
+        border-left: none !important;
+        border-right: none !important;
+        overflow: visible !important;
+    }
+
+    #screen-auth-root {
+        overflow: hidden;
+        padding: 0 !important;
+    }
+
+    .auth-layout {
+        flex-direction: row;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .auth-panel--left   { order: 0; border-top: none; border-right: 1px solid var(--border); }
+    .auth-panel--center { order: 1; border-top: none; border-right: 1px solid var(--border); }
+    .auth-panel--right  { order: 2; border-top: none; }
+
+    .auth-panel {
+        flex: 1;
+        height: 100%;
+        /* no scroll on desktop — content must fit */
+        overflow: hidden;
+        scrollbar-width: none;
+        padding: 32px 28px;
+        justify-content: center;
+        /* allow inner flex children to shrink */
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    .auth-panel::-webkit-scrollbar { display: none; }
+
+    .auth-panel--center {
+        flex: 1.15;
+        background: var(--surface);
+    }
+
+    .auth-panel--left {
+        background:
+                radial-gradient(ellipse 90% 50% at 50% 0%, #c8f13520 0%, transparent 65%),
+                radial-gradient(ellipse 70% 40% at 10% 100%, #c8f13514 0%, transparent 60%),
+                var(--bg);
+    }
+
+    .auth-panel--right {
+        background:
+                radial-gradient(ellipse 90% 50% at 50% 0%, #7b61ff28 0%, transparent 65%),
+                radial-gradient(ellipse 70% 40% at 90% 100%, #7b61ff1c 0%, transparent 60%),
+                var(--bg);
+    }
+
+    /* inner container stretches to fill panel, items shrink to fit */
+    .auth-panel-inner {
+        max-width: 380px;
+        margin: 0 auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        justify-content: center;
+        /* gap scales down if needed */
+        gap: clamp(10px, 1.4vh, 20px);
+    }
+    .auth-panel-inner--center {
+        max-width: 360px;
+    }
+
+    /* screenshot shrinks to whatever space is left */
+    .auth-panel-screenshot {
+        width: 55%;
+        min-height: 0;
+        flex-shrink: 1;
+    }
+    .auth-panel-screenshot img {
+        /* natural aspect ratio but capped so it never overflows */
+        max-height: 34vh;
+        width: auto;
+        margin: 0 auto;
+        display: block;
+        object-fit: contain;
+    }
+
+    /* feature cards: don't grow, but shrink gracefully */
+    .auth-feature-block {
+        flex-shrink: 1;
+        min-height: 0;
+    }
+
+    /* badge: fixed, no shrink */
+    .auth-panel-badge {
+        flex-shrink: 0;
+    }
+}
+
+@media (min-width: 600px) and (max-width: 899px) {
+    .auth-panel { padding: 32px 32px; }
+    .auth-panel-inner { max-width: 480px; margin: 0 auto; }
+}
+
+/* ─── AUTH LOGO / TAGLINE ────────────────────────────── */
 .auth-logo {
     font-family: var(--font-display);
     font-size: 42px;
@@ -1012,18 +1246,36 @@ select.form-input {
 /* ─── AUTH SHOWCASE ─────────────────────────────────── */
 .auth-showcase {
     width: 100%;
-    height: 220px;
     border-radius: var(--r-lg);
     overflow: hidden;
-    border: 1px solid var(--border);
-    background: var(--surface2);
     flex-shrink: 0;
+    position: relative;
+    /* layered shadow: inner dark vignette + outer glow */
+    box-shadow:
+            0 0 0 1px var(--border),
+            0 8px 32px rgba(0, 0, 0, 0.6),
+            0 0 48px rgba(200, 241, 53, 0.07);
 }
+
+/* subtle dark vignette at bottom so image fades into panel bg */
+.auth-showcase::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-lg);
+    background: linear-gradient(
+            to bottom,
+            transparent 55%,
+            rgba(13, 13, 15, 0.55) 100%
+    );
+    pointer-events: none;
+}
+
 .main-image {
     width: 100%;
-    height: 100%;
-    object-fit: contain;   /* вместо cover */
-    background: #000;
+    height: auto;
+    display: block;
+    object-fit: contain;
 }
 
 .auth-features {
