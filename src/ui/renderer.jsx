@@ -46,15 +46,18 @@ export function renderUI() {
 
 let _authRoot  = null;
 let _authState = { loading: false, error: null };
+let _authKey   = 0;
 
-export function renderAuthScreen({ loading = false, error = null } = {}) {
+export function renderAuthScreen({ loading = false, error = null, resetKey = false } = {}) {
     _authState = { loading, error };
+    if (resetKey) _authKey++;
     const container = document.getElementById('screen-auth-root');
     if (!container) return;
     if (!_authRoot) _authRoot = createRoot(container);
 
     _authRoot.render(
         <AuthScreen
+            key={_authKey}
             onSignIn={AuthService.signIn}
             loading={loading}
             error={error}
@@ -338,6 +341,7 @@ export function renderProfileModal({ open = false }) {
             }}
             onSignOut={() => {
                 renderProfileModal({ open: false });
+                renderAuthScreen({ resetKey: true });
                 AuthService.signOut();
             }}
             onClose={() => renderProfileModal({ open: false })}

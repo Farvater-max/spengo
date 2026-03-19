@@ -57,11 +57,21 @@ export function AuthScreen({ onSignIn, loading, error }) {
             <div className="auth-panel auth-panel--center">
                 <div className="auth-panel-inner auth-panel-inner--center">
 
+                    <h1 className="visually-hidden">SpenGo</h1>
+
                     <h1 className="auth-logo">{getI18nValue('auth.logo')}</h1>
                     <p className="auth-tagline">{getI18nValue('auth.tagline')}</p>
 
                     <div className="auth-showcase">
                         <img src="/main.webp" alt="SpenGo expense tracker" className="main-image" fetchPriority="high" />
+                    </div>
+
+                    <div className="auth-feature-block">
+                        <h3 className="auth-feature-title"><span className="auth-feature-icon">🔐</span>Your Expenses. Your Google Sheet</h3>
+                        <p className="auth-feature-desc">
+                            SpenGo is a fast, mobile-first expense tracker.
+                            Your data stays in Google Sheets — no servers, no databases, no third-party storage.
+                        </p>
                     </div>
 
                     <div className="auth-card">
