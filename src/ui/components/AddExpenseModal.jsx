@@ -4,17 +4,20 @@ import { getI18nValue } from '../../i18n/localization.js';
 import { parseAmount } from '../../utils/helpers.js';
 import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
 
-export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose, loading }) {
+export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
     const [amount,   setAmount]   = useState('');
     const [category, setCategory] = useState(initialCat);
     const [comment,  setComment]  = useState('');
+    const [loading,  setLoading]  = useState(false);
 
     const sheetRef = useSwipeToClose(onClose);
     const parsedAmount = parseAmount(amount);
 
-    function handleSubmit() {
+    async function handleSubmit() {
         if (!parsedAmount) return;
-        onSubmit({ amount: parsedAmount, category, comment });
+        setLoading(true);
+        await onSubmit({ amount: parsedAmount, category, comment });
+        setLoading(false);
     }
 
     function handleOverlayClick(e) {

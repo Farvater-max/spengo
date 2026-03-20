@@ -4,10 +4,11 @@ import { getI18nValue } from '../../i18n/localization.js';
 import { parseAmount } from '../../utils/helpers.js';
 import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
 
-export function EditExpenseModal({ expense, onUpdate, onDelete, onClose, loading }) {
+export function EditExpenseModal({ expense, onUpdate, onDelete, onClose }) {
     const [amount,   setAmount]   = useState('');
     const [category, setCategory] = useState('food');
     const [comment,  setComment]  = useState('');
+    const [loading,  setLoading]  = useState(false);
 
     const sheetRef = useSwipeToClose(onClose);
 
@@ -16,6 +17,7 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose, loading
         setAmount(String(expense.amount));
         setCategory(expense.category);
         setComment(expense.comment || '');
+        setLoading(false);
     }, [expense?.id]);
 
     if (!expense) return null;
@@ -27,9 +29,17 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose, loading
         category !== expense.category ||
         comment  !== (expense.comment || '');
 
-    function handleUpdate() {
+    async function handleUpdate() {
         if (!parsedAmount) return;
-        onUpdate(expense.id, parsedAmount, category, comment);
+        setLoading(true);
+        await onUpdate(expense.id, parsedAmount, category, comment);
+        setLoading(false);
+    }
+
+    async function handleDelete() {
+        setLoading(true);
+        await onDelete(expense.id);
+        setLoading(false);
     }
 
     function handleOverlayClick(e) {
@@ -78,7 +88,7 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose, loading
                 <div className="edit-modal-actions">
                     <button
                         className="btn-submit btn-edit-delete"
-                        onClick={() => onDelete(expense.id)}
+                        onClick={handleDelete}
                         disabled={loading}
                     >
                         {getI18nValue('btn.delete')}

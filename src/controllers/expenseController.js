@@ -4,8 +4,20 @@ import * as SheetsService from '../services/sheetsService.js';
 import * as AuthService from '../services/authService.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { uuid, todayStr, showToast } from '../utils/helpers.js';
-import { showScreen, setSetupText } from '../ui/navigation.js';
+import { showScreen } from '../ui/navigation.js';
 import { renderUI, renderAddModal, renderEditModal, renderSetupScreen } from '../ui/renderer.jsx';
+
+// ─── Helpers ──────────────────────────────────────────
+
+async function _withToken(fn) {
+    STATE.accessToken = await AuthService.waitForToken();
+    return fn(STATE.accessToken);
+}
+
+function _saveExpenses(expenses) {
+    STATE.expenses = expenses;
+    localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(expenses));
+}
 
 // ─── Init ─────────────────────────────────────────────
 
@@ -53,8 +65,8 @@ async function _loadAndCacheExpenses() {
         title: getI18nValue('setup.loading'),
         sub:   getI18nValue('setup.reading'),
     });
-    STATE.expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
-    localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
+    const expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
+    _saveExpenses(expenses);
 }
 
 /**
@@ -69,8 +81,7 @@ async function _transitionToMain() {
 
 function _handleInitError(err) {
     console.error('[SpenGo] initSpreadsheet failed:', err);
-    const message = getI18nValue('toast.sheet_error') + err.message;
-    showToast(message, 'error');
+    showToast(getI18nValue('toast.sheet_error') + err.message, 'error');
     showScreen('auth');
 }
 
@@ -84,17 +95,7 @@ export async function refreshDataInBackground() {
         return;
     }
     try {
-        STATE.accessToken = await AuthService.waitForToken();
-
-        renderSetupScreen({
-            title: getI18nValue('setup.loading'),
-            sub:   getI18nValue('setup.reading'),
-        });
-
-        const expenses = await SheetsService.loadExpenses(STATE.accessToken, STATE.spreadsheetId);
-        STATE.expenses = expenses;
-        localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(expenses));
-
+        await _withToken(() => _loadAndCacheExpenses());
         await _transitionToMain();
     } catch (err) {
         console.warn('[SpenGo] Background refresh failed:', err);
@@ -106,7 +107,6 @@ export async function refreshDataInBackground() {
             if (STATE.expenses.length === 0) showScreen('auth');
             else await _transitionToMain();
         } else {
-            // ошибка сети — показываем кэш
             await _transitionToMain();
         }
     }
@@ -116,45 +116,27 @@ export async function refreshDataInBackground() {
 
 export function openAddModal() {
     STATE.selectedCat = 'food';
-    _renderAdd({ loading: false });
-}
-
-function _renderAdd({ loading }) {
     renderAddModal({
         open: true,
-        loading,
         onSubmit: submitExpense,
-        onClose:  _closeAdd,
+        onClose: () => renderAddModal({ open: false }),
     });
-}
-
-function _closeAdd() {
-    renderAddModal({ open: false });
 }
 
 export async function submitExpense({ amount, category, comment }) {
     STATE.selectedCat = category;
-
-    const expense = {
-        id:       uuid(),
-        date:     todayStr(),
-        category,
-        amount,
-        comment,
-    };
-
-    _renderAdd({ loading: true });
+    const expense = { id: uuid(), date: todayStr(), category, amount, comment };
     try {
-        STATE.accessToken = await AuthService.waitForToken();
-        await SheetsService.appendExpense(STATE.accessToken, STATE.spreadsheetId, expense);
-        STATE.expenses.push(expense);
-        localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
-        _closeAdd();
+        await _withToken(token =>
+            SheetsService.appendExpense(token, STATE.spreadsheetId, expense)
+        );
+        _saveExpenses([...STATE.expenses, expense]);
+        renderAddModal({ open: false });
         renderUI();
         showToast(getI18nValue('toast.added'), 'success');
     } catch (err) {
         showToast(getI18nValue('toast.error_prefix') + err.message, 'error');
-        _renderAdd({ loading: false });
+        throw err;
     }
 }
 
@@ -163,59 +145,43 @@ export async function submitExpense({ amount, category, comment }) {
 export function openEditModal(id) {
     const expense = STATE.expenses.find(e => e.id === id);
     if (!expense) return;
-    _renderEdit({ expense, loading: false });
-}
-
-function _renderEdit({ expense, loading }) {
     renderEditModal({
         expense,
-        loading,
         onUpdate: updateExpense,
         onDelete: deleteExpense,
-        onClose:  _closeEdit,
+        onClose:  () => renderEditModal({ expense: null }),
     });
-}
-
-function _closeEdit() {
-    renderEditModal({ expense: null });
 }
 
 export async function updateExpense(id, amount, category, comment) {
     const original = STATE.expenses.find(e => e.id === id);
     if (!original) return;
-
     const updated = { ...original, amount, category, comment };
-
-    _renderEdit({ expense: updated, loading: true });
     try {
-        STATE.accessToken = await AuthService.waitForToken();
-        await SheetsService.editExpense(STATE.accessToken, STATE.spreadsheetId, updated);
-        STATE.expenses = STATE.expenses.map(e => e.id === id ? updated : e);
-        localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
-        _closeEdit();
+        await _withToken(token =>
+            SheetsService.editExpense(token, STATE.spreadsheetId, updated)
+        );
+        _saveExpenses(STATE.expenses.map(e => e.id === id ? updated : e));
+        renderEditModal({ expense: null });
         renderUI();
         showToast(getI18nValue('toast.updated'), 'success');
     } catch (err) {
         showToast(getI18nValue('toast.error_prefix') + err.message, 'error');
-        _renderEdit({ expense: updated, loading: false });
+        throw err;
     }
 }
 
 export async function deleteExpense(id) {
-    const expense = STATE.expenses.find(e => e.id === id);
-    if (!expense) return;
-
-    _renderEdit({ expense, loading: true });
     try {
-        STATE.accessToken = await AuthService.waitForToken();
-        await SheetsService.deleteExpense(STATE.accessToken, STATE.spreadsheetId, id);
-        STATE.expenses = STATE.expenses.filter(e => e.id !== id);
-        localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(STATE.expenses));
-        _closeEdit();
+        await _withToken(token =>
+            SheetsService.deleteExpense(token, STATE.spreadsheetId, id)
+        );
+        _saveExpenses(STATE.expenses.filter(e => e.id !== id));
+        renderEditModal({ expense: null });
         renderUI();
         showToast(getI18nValue('toast.deleted'), 'success');
     } catch {
         showToast(getI18nValue('toast.delete_error'), 'error');
-        _renderEdit({ expense, loading: false });
+        throw new Error('delete failed');
     }
 }
