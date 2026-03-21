@@ -111,7 +111,7 @@ describe('formatDate', () => {
         // when
         const result = formatDate(date, 'cs');
         // then
-        expect(result).toBe('1. mar');
+        expect(result).toBe('1 bře');
     });
 
     test('given valid date and unknown lang — when called — then falls back to English', () => {
