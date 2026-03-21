@@ -19,7 +19,7 @@ SpenGo is a lightweight mobile-first web app for tracking personal expenses. All
 - **Google Sheets as a database** — your expenses live in your own Google Drive, you own the data
 - **Three periods** — track spending by day, week, or month at a glance
 - **Categories** — Food, Transport, Housing, Health, Entertainment, Sport, Clothes, School, Other
-- **Visual analytics** — monthly breakdown by category with bar charts
+- **Visual analytics** — monthly, weekly, and daily breakdown by category with bar and donut charts
 - **Multilingual** — English, Russian, Spanish
 - **Offline-friendly** — recent expenses cached locally in the browser
 - **No ads, no tracking, no servers**
@@ -29,8 +29,8 @@ SpenGo is a lightweight mobile-first web app for tracking personal expenses. All
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
-| Frontend | Vanilla JS (ES Modules) |
+| --- | --- |
+| Frontend | React 18 (JSX components) + Vanilla JS (ES Modules) |
 | Build tool | Vite |
 | Auth | Google Identity Services (OAuth 2.0) |
 | Storage | Google Sheets API v4 |
@@ -74,6 +74,9 @@ npm run dev
 
 # 5. Build for production
 npm run build
+
+# 6. Run tests
+npm test
 ```
 
 ---
@@ -84,36 +87,6 @@ npm run build
 |---|---|
 | `VITE_CLIENT_ID` | Google OAuth 2.0 Client ID |
 | `VITE_API_KEY` | Google API Key (for Sheets & Drive) |
-
----
-
-## Project Structure
-
-```
-├── public/
-│   ├── favicon.svg
-│   ├── main.webp
-│   ├── ogimage.png
-│   ├── localization.json
-│   ├── sitemap.xml
-│   ├── robots.txt
-│   ├── llms.txt
-│   └── privacy-policy.html
-├── src/
-│   ├── api/
-│   ├── controllers/
-│   ├── services/
-│   ├── ui/
-│   ├── i18n/
-│   ├── constants/
-│   └── utils/
-├── app.js
-├── config.js
-├── index.html
-├── styles.css
-├── vite.config.js
-└── vercel.json
-```
 
 ---
 
