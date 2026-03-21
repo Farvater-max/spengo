@@ -1,4 +1,4 @@
-import { STATE } from '../../state.js';
+import { STATE } from '../state.js';
 import { getFilteredExpenses, sumAmounts } from '../utils/helpers.js';
 import { LANG, setLang, getI18nValue } from '../i18n/localization.js';
 import { openEditModal, openAddModal } from '../controllers/expenseController.js';
@@ -6,6 +6,12 @@ import { renderChart } from './statistics/statistics-chart.js';
 import { renderDonutChart } from './statistics/statistics-donut.js';
 import { getPeriod, setPeriod } from './statistics/statistics-state.js';
 import * as AuthService from '../services/authService.js';
+import {
+    selectCategory,
+    selectPeriod,
+    selectAddCategory,
+    selectEditCategory,
+} from '../controllers/uiController.js';
 import { createRoot } from 'react-dom/client';
 import { ExpenseList }        from './components/ExpenseList.jsx';
 import { CategoryFilter }     from './components/CategoryFilter.jsx';
@@ -177,11 +183,7 @@ export function renderSummary() {
         <SummaryCard
             total={sumAmounts(getFilteredExpenses(STATE))}
             currentPeriod={STATE.currentPeriod}
-            onPeriodChange={period => {
-                STATE.currentPeriod = period;
-                renderSummary();
-                renderExpenseList();
-            }}
+            onPeriodChange={selectPeriod}
         />
     );
 }
@@ -234,12 +236,7 @@ export function renderCategoryFilter() {
         <CategoryFilter
             expenses={STATE.expenses}
             activeCat={STATE.currentCategoryFilter}
-            onSelect={catId => {
-                STATE.currentCategoryFilter = catId;
-                renderCategoryFilter();
-                renderExpenseList();
-                renderSummary();
-            }}
+            onSelect={selectCategory}
         />
     );
 }
@@ -256,7 +253,7 @@ export function renderCategorySelectGrid() {
     _catSelectRoot.render(
         <CategorySelectGrid
             selectedCat={STATE.selectedCat}
-            onSelect={catId => { STATE.selectedCat = catId; renderCategorySelectGrid(); }}
+            onSelect={selectAddCategory}
         />
     );
 }
@@ -273,7 +270,7 @@ export function renderCategoryEditGrid() {
     _catEditRoot.render(
         <CategorySelectGrid
             selectedCat={STATE.selectedCat}
-            onSelect={catId => { STATE.selectedCat = catId; renderCategoryEditGrid(); }}
+            onSelect={selectEditCategory}
         />
     );
 }
@@ -362,4 +359,41 @@ export function renderStatistics() {
 export function updateAvatarUI() {
     renderMainHeader();
     renderStatsHeader();
+}
+
+// ─── Reactive bindings ────────────────────────────────
+//
+// Wire STATE changes to renders once, at app startup (called from app.js).
+// After this point any code can mutate STATE directly — the right renders
+// fire automatically, with no manual render() calls needed at the call site.
+
+export function initReactiveBindings() {
+    STATE.subscribe('expenses', () => {
+        renderExpenseList();
+        renderCategoryFilter();
+        renderSummary();
+    });
+
+    STATE.subscribe('currentPeriod', () => {
+        renderSummary();
+        renderExpenseList();
+    });
+
+    STATE.subscribe('currentCategoryFilter', () => {
+        renderCategoryFilter();
+        renderExpenseList();
+        renderSummary();
+    });
+
+    STATE.subscribe('currentScreen', renderBottomNav);
+
+    STATE.subscribe('selectedCat', () => {
+        renderCategorySelectGrid();
+        renderCategoryEditGrid();
+    });
+
+    STATE.subscribe('userProfile', () => {
+        renderMainHeader();
+        renderStatsHeader();
+    });
 }

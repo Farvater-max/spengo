@@ -1,4 +1,4 @@
-import { STATE } from '../../state.js';
+import { STATE } from '../state.js';
 import { renderStatistics, renderBottomNav, renderSetupScreen, setAuthError } from './renderer.jsx';
 
 export function showScreen(name) {

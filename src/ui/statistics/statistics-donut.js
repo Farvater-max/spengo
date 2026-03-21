@@ -1,6 +1,6 @@
 import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
 import { formatMoney, sumAmounts, isInPeriod } from '../../utils/helpers.js';
-import { STATE } from '../../../state.js';
+import { STATE } from '../../state.js';
 import { getI18nValue } from '../../i18n/localization.js';
 import { CATEGORIES } from '../../constants/categories.js';
 import { onPeriodChange } from './statistics-state.js';
