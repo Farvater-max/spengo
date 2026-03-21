@@ -12,7 +12,7 @@ SpenGo is a lightweight, mobile-first web application for tracking personal expe
 - Track spending by day, week, or month
 - Categories: Food, Transport, Housing, Health, Entertainment, Sport, Clothes, School, Other
 - Visual analytics: bar chart by period and donut breakdown by category
-- Multilingual: English, Russian, Spanish
+- Multilingual: English, Russian, Spanish, Polish, Czech
 - Recent expenses cached locally in browser localStorage
 - No ads, no tracking, no servers
 

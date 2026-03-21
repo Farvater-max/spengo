@@ -96,6 +96,24 @@ describe('formatDate', () => {
         expect(result).toBe('1 mar');
     });
 
+    test('given valid date and lang "pl" — when called — then returns Polish format', () => {
+        // given
+        const date = '2024-03-01';
+        // when
+        const result = formatDate(date, 'pl');
+        // then
+        expect(result).toBe('1 mar');
+    });
+
+    test('given valid date and lang "cs" — when called — then returns Czech format', () => {
+        // given
+        const date = '2024-03-01';
+        // when
+        const result = formatDate(date, 'cs');
+        // then
+        expect(result).toBe('1. mar');
+    });
+
     test('given valid date and unknown lang — when called — then falls back to English', () => {
         // given
         const date = '2024-03-01';
