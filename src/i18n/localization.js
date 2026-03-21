@@ -10,13 +10,13 @@ export async function loadTranslations() {
         TRANSLATIONS = await res.json();
     } catch (e) {
         console.warn('Could not load localization.json:', e);
-        TRANSLATIONS = { ru: {}, en: {}, es: {} };
+        TRANSLATIONS = { ru: {}, en: {}, es: {}, pl: {}, cs: {} };
     }
 }
 
 export function getI18nValue(key) {
     return (TRANSLATIONS[LANG] && TRANSLATIONS[LANG][key])
-        || (TRANSLATIONS['ru'] && TRANSLATIONS['ru'][key])
+        || (TRANSLATIONS['en'] && TRANSLATIONS['en'][key])
         || key;
 }
 

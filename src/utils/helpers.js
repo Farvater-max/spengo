@@ -1,12 +1,14 @@
 import { LANG } from '../i18n/localization.js';
 import { parseISO, isSameDay, isSameMonth, isSameWeek, format } from 'date-fns';
-import { ru, enUS, es } from 'date-fns/locale';
+import { ru, enUS, es, pl, cs } from 'date-fns/locale';
 import Big from 'big.js';
-const LOCALE_MAP = { ru: 'ru-RU', en: 'en-US', es: 'es-ES' };
+const LOCALE_MAP = { ru: 'ru-RU', en: 'en-US', es: 'es-ES', pl: 'pl-PL', cs: 'cs-CZ'};
 const DATE_FNS_LOCALES = {
     'ru-RU': ru,
     'en-US': enUS,
-    'es-ES': es
+    'es-ES': es,
+    'pl-PL': pl,
+    'cs-CZ': cs,
 };
 
 

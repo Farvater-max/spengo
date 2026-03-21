@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { getI18nValue } from '../../i18n/localization.js';
 
-const LANGS = ['ru', 'en', 'es'];
+const LANGS = ['en', 'ru', 'es', 'pl', 'cs'];
+
+const LANG_FLAGS  = { en: '🇬🇧', ru: '🇷🇺', es: '🇪🇸', pl: '🇵🇱', cs: '🇨🇿' };
+const LANG_LABELS = { en: 'EN', ru: 'RU', es: 'ES', pl: 'PL',  cs: 'CZ' };
 
 /**
  * @param {{
@@ -77,7 +80,7 @@ function LangDropdown({ current, onChange }) {
                 aria-haspopup="listbox"
                 aria-expanded={open}
             >
-                {current.toUpperCase()}
+                <span className="lang-dropdown__flag">{LANG_FLAGS[current]}</span> {LANG_LABELS[current]}
                 <span className={`lang-dropdown__arrow${open ? ' open' : ''}`}>▾</span>
             </button>
 
@@ -91,7 +94,7 @@ function LangDropdown({ current, onChange }) {
                             className={`lang-dropdown__option${lang === current ? ' active' : ''}`}
                             onMouseDown={e => { e.preventDefault(); select(lang); }}
                         >
-                            {lang.toUpperCase()}
+                            <span className="lang-dropdown__flag">{LANG_FLAGS[lang]}</span> {LANG_LABELS[lang]}
                         </li>
                     ))}
                 </ul>
