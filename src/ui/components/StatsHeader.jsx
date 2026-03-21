@@ -17,11 +17,11 @@ export function StatsHeader({ currentPeriod, onPeriodChange, onAvatarClick, prof
                 {getI18nValue('auth.logo')}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div className="lang-toggle">
+                <div className="period-toggle">
                     {PERIODS.map(p => (
                         <button
                             key={p}
-                            className={`lang-btn chart-period-btn${currentPeriod === p ? ' active' : ''}`}
+                            className={`period-btn${currentPeriod === p ? ' active' : ''}`}
                             onClick={() => onPeriodChange(p)}
                         >
                             {getI18nValue(`chart.period.${p}`)}

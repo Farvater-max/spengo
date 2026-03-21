@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { getI18nValue } from '../../i18n/localization.js';
 
 const LANGS = ['ru', 'en', 'es'];
@@ -17,17 +18,7 @@ export function MainHeader({ currentLang, onLangChange, onAvatarClick, profile }
                 {getI18nValue('auth.logo')}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div className="lang-toggle">
-                    {LANGS.map(lang => (
-                        <button
-                            key={lang}
-                            className={`lang-btn${currentLang === lang ? ' active' : ''}`}
-                            onClick={() => onLangChange(lang)}
-                        >
-                            {lang.toUpperCase()}
-                        </button>
-                    ))}
-                </div>
+                <LangDropdown current={currentLang} onChange={onLangChange} />
                 <div className="header-avatar" onClick={onAvatarClick}>
                     {profile?.picture
                         ? <img src={profile.picture} alt="avatar" />
@@ -35,6 +26,76 @@ export function MainHeader({ currentLang, onLangChange, onAvatarClick, profile }
                     }
                 </div>
             </div>
+        </div>
+    );
+}
+
+// ─── LangDropdown ─────────────────────────────────────
+
+/**
+ * Fully custom language dropdown — consistent appearance across iOS/Android/Desktop.
+ * Closes on outside click, Escape key, and after selection.
+ *
+ * @param {{ current: string, onChange: (lang: string) => void }} props
+ */
+function LangDropdown({ current, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    // Close on outside click
+    useEffect(() => {
+        if (!open) return;
+        const handler = e => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        document.addEventListener('touchstart', handler);
+        return () => {
+            document.removeEventListener('mousedown', handler);
+            document.removeEventListener('touchstart', handler);
+        };
+    }, [open]);
+
+    // Close on Escape
+    useEffect(() => {
+        if (!open) return;
+        const handler = e => { if (e.key === 'Escape') setOpen(false); };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
+    }, [open]);
+
+    function select(lang) {
+        setOpen(false);
+        if (lang !== current) onChange(lang);
+    }
+
+    return (
+        <div className="lang-dropdown" ref={ref}>
+            <button
+                className="lang-dropdown__trigger"
+                onClick={() => setOpen(v => !v)}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+            >
+                {current.toUpperCase()}
+                <span className={`lang-dropdown__arrow${open ? ' open' : ''}`}>▾</span>
+            </button>
+
+            {open && (
+                <ul className="lang-dropdown__menu" role="listbox">
+                    {LANGS.map(lang => (
+                        <li
+                            key={lang}
+                            role="option"
+                            aria-selected={lang === current}
+                            className={`lang-dropdown__option${lang === current ? ' active' : ''}`}
+                            onMouseDown={e => { e.preventDefault(); select(lang); }}
+                        >
+                            {lang.toUpperCase()}
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 }
