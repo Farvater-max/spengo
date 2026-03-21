@@ -1,5 +1,5 @@
 import { CONFIG } from '../constants/config.js';
-import { revokeToken, initGapiClient } from '../api/client/googleClient.js';
+import { revokeToken, initGapiClient, fetchUserProfile } from '../api/client/googleClient.js';
 import {
     waitForGoogleSdk,
     buildTokenClientConfig,
@@ -189,6 +189,17 @@ function _onTokenResponse(response) {
     waiters.forEach(w => w.resolve(_accessToken));
 
     _callbacks.onSignIn({ accessToken: _accessToken });
+}
+
+/**
+ * Fetches the basic profile of the authenticated user.
+ * Delegates to googleClient — callers don't need to know the API details.
+ *
+ * @param {string} accessToken
+ * @returns {Promise<{ email: string, name: string, picture: string, letter: string }|null>}
+ */
+export function getUserProfile(accessToken) {
+    return fetchUserProfile(accessToken);
 }
 
 /**

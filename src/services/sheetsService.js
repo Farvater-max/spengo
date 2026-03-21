@@ -1,5 +1,4 @@
 import { CONFIG } from '../constants/config.js';
-import * as Storage from '../services/storageService.js';
 import {
     verifySpreadsheet,
     findExistingSpreadsheet,
@@ -12,35 +11,27 @@ import {
 
 /**
  * Ensures a valid spreadsheet exists.
- * Verifies the cached ID, or creates a fresh one if absent/inaccessible.
- * Persists the resolved ID via storageService.
+ * Verifies the cached ID if provided, or searches and creates if absent/invalid.
+ * Persistence of the resolved ID is handled by the caller (expenseController).
  *
  * @param {string} accessToken
+ * @param {string|null} cachedId  - Previously stored spreadsheet ID, or null
  * @returns {Promise<{ spreadsheetId: string, isNew: boolean }>}
  */
-export async function resolveSpreadsheet(accessToken) {
-    let spreadsheetId = Storage.getSheetId();
-
-    if (spreadsheetId) {
-        const ok = await verifySpreadsheet(accessToken, spreadsheetId);
-        if (ok) return { spreadsheetId, isNew: false };
-
-        spreadsheetId = null;
-        Storage.saveSheetId('');
-    }
-    spreadsheetId = await findExistingSpreadsheet(accessToken, CONFIG.SPREADSHEET_TITLE);
-
-    if (spreadsheetId) {
-        Storage.saveSheetId(spreadsheetId);
-        return { spreadsheetId, isNew: false };
+export async function resolveSpreadsheet(accessToken, cachedId = null) {
+    if (cachedId) {
+        const ok = await verifySpreadsheet(accessToken, cachedId);
+        if (ok) return { spreadsheetId: cachedId, isNew: false };
     }
 
-    spreadsheetId = await createSpreadsheet(accessToken, {
+    const found = await findExistingSpreadsheet(accessToken, CONFIG.SPREADSHEET_TITLE);
+    if (found) return { spreadsheetId: found, isNew: false };
+
+    const created = await createSpreadsheet(accessToken, {
         title:     CONFIG.SPREADSHEET_TITLE,
         sheetName: CONFIG.SHEET_NAME,
     });
-    Storage.saveSheetId(spreadsheetId);
-    return { spreadsheetId, isNew: true };
+    return { spreadsheetId: created, isNew: true };
 }
 
 /**

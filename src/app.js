@@ -5,7 +5,6 @@ import { onAuthReady, onSignIn, onSignOut, onSilentFail, _enableSignInButton } f
 import { restoreCachedExpenses } from './controllers/expenseController.js';
 import { showAuthError, navigate } from './ui/navigation.js';
 import { renderAuthScreen, renderSetupScreen, mountStatsScreen, initReactiveBindings } from './ui/renderer.jsx';
-import { bindEvents } from './ui/events.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('spengo:navigate', e => navigate(e.detail.name));
@@ -14,7 +13,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateCategoryLabels();
     applyTranslations(STATE, null);
     restoreCachedExpenses();
-    bindEvents();
 
     renderAuthScreen({ loading: true });
     mountStatsScreen();

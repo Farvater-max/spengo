@@ -19,6 +19,7 @@ const LOCAL_STORAGE = {
     EXPENSES:          'spengo_expenses',
     LOGIN_HINT:        'google_login_hint',
     NUMERIC_SHEET_ID:  'spengo_numeric_sheet_id',
+    PROFILE:           'spengo_profile',
 };
 
 const SESSION_STORAGE = {
@@ -183,4 +184,41 @@ export function clearAll() {
     localStorage.removeItem(LOCAL_STORAGE.EXPENSES);
     localStorage.removeItem(LOCAL_STORAGE.LOGIN_HINT);
     localStorage.removeItem(LOCAL_STORAGE.NUMERIC_SHEET_ID);
+    localStorage.removeItem(LOCAL_STORAGE.PROFILE);
+}
+
+// ---------------------------------------------------------------------------
+// User profile cache
+// Persisted across restarts so the avatar is visible before the network call.
+// ---------------------------------------------------------------------------
+
+/**
+ * Serialises and persists the user profile object.
+ * Silently no-ops if serialisation fails (e.g. storage quota exceeded).
+ * @param {{ email: string, name: string, picture: string, letter: string }} profile
+ */
+export function saveProfile(profile) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE.PROFILE, JSON.stringify(profile));
+    } catch {}
+}
+
+/**
+ * Deserialises and returns the cached profile, or null if absent / corrupt.
+ * @returns {{ email: string, name: string, picture: string, letter: string }|null}
+ */
+export function getProfile() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE.PROFILE);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Removes the cached profile from localStorage.
+ */
+export function clearProfile() {
+    localStorage.removeItem(LOCAL_STORAGE.PROFILE);
 }
