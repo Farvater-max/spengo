@@ -1,4 +1,4 @@
-import { STATE } from '../../state.js';
+import { STATE } from '../state.js';
 import { STORAGE } from '../constants/storage.js';
 import * as SheetsService from '../services/sheetsService.js';
 import * as AuthService from '../services/authService.js';

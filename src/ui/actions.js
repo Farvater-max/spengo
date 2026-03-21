@@ -1,4 +1,4 @@
-import { STATE } from '../../state.js';
+import { STATE } from '../state.js';
 import {
     renderSummary,
     renderExpenseList,

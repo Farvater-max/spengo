@@ -1,6 +1,6 @@
 import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip } from 'chart.js';
 import { formatMoney, sumAmounts, isInPeriod } from '../../utils/helpers.js';
-import { STATE } from '../../../state.js';
+import { STATE } from '../../state.js';
 import { getI18nValue } from '../../i18n/localization.js';
 import { getPeriod, setPeriod, onPeriodChange } from './statistics-state.js';
 

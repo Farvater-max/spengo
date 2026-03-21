@@ -1,4 +1,4 @@
-import { STATE } from '../../state.js';
+import { STATE } from '../state.js';
 import * as AuthService from '../services/authService.js';
 import * as Storage from '../services/storageService.js';
 import { fetchUserProfile } from '../api/client/googleClient.js';

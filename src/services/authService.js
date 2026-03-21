@@ -6,6 +6,7 @@ import {
     isSilentAuthError,
     formatAuthError,
 } from '../helpers/authHelpers.js';
+import * as Storage from './storageService.js';
 
 // ---------------------------------------------------------------------------
 // Internal state
@@ -53,7 +54,6 @@ let _callbacks = {
 
 export async function init(callbacks = {}) {
     _callbacks = { ..._callbacks, ...callbacks };
-
     try {
         await waitForGoogleSdk();
         await initGapiClient(CONFIG.API_KEY);
@@ -97,8 +97,7 @@ export function silentRefresh() {
         }
     }, SILENT_REFRESH_TIMEOUT_MS);
 
-    const hint = localStorage.getItem('google_login_hint') ?? '';
-    _tokenClient.requestAccessToken({ prompt: '', login_hint: hint });
+    _tokenClient.requestAccessToken({ prompt: '', login_hint: Storage.getLoginHint() });
 }
 
 /**
@@ -139,8 +138,7 @@ export async function signOut() {
 
     _accessToken = null;
     _pendingFlowType = null;
-    sessionStorage.removeItem('google_access_token');
-    sessionStorage.removeItem('google_token_expires_at');
+    Storage.clearSession();
     _callbacks.onSignOut();
 }
 
@@ -184,8 +182,7 @@ function _onTokenResponse(response) {
 
     _accessToken = response.access_token;
     const expiresAt = Date.now() + (response.expires_in - 60) * 1000;
-    sessionStorage.setItem('google_access_token', _accessToken);
-    sessionStorage.setItem('google_token_expires_at', String(expiresAt));
+    Storage.saveSession(_accessToken, expiresAt);
 
     // Resolve any callers that were waiting for a fresh token
     const waiters = _tokenWaiters.splice(0);
@@ -194,10 +191,12 @@ function _onTokenResponse(response) {
     _callbacks.onSignIn({ accessToken: _accessToken });
 }
 
+/**
+ * @returns {boolean} True if the cached token is absent or past its expiry window.
+ * Delegates to storageService — single source of truth for token expiry.
+ */
 export function isTokenExpired() {
-    const expiresAt = sessionStorage.getItem('google_token_expires_at');
-    if (!expiresAt) return true;
-    return Date.now() > Number(expiresAt);
+    return Storage.isTokenExpired();
 }
 
 /**
