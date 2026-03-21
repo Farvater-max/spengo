@@ -142,6 +142,7 @@ export function renderMainHeader() {
                     renderStatsHeader();
                     renderCategorySelectGrid();
                     renderCategoryEditGrid();
+                    renderSectionTitle();
                 });
                 renderMainHeader();
             }}
@@ -385,7 +386,13 @@ export function initReactiveBindings() {
         renderSummary();
     });
 
-    STATE.subscribe('currentScreen', renderBottomNav);
+    // Render bottom nav and section title whenever the active screen changes.
+    // Section title is static but lives on the main screen — it must be mounted
+    // at least once after navigation, since renderUI() no longer runs on data load.
+    STATE.subscribe('currentScreen', () => {
+        renderBottomNav();
+        renderSectionTitle();
+    });
 
     STATE.subscribe('selectedCat', () => {
         renderCategorySelectGrid();

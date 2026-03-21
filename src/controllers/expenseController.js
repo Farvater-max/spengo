@@ -1,11 +1,11 @@
 import { STATE } from '../state.js';
-import { STORAGE } from '../constants/storage.js';
 import * as SheetsService from '../services/sheetsService.js';
 import * as AuthService from '../services/authService.js';
+import * as Storage from '../services/storageService.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { uuid, todayStr, showToast } from '../utils/helpers.js';
 import { showScreen } from '../ui/navigation.js';
-import { renderUI, renderAddModal, renderEditModal, renderSetupScreen } from '../ui/renderer.jsx';
+import { renderAddModal, renderEditModal, renderSetupScreen } from '../ui/renderer.jsx';
 
 // ─── Helpers ──────────────────────────────────────────
 
@@ -16,16 +16,15 @@ async function _withToken(fn) {
 
 function _saveExpenses(expenses) {
     STATE.expenses = expenses;
-    localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(expenses));
+    Storage.saveExpenses(expenses);
 }
 
 // ─── Init ─────────────────────────────────────────────
 
 export function restoreCachedExpenses() {
-    const savedSheetId = localStorage.getItem(STORAGE.SHEET_ID);
-    if (!savedSheetId) return;
-    const cached = localStorage.getItem(STORAGE.EXPENSES);
-    if (cached) STATE.expenses = JSON.parse(cached);
+    if (!Storage.getSheetId()) return;
+    const cached = Storage.getExpenses();
+    if (cached.length > 0) STATE.expenses = cached;
 }
 
 /**
@@ -47,7 +46,11 @@ async function _resolveAndSaveSpreadsheet() {
         title: getI18nValue('setup.finding'),
         sub:   getI18nValue('setup.checking'),
     });
-    const { spreadsheetId, isNew } = await SheetsService.resolveSpreadsheet(STATE.accessToken);
+
+    const { spreadsheetId, isNew } = await SheetsService.resolveSpreadsheet(
+        STATE.accessToken,
+        Storage.getSheetId(),   // caller owns the cache read
+    );
 
     if (isNew) {
         renderSetupScreen({
@@ -57,7 +60,7 @@ async function _resolveAndSaveSpreadsheet() {
     }
 
     STATE.spreadsheetId = spreadsheetId;
-    localStorage.setItem(STORAGE.SHEET_ID, spreadsheetId);
+    Storage.saveSheetId(spreadsheetId);  // caller owns the cache write
 }
 
 async function _loadAndCacheExpenses() {
@@ -69,12 +72,7 @@ async function _loadAndCacheExpenses() {
     _saveExpenses(expenses);
 }
 
-/**
- * Рендерим main в фоне пока setup ещё виден,
- * ждём один paint кадр, затем переключаем — нет чёрного экрана.
- */
 async function _transitionToMain() {
-    renderUI();
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     showScreen('main');
 }
@@ -101,8 +99,7 @@ export async function refreshDataInBackground() {
         console.warn('[SpenGo] Background refresh failed:', err);
         const isAuthError = err.message.includes('401') || err.message.includes('403');
         if (isAuthError) {
-            sessionStorage.removeItem('google_access_token');
-            sessionStorage.removeItem('google_token_expires_at');
+            Storage.clearSession();
             STATE.accessToken = null;
             if (STATE.expenses.length === 0) showScreen('auth');
             else await _transitionToMain();
@@ -132,7 +129,6 @@ export async function submitExpense({ amount, category, comment }) {
         );
         _saveExpenses([...STATE.expenses, expense]);
         renderAddModal({ open: false });
-        renderUI();
         showToast(getI18nValue('toast.added'), 'success');
     } catch (err) {
         showToast(getI18nValue('toast.error_prefix') + err.message, 'error');
@@ -163,7 +159,6 @@ export async function updateExpense(id, amount, category, comment) {
         );
         _saveExpenses(STATE.expenses.map(e => e.id === id ? updated : e));
         renderEditModal({ expense: null });
-        renderUI();
         showToast(getI18nValue('toast.updated'), 'success');
     } catch (err) {
         showToast(getI18nValue('toast.error_prefix') + err.message, 'error');
@@ -178,7 +173,6 @@ export async function deleteExpense(id) {
         );
         _saveExpenses(STATE.expenses.filter(e => e.id !== id));
         renderEditModal({ expense: null });
-        renderUI();
         showToast(getI18nValue('toast.deleted'), 'success');
     } catch {
         showToast(getI18nValue('toast.delete_error'), 'error');

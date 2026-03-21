@@ -1,9 +1,8 @@
 import { STATE } from '../state.js';
 import * as AuthService from '../services/authService.js';
 import * as Storage from '../services/storageService.js';
-import { fetchUserProfile } from '../api/client/googleClient.js';
 import { initSpreadsheet, refreshDataInBackground } from './expenseController.js';
-import { showScreen, setSetupText } from '../ui/navigation.js';
+import { showScreen } from '../ui/navigation.js';
 import { renderUI, updateAvatarUI, renderProfileModal, setNavEnabled, renderAuthScreen, renderSetupScreen } from '../ui/renderer.jsx';
 import { getI18nValue } from '../i18n/localization.js';
 import { showToast } from '../utils/helpers.js';
@@ -41,11 +40,11 @@ export async function onSignIn({ accessToken }) {
     });
 
     // грузим профиль параллельно — не блокируем UI
-    const profile = await fetchUserProfile(accessToken);
+    const profile = await AuthService.getUserProfile(accessToken);
     if (profile) {
         STATE.userProfile = profile;
         Storage.saveLoginHint(profile.email);
-        try { localStorage.setItem('spengo_profile', JSON.stringify(profile)); } catch {}
+        Storage.saveProfile(profile);
         updateAvatarUI();
     }
 
@@ -65,7 +64,6 @@ export function onSignOut() {
     STATE.selectedCat           = null;
 
     Storage.clearAll();
-    try { localStorage.removeItem('spengo_profile'); } catch {}
 
     setNavEnabled(false);
     renderProfileModal({ open: false });
@@ -132,10 +130,8 @@ function _startSilentRestore(sheetId, expenses) {
 }
 
 function _restoreProfileFromStorage() {
-    try {
-        const raw = localStorage.getItem('spengo_profile');
-        if (raw) { STATE.userProfile = JSON.parse(raw); updateAvatarUI(); }
-    } catch {}
+    const profile = Storage.getProfile();
+    if (profile) { STATE.userProfile = profile; updateAvatarUI(); }
 }
 
 function _toUnauthenticated() {
