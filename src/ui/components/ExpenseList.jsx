@@ -1,5 +1,5 @@
 import { ExpenseItem } from './ExpenseItem.jsx';
-import { getFilteredExpenses } from '../../utils/helpers.js';
+import { getFilteredExpenses, sortExpenses } from '../../utils/helpers.js';
 import { getI18nValue } from '../../i18n/localization.js';
 
 /**
@@ -7,17 +7,16 @@ import { getI18nValue } from '../../i18n/localization.js';
  *   expenses: Array,
  *   currentPeriod: string,
  *   currentCategoryFilter: string,
+ *   sortField: 'date' | 'amount',
+ *   sortDir: 'asc' | 'desc',
  *   onEdit: (id: string) => void
  * }} props
  */
-export function ExpenseList({ expenses, currentPeriod, currentCategoryFilter, onEdit }) {
-    const filtered = getFilteredExpenses({
-        expenses,
-        currentPeriod,
-        currentCategoryFilter,
-    }).slice().reverse();
+export function ExpenseList({ expenses, currentPeriod, currentCategoryFilter, sortField, sortDir, onEdit }) {
+    const filtered = getFilteredExpenses({ expenses, currentPeriod, currentCategoryFilter });
+    const sorted   = sortExpenses(filtered, sortField, sortDir);
 
-    if (!filtered.length) {
+    if (!sorted.length) {
         return (
             <div className="empty-state">
                 <div className="empty-icon">🌱</div>
@@ -28,7 +27,7 @@ export function ExpenseList({ expenses, currentPeriod, currentCategoryFilter, on
 
     return (
         <>
-            {filtered.map((item, i) => (
+            {sorted.map((item, i) => (
                 <ExpenseItem
                     key={item.id}
                     item={item}

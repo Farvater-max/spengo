@@ -1399,3 +1399,71 @@ p {
 }
 
 p + p { margin-top: 10px; }
+/* ─── SECTION HEADER ─────────────────────────────────── */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 10px;
+    flex-shrink: 0;          /* не скроллится — вне .expense-list */
+}
+
+/* override section-title padding when inside section-header */
+.section-header .section-title {
+    padding: 0;
+    margin: 0;
+}
+
+/* ─── SORT CONTROLS ──────────────────────────────────── */
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Three-lines direction icon button */
+.sort-dir-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    color: var(--accent);
+    cursor: pointer;
+    transition: border-color .15s, transform .15s;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+}
+.sort-dir-btn:hover  { border-color: var(--accent); }
+.sort-dir-btn:active { transform: scale(.93); }
+
+/* Field selector pill */
+.sort-field-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+}
+.sort-field-pill:hover  { border-color: var(--accent); }
+.sort-field-pill:active { opacity: .8; }
+
+.sort-field-chevron {
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: 1px;
+}

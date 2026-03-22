@@ -5,6 +5,7 @@ import {
     getFilteredExpenses,
     parseAmount,
     sumAmounts,
+    sortExpenses,
     uuid,
     todayStr,
 } from './helpers.js';
@@ -422,5 +423,56 @@ describe('getFilteredExpenses', () => {
         getFilteredExpenses(state);
         // then
         expect(expenses).toHaveLength(originalLength);
+    });
+});
+// ─── sortExpenses ─────────────────────────────────────
+describe('sortExpenses', () => {
+    const expenses = [
+        { id: '1', date: '2024-03-01', amount: 50  },
+        { id: '2', date: '2024-03-03', amount: 200 },
+        { id: '3', date: '2024-03-02', amount: 10  },
+    ];
+
+    test('given field "date" and dir "desc" — when called — then newest first', () => {
+        const result = sortExpenses(expenses, 'date', 'desc');
+        expect(result.map(e => e.id)).toEqual(['2', '3', '1']);
+    });
+
+    test('given field "date" and dir "asc" — when called — then oldest first', () => {
+        const result = sortExpenses(expenses, 'date', 'asc');
+        expect(result.map(e => e.id)).toEqual(['1', '3', '2']);
+    });
+
+    test('given field "amount" and dir "desc" — when called — then largest first', () => {
+        const result = sortExpenses(expenses, 'amount', 'desc');
+        expect(result.map(e => e.id)).toEqual(['2', '1', '3']);
+    });
+
+    test('given field "amount" and dir "asc" — when called — then smallest first', () => {
+        const result = sortExpenses(expenses, 'amount', 'asc');
+        expect(result.map(e => e.id)).toEqual(['3', '1', '2']);
+    });
+
+    test('given same-date expenses — when sort is date desc — then latest inserted is first', () => {
+        // given — all same date, id:3 was inserted last (highest index)
+        const sameDay = [
+            { id: '1', date: '2024-03-01', amount: 10 },
+            { id: '2', date: '2024-03-01', amount: 50 },
+            { id: '3', date: '2024-03-01', amount: 20 },
+        ];
+        // when
+        const result = sortExpenses(sameDay, 'date', 'desc');
+        // then — insertion order tiebreaker: id:3 first, id:2 second, id:1 last
+        expect(result.map(e => e.id)).toEqual(['3', '2', '1']);
+    });
+
+    test('given empty array — when called — then returns empty array', () => {
+        expect(sortExpenses([], 'date', 'desc')).toEqual([]);
+    });
+
+    test('given expenses — when called — then does not mutate original array', () => {
+        const original = [...expenses];
+        sortExpenses(expenses, 'amount', 'asc');
+        expect(expenses).toEqual(original);
     });
 });

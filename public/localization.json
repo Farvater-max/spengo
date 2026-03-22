@@ -65,6 +65,8 @@
     "cat.clothes": "Одежда",
     "cat.school": "Школа",
     "cat.other": "Прочее",
+    "sort.date": "по дате",
+    "sort.amount": "по расходу",
     "chart.period.week": "Неделя",
     "chart.period.month": "Месяц",
     "chart.period.year": "Год"
@@ -135,6 +137,8 @@
     "cat.clothes": "Clothes",
     "cat.school": "School",
     "cat.other": "Other",
+    "sort.date": "by date",
+    "sort.amount": "by spends",
     "chart.period.week": "Week",
     "chart.period.month": "Month",
     "chart.period.year": "Year"
@@ -205,6 +209,8 @@
     "cat.clothes": "Ropa",
     "cat.school": "Escuela",
     "cat.other": "Otros",
+    "sort.date": "por fecha",
+    "sort.amount": "por gastos",
     "chart.period.week": "Semana",
     "chart.period.month": "Mes",
     "chart.period.year": "Año"
@@ -275,6 +281,8 @@
     "cat.clothes": "Ubrania",
     "cat.school": "Szkoła",
     "cat.other": "Inne",
+    "sort.date": "według daty",
+    "sort.amount": "według wydatków",
     "chart.period.week": "Tydzień",
     "chart.period.month": "Miesiąc",
     "chart.period.year": "Rok"
@@ -345,6 +353,8 @@
     "cat.clothes": "Oblečení",
     "cat.school": "Škola",
     "cat.other": "Ostatní",
+    "sort.date": "podle data",
+    "sort.amount": "podle výdajů",
     "chart.period.week": "Týden",
     "chart.period.month": "Měsíc",
     "chart.period.year": "Rok"

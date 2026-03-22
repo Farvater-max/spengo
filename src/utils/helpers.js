@@ -192,3 +192,29 @@ export function sumAmounts(expenses) {
     const total = expenses.reduce((acc, e) => acc.plus(new Big(e.amount)), new Big(0));
     return Number(total.toFixed(2));
 }
+/**
+ * Returns a sorted copy of an expenses array without mutating the original.
+ *
+ * @param {Array<{ date: string, amount: number }>} expenses
+ * @param {'date' | 'amount'} field  - The field to sort by.
+ * @param {'asc' | 'desc'}    dir    - Sort direction.
+ * @returns {Array}
+ */
+export function sortExpenses(expenses, field, dir) {
+    const multiplier = dir === 'asc' ? 1 : -1;
+
+    // Capture original insertion order once — used as tiebreaker so that
+    // within the same date the most recently added expense always ranks first.
+    const indexMap = new Map(expenses.map((e, i) => [e.id, i]));
+
+    return expenses.slice().sort((a, b) => {
+        if (field === 'date') {
+            const diff = a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+            if (diff !== 0) return diff * multiplier;
+            // Same date — newer insertion (higher index) ranks first regardless of dir
+            return indexMap.get(b.id) - indexMap.get(a.id);
+        }
+        // field === 'amount'
+        return (a.amount - b.amount) * multiplier;
+    });
+}
