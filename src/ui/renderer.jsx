@@ -36,13 +36,19 @@ export function setNavEnabled(enabled) {
     renderBottomNav();
 }
 
+
+// ─── Sort state ───────────────────────────────────────
+
+let _sortField = 'date';
+let _sortDir   = 'desc';
+
 // ─── renderUI ─────────────────────────────────────────
 
 export function renderUI() {
     renderMainHeader();
     renderSummary();
     renderCategoryFilter();
-    renderSectionTitle();
+    renderSectionHeader();
     renderExpenseList();
     renderStatistics();
     renderBottomNav();
@@ -142,7 +148,7 @@ export function renderMainHeader() {
                     renderStatsHeader();
                     renderCategorySelectGrid();
                     renderCategoryEditGrid();
-                    renderSectionTitle();
+                    renderSectionHeader();
                 });
                 renderMainHeader();
             }}
@@ -189,19 +195,60 @@ export function renderSummary() {
     );
 }
 
-// ─── SectionTitle ─────────────────────────────────────
+// ─── SectionHeader (title + sort controls) ────────────
 
-let _sectionTitleRoot = null;
+let _sectionHeaderRoot = null;
 
-export function renderSectionTitle() {
-    const container = document.getElementById('section-title-root');
+export function renderSectionHeader() {
+    const container = document.getElementById('section-header-root');
     if (!container) return;
-    if (!_sectionTitleRoot) _sectionTitleRoot = createRoot(container);
+    if (!_sectionHeaderRoot) _sectionHeaderRoot = createRoot(container);
 
-    _sectionTitleRoot.render(
-        <div className="section-title">
-            {getI18nValue('section.expenses')}
+    function handleDirToggle() {
+        _sortDir = _sortDir === 'desc' ? 'asc' : 'desc';
+        renderSectionHeader();
+        renderExpenseList();
+    }
+
+    function handleFieldCycle() {
+        _sortField = _sortField === 'date' ? 'amount' : 'date';
+        _sortDir   = 'desc';
+        renderSectionHeader();
+        renderExpenseList();
+    }
+
+    const fieldLabel = _sortField === 'date'
+        ? (getI18nValue('sort.date'))
+        : (getI18nValue('sort.amount'));
+
+    _sectionHeaderRoot.render(
+        <div className="section-header">
+            <span className="section-title">{getI18nValue('section.expenses')}</span>
+            <div className="sort-controls">
+                <button className="sort-dir-btn" onClick={handleDirToggle} title="Toggle sort direction">
+                    <SortLinesIcon dir={_sortDir} />
+                </button>
+                <button className="sort-field-pill" onClick={handleFieldCycle}>
+                    {fieldLabel}
+                    <span className="sort-field-chevron">&#9662;</span>
+                </button>
+            </div>
         </div>
+    );
+}
+
+function SortLinesIcon({ dir }) {
+    const isDesc = dir === 'desc';
+    const lines = isDesc
+        ? [{ x2: 13 }, { x2: 9 }, { x2: 5 }]
+        : [{ x2: 5  }, { x2: 9 }, { x2: 13 }];
+    return (
+        <svg width="16" height="14" viewBox="0 0 16 14" fill="none"
+             xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="1" y1="1.5"  x2={lines[0].x2} y2="1.5"  stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            <line x1="1" y1="7"    x2={lines[1].x2} y2="7"    stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            <line x1="1" y1="12.5" x2={lines[2].x2} y2="12.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
     );
 }
 
@@ -219,6 +266,8 @@ export function renderExpenseList() {
             expenses={STATE.expenses}
             currentPeriod={STATE.currentPeriod}
             currentCategoryFilter={STATE.currentCategoryFilter}
+            sortField={_sortField}
+            sortDir={_sortDir}
             onEdit={openEditModal}
         />
     );
@@ -391,7 +440,7 @@ export function initReactiveBindings() {
     // at least once after navigation, since renderUI() no longer runs on data load.
     STATE.subscribe('currentScreen', () => {
         renderBottomNav();
-        renderSectionTitle();
+        renderSectionHeader();
     });
 
     STATE.subscribe('selectedCat', () => {
