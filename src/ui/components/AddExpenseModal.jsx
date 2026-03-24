@@ -1,27 +1,39 @@
 import { useState } from 'react';
 import { CategorySelectGrid } from './CategorySelectGrid.jsx';
-import { getI18nValue } from '../../i18n/localization.js';
-import { parseAmount } from '../../utils/helpers.js';
-import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
+import { DatePicker }         from './DatePicker.jsx';
+import { getI18nValue }       from '../../i18n/localization.js';
+import { parseAmount, todayStr } from '../../utils/helpers.js';
+import { useSwipeToClose }    from '../../hooks/useSwipeToClose.js';
+
+function getMonthStart() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+}
 
 export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
     const [amount,   setAmount]   = useState('');
     const [category, setCategory] = useState(initialCat);
     const [comment,  setComment]  = useState('');
+    const [date,     setDate]     = useState(todayStr());
     const [loading,  setLoading]  = useState(false);
 
-    const sheetRef = useSwipeToClose(onClose);
+    const sheetRef     = useSwipeToClose(onClose);
     const parsedAmount = parseAmount(amount);
 
     async function handleSubmit() {
         if (!parsedAmount) return;
         setLoading(true);
-        await onSubmit({ amount: parsedAmount, category, comment });
+        await onSubmit({ amount: parsedAmount, category, comment, date });
         setLoading(false);
     }
 
     function handleOverlayClick(e) {
-        if (e.target.classList.contains('modal-overlay')) onClose();
+        const isOverlay = e.target.classList.contains('modal-overlay');
+        const isCalendar = e.target.closest('.flatpickr-calendar');
+
+        if (isOverlay && !isCalendar) {
+            onClose();
+        }
     }
 
     return (
@@ -52,9 +64,20 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                 </div>
 
                 <div className="form-group">
+                    <label className="form-label">{getI18nValue('label.date')}</label>
+                    <DatePicker
+                        value={date}
+                        onChange={setDate}
+                        minDate={getMonthStart()}
+                        maxDate={todayStr()}
+                    />
+                </div>
+
+                <div className="form-group">
                     <label className="form-label">{getI18nValue('label.comment')}</label>
                     <input
                         className="form-input"
+                        placeholder={getI18nValue('placeholder.comment')}
                         type="text"
                         maxLength={120}
                         value={comment}

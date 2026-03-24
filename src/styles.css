@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;800&family=Manrope:wght@300;400;500;600&display=swap');
 /* ─── TOKENS ─────────────────────────────────────────── */
 :root {
     --bg:        #0d0d0f;
@@ -1466,4 +1467,158 @@ p + p { margin-top: 10px; }
     font-size: 10px;
     color: var(--muted);
     margin-left: 1px;
+}
+
+/* ── DatePicker (Pikaday) ────────────────────────────────────
+   Trigger button opens a Pikaday popup.
+   No <input> is ever exposed — manual text entry is impossible.
+──────────────────────────────────────────────────────────── */
+
+.datepicker-wrapper {
+    position: relative;
+}
+
+/* Hidden input Pikaday uses as anchor — never visible to the user */
+.datepicker-anchor {
+    position:       absolute;
+    width:          120;
+    height:         0;
+    opacity:        0;
+    border:         none;
+    padding:        0;
+    pointer-events: none;
+}
+
+.datepicker-trigger {
+    width:         100%;
+    display:       flex;
+    align-items:   center;
+    gap:           10px;
+    background:    var(--surface2);
+    border:        1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    padding:       14px 16px;
+    color:         var(--text);
+    font-family:   var(--font-body);
+    font-size:     16px;
+    cursor:        pointer;
+    transition:    border-color .15s;
+    text-align:    left;
+    -webkit-tap-highlight-color: transparent;
+}
+.datepicker-trigger:hover,
+.datepicker-trigger:focus-visible {
+    border-color: var(--accent);
+    outline:      none;
+}
+
+.datepicker-trigger svg:first-child {
+    color:       var(--accent);
+    flex-shrink: 0;
+}
+
+.datepicker-trigger__label {
+    flex: 1;
+}
+
+.datepicker-trigger__chevron {
+    color:       var(--muted);
+    flex-shrink: 0;
+}
+
+/* ── Pikaday popup dark theme ──────────────────────────────── */
+.pika-single {
+    font-family:   var(--font-body) !important;
+    background:    var(--surface2) !important;
+    border:        1px solid var(--border) !important;
+    border-radius: var(--r-md) !important;
+    box-shadow:    0 16px 48px rgba(0,0,0,.55) !important;
+    color:         var(--text) !important;
+    z-index:       300 !important;
+}
+@media (min-width: 768px) {
+    .pika-single {
+        left: 290 !important;
+    }
+}
+@media (max-width: 767px) {
+    .pika-single {
+        left: 70px !important;
+    }
+}
+
+/* Header: hide prev/next, center the month label */
+.pika-prev,
+.pika-next {
+    display: none !important;
+}
+
+.pika-title {
+    background: var(--surface2) !important;
+    padding:    8px 4px 4px !important;
+    text-align: center !important;
+}
+
+.pika-label {
+    background:  var(--surface2) !important;
+    color:       var(--text) !important;
+    font-size:   15px !important;
+    font-weight: 600 !important;
+    pointer-events: none !important;
+}
+
+/* Weekday labels */
+.pika-table {
+    width: 100% !important;
+}
+
+.pika-table th {
+    color:       var(--muted) !important;
+    font-size:   11px !important;
+    font-weight: 600 !important;
+    text-align:  center !important;
+}
+.pika-table abbr {
+    text-decoration: none !important;
+    cursor:          default !important;
+}
+
+/* Day cells */
+.pika-button {
+    background:    transparent !important;
+    color:         var(--text) !important;
+    border-radius: var(--r-sm) !important;
+    font-family:   var(--font-body) !important;
+    font-size:     14px !important;
+    text-align:    center !important;
+}
+.pika-button:hover {
+    background: var(--border) !important;
+    color:      var(--text) !important;
+    box-shadow: none !important;
+}
+
+/* Today */
+.is-today .pika-button {
+    color:       var(--accent) !important;
+    font-weight: 700 !important;
+}
+
+/* Selected */
+.is-selected .pika-button {
+    background:  var(--accent) !important;
+    color:       #0d0d0f !important;
+    font-weight: 700 !important;
+    box-shadow:  none !important;
+}
+
+/* Disabled / out-of-range */
+.is-disabled .pika-button,
+.is-outside-current-month .pika-button {
+    color:   var(--border) !important;
+    opacity: .45 !important;
+    cursor:  not-allowed !important;
+}
+.is-disabled .pika-button:hover {
+    background: transparent !important;
 }

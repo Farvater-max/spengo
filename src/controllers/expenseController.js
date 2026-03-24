@@ -19,6 +19,18 @@ function _saveExpenses(expenses) {
     Storage.saveExpenses(expenses);
 }
 
+/**
+ * Guards against a date string being in the future.
+ * Returns today's date string if the provided date is invalid or future.
+ * @param {string} date - YYYY-MM-DD
+ * @returns {string} - safe YYYY-MM-DD
+ */
+function _safeDate(date) {
+    const today = todayStr();
+    if (!date || date > today) return today;
+    return date;
+}
+
 // ─── Init ─────────────────────────────────────────────
 
 export function restoreCachedExpenses() {
@@ -27,10 +39,6 @@ export function restoreCachedExpenses() {
     if (cached.length > 0) STATE.expenses = cached;
 }
 
-/**
- * Первый вход — создаём таблицу, грузим данные.
- * Тексты: setup.creating → setup.first_time → setup.loading → setup.reading → main
- */
 export async function initSpreadsheet() {
     try {
         await _resolveAndSaveSpreadsheet();
@@ -49,7 +57,7 @@ async function _resolveAndSaveSpreadsheet() {
 
     const { spreadsheetId, isNew } = await SheetsService.resolveSpreadsheet(
         STATE.accessToken,
-        Storage.getSheetId(),   // caller owns the cache read
+        Storage.getSheetId(),
     );
 
     if (isNew) {
@@ -60,7 +68,7 @@ async function _resolveAndSaveSpreadsheet() {
     }
 
     STATE.spreadsheetId = spreadsheetId;
-    Storage.saveSheetId(spreadsheetId);  // caller owns the cache write
+    Storage.saveSheetId(spreadsheetId);
 }
 
 async function _loadAndCacheExpenses() {
@@ -83,10 +91,6 @@ function _handleInitError(err) {
     showScreen('auth');
 }
 
-/**
- * Повторный вход / обновление страницы — грузим свежие данные.
- * Setup экран уже показан в authController.
- */
 export async function refreshDataInBackground() {
     if (!STATE.accessToken) {
         await _transitionToMain();
@@ -120,9 +124,15 @@ export function openAddModal() {
     });
 }
 
-export async function submitExpense({ amount, category, comment }) {
+export async function submitExpense({ amount, category, comment, date }) {
     STATE.selectedCat = category;
-    const expense = { id: uuid(), date: todayStr(), category, amount, comment };
+    const expense = {
+        id: uuid(),
+        date: _safeDate(date),  // ← server-side guard: future dates silently clamped to today
+        category,
+        amount,
+        comment,
+    };
     try {
         await _withToken(token =>
             SheetsService.appendExpense(token, STATE.spreadsheetId, expense)
@@ -149,10 +159,16 @@ export function openEditModal(id) {
     });
 }
 
-export async function updateExpense(id, amount, category, comment) {
+export async function updateExpense(id, amount, category, comment, date) {
     const original = STATE.expenses.find(e => e.id === id);
     if (!original) return;
-    const updated = { ...original, amount, category, comment };
+    const updated = {
+        ...original,
+        amount,
+        category,
+        comment,
+        date: _safeDate(date ?? original.date),  // ← server-side guard
+    };
     try {
         await _withToken(token =>
             SheetsService.editExpense(token, STATE.spreadsheetId, updated)
