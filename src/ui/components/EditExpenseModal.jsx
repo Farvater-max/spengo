@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react';
 import { CategorySelectGrid } from './CategorySelectGrid.jsx';
-import { getI18nValue } from '../../i18n/localization.js';
-import { parseAmount } from '../../utils/helpers.js';
-import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
+import { DatePicker }         from './DatePicker.jsx';
+import { getI18nValue }       from '../../i18n/localization.js';
+import { parseAmount, todayStr } from '../../utils/helpers.js';
+import { useSwipeToClose }    from '../../hooks/useSwipeToClose.js';
+
+function getMonthStart() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+}
 
 export function EditExpenseModal({ expense, onUpdate, onDelete, onClose }) {
     const [amount,   setAmount]   = useState('');
     const [category, setCategory] = useState('food');
     const [comment,  setComment]  = useState('');
+    const [date,     setDate]     = useState(todayStr());
     const [loading,  setLoading]  = useState(false);
 
     const sheetRef = useSwipeToClose(onClose);
@@ -17,6 +24,7 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose }) {
         setAmount(String(expense.amount));
         setCategory(expense.category);
         setComment(expense.comment || '');
+        setDate(expense.date || todayStr());
         setLoading(false);
     }, [expense?.id]);
 
@@ -25,14 +33,15 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose }) {
     const parsedAmount = parseAmount(amount);
 
     const isDirty =
-        parsedAmount !== expense.amount ||
-        category !== expense.category ||
-        comment  !== (expense.comment || '');
+        parsedAmount !== expense.amount          ||
+        category     !== expense.category        ||
+        comment      !== (expense.comment || '') ||
+        date         !== expense.date;
 
     async function handleUpdate() {
         if (!parsedAmount) return;
         setLoading(true);
-        await onUpdate(expense.id, parsedAmount, category, comment);
+        await onUpdate(expense.id, parsedAmount, category, comment, date);
         setLoading(false);
     }
 
@@ -43,7 +52,12 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose }) {
     }
 
     function handleOverlayClick(e) {
-        if (e.target.classList.contains('modal-overlay')) onClose();
+        const isOverlay = e.target.classList.contains('modal-overlay');
+        const isCalendar = e.target.closest('.flatpickr-calendar');
+
+        if (isOverlay && !isCalendar) {
+            onClose();
+        }
     }
 
     return (
@@ -72,6 +86,16 @@ export function EditExpenseModal({ expense, onUpdate, onDelete, onClose }) {
                 <div className="form-group">
                     <label className="form-label">{getI18nValue('label.category')}</label>
                     <CategorySelectGrid selectedCat={category} onSelect={setCategory} />
+                </div>
+
+                <div className="form-group">
+                    <label className="form-label">{getI18nValue('label.date')}</label>
+                    <DatePicker
+                        value={date}
+                        onChange={setDate}
+                        minDate={getMonthStart()}
+                        maxDate={todayStr()}
+                    />
                 </div>
 
                 <div className="form-group">
