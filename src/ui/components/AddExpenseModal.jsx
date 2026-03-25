@@ -11,20 +11,19 @@ function getMonthStart() {
 }
 
 export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
-    const [amount,   setAmount]   = useState('');
-    const [category, setCategory] = useState(initialCat);
-    const [comment,  setComment]  = useState('');
-    const [date,     setDate]     = useState(todayStr());
-    const [loading,  setLoading]  = useState(false);
+    const [amount,      setAmount]     = useState('');
+    const [category,    setCategory]   = useState(initialCat);
+    const [comment,     setComment]    = useState('');
+    const [date,        setDate]       = useState(todayStr());
+    const [loading,     setLoading]    = useState(false);
+    const [inputReady,  setInputReady] = useState(false);
 
     const sheetRef     = useSwipeToClose(onClose);
     const amountRef    = useRef(null);
     const parsedAmount = parseAmount(amount);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            amountRef.current?.focus();
-        }, 400);
+        const timer = setTimeout(() => setInputReady(true), 350);
         return () => clearTimeout(timer);
     }, []);
 
@@ -62,6 +61,8 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                             maxLength={9}
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
+                            readOnly={!inputReady}
+                            autoFocus
                         />
                     </div>
                 </div>
