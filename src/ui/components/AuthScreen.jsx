@@ -39,14 +39,14 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">✏️</span>Edit or delete anytime</h3>
                         <p className="auth-feature-desc">
                             Made a mistake? Tap the pencil icon on any entry to correct the amount,
-                            change the category, or remove it entirely.
+                            change the category, date or remove it entirely.
                         </p>
                     </div>
 
                     <div className="auth-feature-block">
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">🗂️</span>Filter by category</h3>
                         <p className="auth-feature-desc">
-                            Food, Transport, Housing, Entertainment and more. Filter the list in one
+                            Food, Transport, Housing, Entertainment and more. Filter and sorting the list in one
                             tap to see only what you're interested in.
                         </p>
                     </div>
