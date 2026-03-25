@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { CategorySelectGrid } from './CategorySelectGrid.jsx';
 import { DatePicker }         from './DatePicker.jsx';
 import { getI18nValue }       from '../../i18n/localization.js';
@@ -11,21 +11,14 @@ function getMonthStart() {
 }
 
 export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
-    const [amount,      setAmount]     = useState('');
-    const [category,    setCategory]   = useState(initialCat);
-    const [comment,     setComment]    = useState('');
-    const [date,        setDate]       = useState(todayStr());
-    const [loading,     setLoading]    = useState(false);
-    const [inputReady,  setInputReady] = useState(false);
+    const [amount,   setAmount]   = useState('');
+    const [category, setCategory] = useState(initialCat);
+    const [comment,  setComment]  = useState('');
+    const [date,     setDate]     = useState(todayStr());
+    const [loading,  setLoading]  = useState(false);
 
     const sheetRef     = useSwipeToClose(onClose);
-    const amountRef    = useRef(null);
     const parsedAmount = parseAmount(amount);
-
-    useEffect(() => {
-        const timer = setTimeout(() => setInputReady(true), 350);
-        return () => clearTimeout(timer);
-    }, []);
 
     async function handleSubmit() {
         if (!parsedAmount) return;
@@ -53,7 +46,6 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                     <label className="form-label">{getI18nValue('label.amount')}</label>
                     <div className="amount-wrapper">
                         <input
-                            ref={amountRef}
                             className="form-input"
                             type="text"
                             inputMode="decimal"
@@ -61,7 +53,6 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                             maxLength={9}
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
-                            readOnly={!inputReady}
                             autoFocus
                         />
                     </div>
