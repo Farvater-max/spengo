@@ -778,6 +778,11 @@ html, body {
     border-radius: var(--r-lg) var(--r-lg) 0 0;
     padding: 12px 24px 40px;
     animation: slideUp .3s cubic-bezier(.2,.8,.4,1) both;
+
+    /* ─── IOS FIX ──────────────────────────────── */
+    max-height: 92dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-sheet {
