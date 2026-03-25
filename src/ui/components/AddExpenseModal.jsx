@@ -53,7 +53,6 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                             maxLength={9}
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
-                            autoFocus
                         />
                     </div>
                 </div>
