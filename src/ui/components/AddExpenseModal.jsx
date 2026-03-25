@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { CategorySelectGrid } from './CategorySelectGrid.jsx';
 import { DatePicker }         from './DatePicker.jsx';
 import { getI18nValue }       from '../../i18n/localization.js';
@@ -18,6 +18,7 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
     const [loading,  setLoading]  = useState(false);
 
     const sheetRef     = useSwipeToClose(onClose);
+    const amountRef    = useRef(null);
     const parsedAmount = parseAmount(amount);
 
     async function handleSubmit() {
@@ -46,6 +47,7 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                     <label className="form-label">{getI18nValue('label.amount')}</label>
                     <div className="amount-wrapper">
                         <input
+                            ref={amountRef}
                             className="form-input"
                             type="text"
                             inputMode="decimal"
@@ -54,10 +56,19 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
                             autoFocus
-                            // delay for iOS
-                            onFocus={e => {
+                            onFocus={() => {
                                 setTimeout(() => {
-                                    e.target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                                    const sheet = sheetRef.current;
+                                    const input = amountRef.current;
+                                    if (!sheet || !input) return;
+
+                                    const sheetTop = sheet.getBoundingClientRect().top;
+                                    const inputTop = input.getBoundingClientRect().top;
+                                    const offset   = inputTop - sheetTop - 24;
+
+                                    if (offset <= 0) return; // input уже виден — скроллить не нужно
+
+                                    sheet.scrollTo({ top: offset, behavior: 'smooth' });
                                 }, 350);
                             }}
                         />
