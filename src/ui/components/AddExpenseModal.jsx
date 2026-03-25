@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CategorySelectGrid } from './CategorySelectGrid.jsx';
 import { DatePicker }         from './DatePicker.jsx';
 import { getI18nValue }       from '../../i18n/localization.js';
@@ -20,6 +20,13 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
     const sheetRef     = useSwipeToClose(onClose);
     const amountRef    = useRef(null);
     const parsedAmount = parseAmount(amount);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            amountRef.current?.focus();
+        }, 400);
+        return () => clearTimeout(timer);
+    }, []);
 
     async function handleSubmit() {
         if (!parsedAmount) return;
@@ -55,22 +62,6 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                             maxLength={9}
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
-                            autoFocus
-                            onFocus={() => {
-                                setTimeout(() => {
-                                    const sheet = sheetRef.current;
-                                    const input = amountRef.current;
-                                    if (!sheet || !input) return;
-
-                                    const sheetTop = sheet.getBoundingClientRect().top;
-                                    const inputTop = input.getBoundingClientRect().top;
-                                    const offset   = inputTop - sheetTop - 24;
-
-                                    if (offset <= 0) return; // input уже виден — скроллить не нужно
-
-                                    sheet.scrollTo({ top: offset, behavior: 'smooth' });
-                                }, 350);
-                            }}
                         />
                     </div>
                 </div>
