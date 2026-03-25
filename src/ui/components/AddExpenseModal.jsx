@@ -54,6 +54,12 @@ export function AddExpenseModal({ initialCat = 'food', onSubmit, onClose }) {
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
                             autoFocus
+                            // delay for iOS
+                            onFocus={e => {
+                                setTimeout(() => {
+                                    e.target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                                }, 350);
+                            }}
                         />
                     </div>
                 </div>
