@@ -2,10 +2,12 @@ import { STATE } from '../state.js';
 import { getFilteredExpenses, sumAmounts } from '../utils/helpers.js';
 import { LANG, setLang, getI18nValue } from '../i18n/localization.js';
 import { openEditModal, openAddModal } from '../controllers/expenseController.js';
+import { openShareModal } from '../controllers/sharingController.js';
 import { renderChart } from './statistics/statistics-chart.js';
 import { renderDonutChart } from './statistics/statistics-donut.js';
 import { getPeriod, setPeriod } from './statistics/statistics-state.js';
 import * as AuthService from '../services/authService.js';
+import * as Storage from '../services/storageService.js';
 import {
     selectCategory,
     selectPeriod,
@@ -20,6 +22,7 @@ import { SummaryCard }        from './components/SummaryCard.jsx';
 import { AddExpenseModal }    from './components/AddExpenseModal.jsx';
 import { EditExpenseModal }   from './components/EditExpenseModal.jsx';
 import { ProfileModal }       from './components/ProfileModal.jsx';
+import { ShareModal }         from './components/ShareModal.jsx';
 import { MainHeader }         from './components/MainHeader.jsx';
 import { StatsHeader }        from './components/StatsHeader.jsx';
 import { BottomNav }          from './components/BottomNav.jsx';
@@ -377,14 +380,30 @@ export function renderProfileModal({ open = false }) {
 
     if (!open) { _profileModalRoot.render(null); return; }
 
+    // Determine ownership: compare current user's email to the cached owner email.
+    // On first open before any sharing API call, ownerEmail is null → we treat
+    // the current user as owner (safe default: they see the Share button and
+    // no "shared by" banner). The real value arrives after openShareModal fires.
+    const ownerEmail  = Storage.getSheetOwnerEmail();
+    const myEmail     = STATE.userProfile?.email ?? null;
+    const isOwner     = !ownerEmail || !myEmail || ownerEmail.toLowerCase() === myEmail.toLowerCase();
+    const sharedUsers = Storage.getSharedUsers();
+
     _profileModalRoot.render(
         <ProfileModal
             profile={STATE.userProfile}
+            sharedUsers={sharedUsers}
+            ownerEmail={ownerEmail}
+            isOwner={isOwner}
             onOpenSheet={() => {
                 if (STATE.spreadsheetId) {
                     window.open(`https://docs.google.com/spreadsheets/d/${STATE.spreadsheetId}`, '_blank');
                 }
                 renderProfileModal({ open: false });
+            }}
+            onShare={() => {
+                renderProfileModal({ open: false });
+                openShareModal();
             }}
             onSignOut={() => {
                 renderProfileModal({ open: false });
@@ -392,6 +411,35 @@ export function renderProfileModal({ open = false }) {
                 AuthService.signOut();
             }}
             onClose={() => renderProfileModal({ open: false })}
+        />
+    );
+}
+
+// ─── ShareModal ───────────────────────────────────────
+
+let _shareModalRoot = null;
+
+export function renderShareModal({
+    open        = false,
+    sharedUsers = [],
+    loading     = false,
+    onShare,
+    onRemove,
+    onClose,
+}) {
+    const container = document.getElementById('modal-share-root');
+    if (!container) return;
+    if (!_shareModalRoot) _shareModalRoot = createRoot(container);
+
+    if (!open) { _shareModalRoot.render(null); return; }
+
+    _shareModalRoot.render(
+        <ShareModal
+            sharedUsers={sharedUsers}
+            loading={loading}
+            onShare={onShare}
+            onRemove={onRemove}
+            onClose={onClose}
         />
     );
 }

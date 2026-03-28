@@ -8,6 +8,7 @@ import {
     sortExpenses,
     uuid,
     todayStr,
+    isGoogleEmail,
 } from './helpers.js';
 
 // ─── helpers ──────────────────────────────────────────
@@ -474,5 +475,135 @@ describe('sortExpenses', () => {
         const original = [...expenses];
         sortExpenses(expenses, 'amount', 'asc');
         expect(expenses).toEqual(original);
+    });
+});
+// ─── isGoogleEmail ────────────────────────────────────
+describe('isGoogleEmail', () => {
+
+    // ── valid inputs ──────────────────────────────────
+
+    test('given gmail address — when called — then returns true', () => {
+        expect(isGoogleEmail('user@gmail.com')).toBe(true);
+    });
+
+    test('given gmail address with dots in local — when called — then returns true', () => {
+        expect(isGoogleEmail('first.last@gmail.com')).toBe(true);
+    });
+
+    test('given gmail address with plus alias — when called — then returns true', () => {
+        expect(isGoogleEmail('user+tag@gmail.com')).toBe(true);
+    });
+
+    test('given Google Workspace custom domain — when called — then returns true', () => {
+        expect(isGoogleEmail('employee@company.com')).toBe(true);
+    });
+
+    test('given Google Workspace subdomain — when called — then returns true', () => {
+        expect(isGoogleEmail('user@mail.company.co.uk')).toBe(true);
+    });
+
+    test('given uppercase input — when called — then normalises and returns true', () => {
+        expect(isGoogleEmail('User@Gmail.COM')).toBe(true);
+    });
+
+    test('given input with surrounding whitespace — when called — then trims and returns true', () => {
+        expect(isGoogleEmail('  user@gmail.com  ')).toBe(true);
+    });
+
+    // ── non-Google consumer providers (blocklist) ─────
+
+    test('given outlook.com address — when called — then returns false', () => {
+        expect(isGoogleEmail('user@outlook.com')).toBe(false);
+    });
+
+    test('given hotmail.com address — when called — then returns false', () => {
+        expect(isGoogleEmail('user@hotmail.com')).toBe(false);
+    });
+
+    test('given yahoo.com address — when called — then returns false', () => {
+        expect(isGoogleEmail('user@yahoo.com')).toBe(false);
+    });
+
+    test('given icloud.com address — when called — then returns false', () => {
+        expect(isGoogleEmail('user@icloud.com')).toBe(false);
+    });
+
+    test('given protonmail.com address — when called — then returns false', () => {
+        expect(isGoogleEmail('user@protonmail.com')).toBe(false);
+    });
+
+    test('given mail.ru address — when called — then returns false', () => {
+        expect(isGoogleEmail('user@mail.ru')).toBe(false);
+    });
+
+    test('given yandex.ru address — when called — then returns false', () => {
+        expect(isGoogleEmail('user@yandex.ru')).toBe(false);
+    });
+
+    // ── structural invalids ───────────────────────────
+
+    test('given empty string — when called — then returns false', () => {
+        expect(isGoogleEmail('')).toBe(false);
+    });
+
+    test('given null — when called — then returns false', () => {
+        expect(isGoogleEmail(null)).toBe(false);
+    });
+
+    test('given undefined — when called — then returns false', () => {
+        expect(isGoogleEmail(undefined)).toBe(false);
+    });
+
+    test('given string without @ — when called — then returns false', () => {
+        expect(isGoogleEmail('notanemail')).toBe(false);
+    });
+
+    test('given string with @ at start — when called — then returns false', () => {
+        expect(isGoogleEmail('@gmail.com')).toBe(false);
+    });
+
+    test('given string without domain — when called — then returns false', () => {
+        expect(isGoogleEmail('user@')).toBe(false);
+    });
+
+    test('given local part with leading dot — when called — then returns false', () => {
+        expect(isGoogleEmail('.user@gmail.com')).toBe(false);
+    });
+
+    test('given local part with trailing dot — when called — then returns false', () => {
+        expect(isGoogleEmail('user.@gmail.com')).toBe(false);
+    });
+
+    test('given local part with consecutive dots — when called — then returns false', () => {
+        expect(isGoogleEmail('us..er@gmail.com')).toBe(false);
+    });
+
+    test('given domain without TLD — when called — then returns false', () => {
+        expect(isGoogleEmail('user@localhost')).toBe(false);
+    });
+
+    test('given domain with single-char TLD — when called — then returns false', () => {
+        expect(isGoogleEmail('user@domain.x')).toBe(false);
+    });
+
+    test('given domain label starting with hyphen — when called — then returns false', () => {
+        expect(isGoogleEmail('user@-domain.com')).toBe(false);
+    });
+
+    test('given domain label ending with hyphen — when called — then returns false', () => {
+        expect(isGoogleEmail('user@domain-.com')).toBe(false);
+    });
+
+    test('given domain with double dot — when called — then returns false', () => {
+        expect(isGoogleEmail('user@domain..com')).toBe(false);
+    });
+
+    test('given local part exceeding 64 chars — when called — then returns false', () => {
+        const longLocal = 'a'.repeat(65);
+        expect(isGoogleEmail(`${longLocal}@gmail.com`)).toBe(false);
+    });
+
+    test('given local part with invalid chars — when called — then returns false', () => {
+        expect(isGoogleEmail('user name@gmail.com')).toBe(false);
     });
 });

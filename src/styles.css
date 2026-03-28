@@ -1628,3 +1628,29 @@ p + p { margin-top: 10px; }
 .is-disabled .pika-button:hover {
     background: transparent !important;
 }
+
+/* ─── SHARE MODAL ────────────────────────────────────── */
+
+.profile-shared-banner {
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border-radius: var(--r-sm);
+    background: #7b61ff18;
+    border: 1px solid #7b61ff40;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--accent2);
+    line-height: 1.45;
+}
+
+#modal-share .modal-sheet input[type="email"]:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+#modal-share .modal-sheet button:last-of-type:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}

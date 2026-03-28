@@ -218,3 +218,80 @@ export function sortExpenses(expenses, field, dir) {
         return (a.amount - b.amount) * multiplier;
     });
 }
+
+/**
+ * Validates that an email address is a plausible Google account.
+ *
+ * Google accounts fall into two categories:
+ *   1. Gmail addresses        — local part + @gmail.com
+ *   2. Google Workspace (GSuite) — any valid email on a custom domain
+ *      managed via Google (e.g. user@company.com).
+ *
+ * Since we cannot know at validation time which custom domains are
+ * Google Workspace tenants, we validate the email format strictly and
+ * reject known non-Google consumer domains that are commonly mistyped
+ * (outlook.com, hotmail.com, yahoo.com, etc.).
+ *
+ * Rules applied:
+ *   - Must be a syntactically valid RFC-5321-ish email
+ *   - Local part: 1–64 chars, no leading/trailing dot, no consecutive dots
+ *   - Domain: at least one dot, valid TLD (2+ chars), no leading/trailing hyphen per label
+ *   - Must NOT be a known non-Google domain (blocklist)
+ *
+ * @param {string} email - Raw input (will be trimmed + lowercased internally)
+ * @returns {boolean}
+ */
+export function isGoogleEmail(email) {
+    if (!email || typeof email !== 'string') return false;
+
+    const normalised = email.trim().toLowerCase();
+
+    // ── 1. Basic structure ────────────────────────────────────────────────
+    const atIdx = normalised.lastIndexOf('@');
+    if (atIdx < 1) return false;                         // no @ or empty local
+
+    const local  = normalised.slice(0, atIdx);
+    const domain = normalised.slice(atIdx + 1);
+
+    if (!local || !domain) return false;
+
+    // ── 2. Local part rules ───────────────────────────────────────────────
+    if (local.length > 64)            return false;
+    if (local.startsWith('.'))        return false;
+    if (local.endsWith('.'))          return false;
+    if (local.includes('..'))         return false;
+    // Allow: letters, digits, dots, hyphens, plus, underscores
+    if (!/^[a-z0-9.+_-]+$/.test(local)) return false;
+
+    // ── 3. Domain rules ───────────────────────────────────────────────────
+    const labels = domain.split('.');
+    if (labels.length < 2)            return false;      // must have TLD
+
+    const tld = labels[labels.length - 1];
+    if (tld.length < 2)               return false;      // TLD too short
+    if (!/^[a-z]+$/.test(tld))        return false;      // TLD letters only
+
+    for (const label of labels) {
+        if (!label)                   return false;      // empty label (double dot)
+        if (label.startsWith('-'))    return false;
+        if (label.endsWith('-'))      return false;
+        if (!/^[a-z0-9-]+$/.test(label)) return false;
+    }
+
+    // ── 4. Blocklist — known non-Google consumer providers ────────────────
+    // These domains cannot be Google accounts. The list intentionally stays
+    // small — we only block common mistyped alternatives, not every provider.
+    const NON_GOOGLE_DOMAINS = new Set([
+        'outlook.com', 'hotmail.com', 'hotmail.co.uk', 'hotmail.fr',
+        'live.com', 'live.co.uk', 'live.fr', 'msn.com',
+        'yahoo.com', 'yahoo.co.uk', 'yahoo.fr', 'yahoo.de', 'ymail.com',
+        'icloud.com', 'me.com', 'mac.com',
+        'aol.com', 'aim.com',
+        'protonmail.com', 'protonmail.ch', 'pm.me',
+        'mail.ru', 'yandex.ru', 'yandex.com',
+    ]);
+
+    if (NON_GOOGLE_DOMAINS.has(domain)) return false;
+
+    return true;
+}
