@@ -238,19 +238,46 @@ export async function removeExpenseRow(accessToken, spreadsheetId, sheetName, ex
 
 /**
  * Searches Google Drive for an existing spreadsheet by exact title.
- * Returns the spreadsheetId if found, or null.
+ *
+ * Searches BOTH files owned by the user AND files shared with them.
+ * This is the key fix for guest users: without includeItemsFromAllDrives=true
+ * and the sharedWithMe clause, Drive API only returns files the current user
+ * owns — shared spreadsheets are invisible to the search, causing a new blank
+ * spreadsheet to be created instead of loading the shared one.
+ *
+ * Search strategy — two parallel queries, first result wins:
+ *   1. owned by me  (original behaviour — fast path for the owner)
+ *   2. sharedWithMe (new path — finds spreadsheets shared with the guest)
+ *
+ * We run them in parallel and take whichever returns a file first so neither
+ * owner nor guest pays an extra sequential round-trip.
+ *
  * @param {string} accessToken
  * @param {string} title - e.g. CONFIG.SPREADSHEET_TITLE
  * @returns {Promise<string|null>}
  */
 export async function findExistingSpreadsheet(accessToken, title) {
+    const mime        = 'application/vnd.google-apps.spreadsheet';
+    const baseFilter  = `name='${title}' and mimeType='${mime}' and trashed=false`;
+    const fields      = 'files(id,name)';
+
+    const ownedQuery  = encodeURIComponent(baseFilter);
+    const sharedQuery = encodeURIComponent(`${baseFilter} and sharedWithMe=true`);
+
+    const ownedUrl  = `${CONFIG.DRIVE_FILES}?q=${ownedQuery}&fields=${fields}&pageSize=1`;
+    // includeItemsFromAllDrives + supportsAllDrives are required to reach
+    // files in shared drives; they are harmless for regular My Drive files.
+    const sharedUrl = `${CONFIG.DRIVE_FILES}?q=${sharedQuery}&fields=${fields}&pageSize=1&includeItemsFromAllDrives=true&supportsAllDrives=true`;
+
     try {
-        const query  = encodeURIComponent(
-            `name='${title}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`
-        );
-        const url    = `${CONFIG.DRIVE_SEARCH_BASE}?q=${query}&fields=files(id,name)&pageSize=1`;
-        const data   = await SheetsClient.get(accessToken, url);
-        const file   = data.files?.[0];
+        const [ownedData, sharedData] = await Promise.all([
+            SheetsClient.get(accessToken, ownedUrl).catch(() => ({ files: [] })),
+            SheetsClient.get(accessToken, sharedUrl).catch(() => ({ files: [] })),
+        ]);
+
+        // Owner's own file takes priority to avoid accidentally loading
+        // a same-named file shared from a different account.
+        const file = ownedData.files?.[0] ?? sharedData.files?.[0];
         return file?.id || null;
     } catch (err) {
         console.warn('[SpenGo] Drive search failed:', err);

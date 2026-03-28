@@ -20,6 +20,8 @@ const LOCAL_STORAGE = {
     LOGIN_HINT:        'google_login_hint',
     NUMERIC_SHEET_ID:  'spengo_numeric_sheet_id',
     PROFILE:           'spengo_profile',
+    SHARED_USERS:      'spengo_shared_users',   // [{ permissionId, email, displayName, role, isPending }]
+    SHEET_OWNER_EMAIL: 'spengo_sheet_owner',    // email of the spreadsheet owner
 };
 
 const SESSION_STORAGE = {
@@ -185,6 +187,8 @@ export function clearAll() {
     localStorage.removeItem(LOCAL_STORAGE.LOGIN_HINT);
     localStorage.removeItem(LOCAL_STORAGE.NUMERIC_SHEET_ID);
     localStorage.removeItem(LOCAL_STORAGE.PROFILE);
+    localStorage.removeItem(LOCAL_STORAGE.SHARED_USERS);
+    localStorage.removeItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL);
 }
 
 // ---------------------------------------------------------------------------
@@ -221,4 +225,55 @@ export function getProfile() {
  */
 export function clearProfile() {
     localStorage.removeItem(LOCAL_STORAGE.PROFILE);
+}
+
+// ---------------------------------------------------------------------------
+// Shared users cache
+// Cached after every sharingService call so the ProfileModal can render
+// the shared-with list instantly without waiting for Drive API.
+// ---------------------------------------------------------------------------
+
+/**
+ * Persists the list of users the spreadsheet is shared with.
+ * @param {Array<{ permissionId: string, email: string, displayName: string, role: string, isPending: boolean }>} users
+ */
+export function saveSharedUsers(users) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE.SHARED_USERS, JSON.stringify(users));
+    } catch {}
+}
+
+/**
+ * Returns the cached shared-users list, or an empty array on failure.
+ * @returns {Array<{ permissionId: string, email: string, displayName: string, role: string, isPending: boolean }>}
+ */
+export function getSharedUsers() {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE.SHARED_USERS);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Sheet owner email cache
+// Stored so a guest user (non-owner) can see "Shared by owner@mail.com"
+// in their ProfileModal without an extra API call.
+// ---------------------------------------------------------------------------
+
+/**
+ * @param {string} email
+ */
+export function saveSheetOwnerEmail(email) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL, email);
+    } catch {}
+}
+
+/**
+ * @returns {string|null}
+ */
+export function getSheetOwnerEmail() {
+    return localStorage.getItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL) ?? null;
 }

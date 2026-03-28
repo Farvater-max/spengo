@@ -224,7 +224,7 @@
 
   <div class="title-block">
     <h1>Privacy Policy &amp; Terms of Use</h1>
-    <p class="updated">Last updated: March 2026</p>
+    <p class="updated">Last updated: June 2026</p>
   </div>
 
   <!-- 1. Overview -->
@@ -251,7 +251,17 @@
       <tr>
         <td data-label="Scope"><code>drive.file</code></td>
         <td data-label="Data accessed">Only the Google Spreadsheet created by SpenGo — not your entire Drive</td>
-        <td data-label="Why it is needed">To create, find, read, write, and delete expense records in the SpenGo spreadsheet. Access is limited exclusively to files created by this application.</td>
+        <td data-label="Why it is needed">To create, read, write, and delete expense records in the SpenGo spreadsheet. Access is limited exclusively to files created by this application.</td>
+      </tr>
+      <tr>
+        <td data-label="Scope"><code>drive.metadata.readonly</code></td>
+        <td data-label="Data accessed">File names, IDs, and permission metadata visible to you in Google Drive — no file contents</td>
+        <td data-label="Why it is needed">To search Drive for an existing SpenGo spreadsheet by name (so we don't create a duplicate on every sign-in), and to read the sharing permissions of that spreadsheet so the app can show who has access.</td>
+      </tr>
+      <tr>
+        <td data-label="Scope"><code>spreadsheets</code></td>
+        <td data-label="Data accessed">The content (rows and cells) of any Google Spreadsheet you have been given access to</td>
+        <td data-label="Why it is needed">Required when another user shares their SpenGo spreadsheet with you. The <code>drive.file</code> scope only covers files this app itself created; <code>spreadsheets</code> allows reading and writing a spreadsheet created by someone else's account.</td>
       </tr>
       <tr>
         <td data-label="Scope"><code>userinfo.profile</code></td>
@@ -266,7 +276,7 @@
       </tbody>
     </table>
 
-    <p style="margin-top:14px;">SpenGo requests only the minimum scopes necessary to provide its functionality. We do not request access to Gmail, Calendar, Contacts, or any other Google service.</p>
+    <p style="margin-top:14px;">SpenGo requests only the minimum scopes necessary to provide its functionality. <code>drive.metadata.readonly</code> and <code>spreadsheets</code> are classified as <em>sensitive</em> scopes by Google — they are not <em>restricted</em> scopes, and they do not grant access to any Google service beyond Drive file metadata and Sheets data. We do not request access to Gmail, Calendar, Contacts, or any other Google service.</p>
   </div>
 
   <!-- 3. Data Usage -->
@@ -279,9 +289,40 @@
       <span class="pill good">Delete individual expense rows</span>
       <span class="pill good">Show your name &amp; avatar</span>
       <span class="pill good">Restore your session silently</span>
+      <span class="pill good">Find existing SpenGo spreadsheet</span>
+      <span class="pill good">Read &amp; manage sharing permissions</span>
+      <span class="pill good">Access a spreadsheet shared with you</span>
     </div>
     <p style="margin-top:14px;">Your email address is stored locally in your browser solely to avoid the Google account-picker popup when you reload the app. It is not transmitted to any server, used for communication, or shared with any third party.</p>
     <p>SpenGo does not use Google user data to train AI or machine learning models, for advertising, or for any purpose beyond what is described in this policy. This complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank">Google API Services User Data Policy</a> Limited Use requirements.</p>
+  </div>
+
+
+  <!-- 5b. Sharing Feature -->
+  <div class="section">
+    <h2>Spreadsheet Sharing</h2>
+    <p>SpenGo allows the owner of a SpenGo spreadsheet to share it with one other Google account. This is an optional feature and is never enabled by default.</p>
+    <p>When you use the Share feature:</p>
+    <table>
+      <thead>
+        <tr><th>Action</th><th>What happens</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Action">You share with another person</td>
+          <td data-label="What happens">SpenGo calls the Google Drive Permissions API to grant the specified Google account <em>writer</em> access to your SpenGo spreadsheet. Google sends a notification email to that person on your behalf.</td>
+        </tr>
+        <tr>
+          <td data-label="Action">The other person signs into SpenGo</td>
+          <td data-label="What happens">SpenGo finds and loads your shared spreadsheet using the <code>drive.metadata.readonly</code> and <code>spreadsheets</code> scopes. They can read and edit all expense records in that file.</td>
+        </tr>
+        <tr>
+          <td data-label="Action">You revoke access</td>
+          <td data-label="What happens">SpenGo calls the Drive Permissions API to remove the permission. The other person immediately loses access to the spreadsheet.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px;">Sharing is strictly between Google accounts. SpenGo does not store the shared person's email on any server — it is only persisted in your browser's <code>localStorage</code> as a display cache and is cleared on sign-out.</p>
   </div>
 
   <!-- 4. Data Sharing -->
@@ -326,6 +367,16 @@
         <td data-label="Key"><code>spengo_numeric_sheet_id</code></td>
         <td data-label="Contents">Internal Google sheet identifier</td>
         <td data-label="Purpose">Optimise delete operations (avoids an extra API call)</td>
+      </tr>
+      <tr>
+        <td data-label="Key"><code>spengo_shared_users</code></td>
+        <td data-label="Contents">Email, display name, and Drive permission ID of the person you have shared with (if any)</td>
+        <td data-label="Purpose">Display the shared-user list instantly without an extra Drive API call on every modal open. Cleared on sign-out.</td>
+      </tr>
+      <tr>
+        <td data-label="Key"><code>spengo_sheet_owner</code></td>
+        <td data-label="Contents">Email address of the spreadsheet owner</td>
+        <td data-label="Purpose">Allows the app to show the correct owner/guest state in the profile screen without an extra API call. Cleared on sign-out.</td>
       </tr>
       </tbody>
     </table>

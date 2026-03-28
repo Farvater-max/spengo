@@ -74,6 +74,14 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         </p>
                     </div>
 
+                    <div className="auth-feature-block">
+                        <h3 className="auth-feature-title"><span className="auth-feature-icon">🔗</span>Share with a partner</h3>
+                        <p className="auth-feature-desc">
+                            Invite one other Google account to view and edit your sheet together —
+                            perfect for couples or housemates tracking a shared budget.
+                        </p>
+                    </div>
+
                     <div className="auth-card">
                         <button
                             className="btn-google"

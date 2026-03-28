@@ -1,5 +1,6 @@
 import { STATE } from '../state.js';
 import * as SheetsService from '../services/sheetsService.js';
+import * as SharingService from '../services/sharingService.js';
 import * as AuthService from '../services/authService.js';
 import * as Storage from '../services/storageService.js';
 import { getI18nValue } from '../i18n/localization.js';
@@ -44,6 +45,10 @@ export async function initSpreadsheet() {
         await _resolveAndSaveSpreadsheet();
         await _loadAndCacheExpenses();
         await _transitionToMain();
+        // Fire-and-forget: determine owner vs guest without blocking the UI.
+        // ProfileModal reads ownerEmail from Storage — once this resolves
+        // the next time the user opens ProfileModal it shows the correct state.
+        _syncOwnershipInBackground();
     } catch (err) {
         _handleInitError(err);
     }
@@ -91,6 +96,30 @@ function _handleInitError(err) {
     showScreen('auth');
 }
 
+/**
+ * Fetches the permissions list for the current spreadsheet in the background
+ * and caches the owner email + shared users list into localStorage.
+ *
+ * This runs after _transitionToMain() so it never delays the UI.
+ * ProfileModal reads ownerEmail from Storage to decide isOwner — after this
+ * resolves, the next modal open will show the correct owner/guest state.
+ *
+ * Errors are swallowed — a failed permissions fetch should never crash the app.
+ */
+async function _syncOwnershipInBackground() {
+    try {
+        const token = await AuthService.waitForToken();
+        const { sharedUsers, ownerEmail } = await SharingService.getSharedUsers(
+            token,
+            STATE.spreadsheetId,
+        );
+        if (ownerEmail) Storage.saveSheetOwnerEmail(ownerEmail);
+        Storage.saveSharedUsers(sharedUsers);
+    } catch (err) {
+        console.warn('[SpenGo] Background ownership sync failed:', err);
+    }
+}
+
 export async function refreshDataInBackground() {
     if (!STATE.accessToken) {
         await _transitionToMain();
@@ -99,6 +128,7 @@ export async function refreshDataInBackground() {
     try {
         await _withToken(() => _loadAndCacheExpenses());
         await _transitionToMain();
+        _syncOwnershipInBackground();
     } catch (err) {
         console.warn('[SpenGo] Background refresh failed:', err);
         const isAuthError = err.message.includes('401') || err.message.includes('403');
