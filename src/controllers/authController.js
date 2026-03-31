@@ -23,23 +23,17 @@ export function onSilentFail() {
     _toUnauthenticated();
 }
 
-/**
- * Сценарий: пользователь нажал Sign in и прошёл OAuth.
- * Показываем setup.finding → затем initSpreadsheet обновит тексты.
- */
 export async function onSignIn({ accessToken }) {
     STATE.accessToken = accessToken;
     STATE.authStatus  = 'ready';
     setNavEnabled(true);
 
-    // показываем setup сразу — пользователь видит спиннер
     showScreen('setup');
     renderSetupScreen({
         title: getI18nValue('setup.finding'),
         sub:   getI18nValue('setup.checking'),
     });
 
-    // грузим профиль параллельно — не блокируем UI
     const profile = await AuthService.getUserProfile(accessToken);
     if (profile) {
         STATE.userProfile = profile;
@@ -49,10 +43,8 @@ export async function onSignIn({ accessToken }) {
     }
 
     if (STATE.spreadsheetId) {
-        // повторный вход — грузим данные, setup уже показан
         await refreshDataInBackground();
     } else {
-        // первый вход — initSpreadsheet обновит тексты и переключит на main
         await initSpreadsheet();
     }
 }
@@ -74,11 +66,6 @@ export function onSignOut() {
 }
 
 // ─── Private helpers ───────────────────────────────────
-
-/**
- * Сценарий: обновление страницы — токен есть, данные в кэше.
- * Показываем setup.reading пока идёт silentRefresh.
- */
 function _restoreSession({ accessToken, sheetId, expenses }) {
     STATE.accessToken   = accessToken;
     STATE.spreadsheetId = sheetId;
@@ -87,7 +74,6 @@ function _restoreSession({ accessToken, sheetId, expenses }) {
     setNavEnabled(true);
 
     if (expenses.length > 0) {
-        // есть кэш — показываем setup.reading пока проверяем токен
         showScreen('setup');
         renderSetupScreen({
             title: getI18nValue('setup.loading'),
@@ -105,9 +91,6 @@ function _restoreSession({ accessToken, sheetId, expenses }) {
     AuthService.silentRefresh();
 }
 
-/**
- * Сценарий: токен истёк или отсутствует — тихий рефреш.
- */
 function _startSilentRestore(sheetId, expenses) {
     STATE.spreadsheetId = sheetId;
     STATE.authStatus    = 'restoring';

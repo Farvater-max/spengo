@@ -113,7 +113,8 @@ async function _syncOwnershipInBackground() {
             token,
             STATE.spreadsheetId,
         );
-        if (ownerEmail) Storage.saveSheetOwnerEmail(ownerEmail);
+        if (ownerEmail) 
+        Storage.saveSheetOwnerEmail(ownerEmail);
         Storage.saveSharedUsers(sharedUsers);
     } catch (err) {
         console.warn('[SpenGo] Background ownership sync failed:', err);
