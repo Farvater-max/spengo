@@ -159,7 +159,7 @@ export async function submitExpense({ amount, category, comment, date }) {
     STATE.selectedCat = category;
     const expense = {
         id: uuid(),
-        date: _safeDate(date),  // ← server-side guard: future dates silently clamped to today
+        date: _safeDate(date),  
         category,
         amount,
         comment,
