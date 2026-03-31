@@ -1276,9 +1276,9 @@ html, body {
     animation: spin .7s linear infinite;
 }
 
-/* Make modal-sheet position relative for the overlay */
 .modal-sheet {
     position: relative;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 
 /* ─── UTIL ───────────────────────────────────────────── */
