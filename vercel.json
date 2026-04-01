@@ -9,6 +9,8 @@
   ],
   "rewrites": [
     { "source": "/privacy-policy",  "destination": "/privacy-policy.html" },
-    { "source": "/privacy-policy/", "destination": "/privacy-policy.html" }
+    { "source": "/privacy-policy/", "destination": "/privacy-policy.html" },
+    { "source": "/features",        "destination": "/features.html" },
+    { "source": "/features/",       "destination": "/features.html" }
   ]
 }

@@ -31,7 +31,8 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">⚡</span>Add in seconds</h3>
                         <p className="auth-feature-desc">
                             Tap +, enter the amount, pick a category — done. Logging an expense
-                            takes under 5 seconds, so you'll actually stick with it.
+                            takes under 5 seconds, so you'll actually stick with it.{' '}
+                            <a href="/features/#add-in-seconds" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
 
@@ -39,7 +40,8 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">✏️</span>Edit or delete anytime</h3>
                         <p className="auth-feature-desc">
                             Made a mistake? Tap the pencil icon on any entry to correct the amount,
-                            change the category, date or remove it entirely.
+                            change the category, date or remove it entirely.{' '}
+                            <a href="/features/#edit-delete" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
 
@@ -47,7 +49,8 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">🗂️</span>Filter by category</h3>
                         <p className="auth-feature-desc">
                             Food, Transport, Housing, Entertainment and more. Filter and sorting the list in one
-                            tap to see only what you're interested in.
+                            tap to see only what you're interested in.{' '}
+                            <a href="/features/#filter-category" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
                 </div>
@@ -70,7 +73,8 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">🔐</span>Your Expenses. Your Google Sheet</h3>
                         <p className="auth-feature-desc">
                             SpenGo is a fast, mobile-first expense tracker.
-                            Your data stays in Google Sheets — no servers, no databases, no third-party storage.
+                            Your data stays in Google Sheets — no servers, no databases, no third-party storage.{' '}
+                            <a href="/features/#your-sheet" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
 
@@ -78,7 +82,8 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">🔗</span>Share with a partner</h3>
                         <p className="auth-feature-desc">
                             Invite one other Google account to view and edit your sheet together —
-                            perfect for couples or housemates tracking a shared budget.
+                            perfect for couples or housemates tracking a shared budget.{' '}
+                            <a href="/features/#share-partner" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
 
@@ -129,7 +134,8 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">📊</span>Bar chart by period</h3>
                         <p className="auth-feature-desc">
                             See your daily spending laid out as a bar chart for the current week,
-                            month, or year — spot patterns and outliers at a glance.
+                            month, or year — spot patterns and outliers at a glance.{' '}
+                            <a href="/features/#bar-chart" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
 
@@ -137,7 +143,8 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">🍩</span>Category breakdown</h3>
                         <p className="auth-feature-desc">
                             A donut chart shows exactly how your budget splits across categories,
-                            with percentage labels so nothing stays hidden.
+                            with percentage labels so nothing stays hidden.{' '}
+                            <a href="/features/#donut-chart" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
 
@@ -145,7 +152,8 @@ export function AuthScreen({ onSignIn, loading, error }) {
                         <h3 className="auth-feature-title"><span className="auth-feature-icon">📅</span>Week · Month · Year</h3>
                         <p className="auth-feature-desc">
                             Switch between time frames in one tap. Track short-term habits or
-                            review your annual spending — the choice is yours.
+                            review your annual spending — the choice is yours.{' '}
+                            <a href="/features/#time-frames" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
                 </div>
