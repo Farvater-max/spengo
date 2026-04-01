@@ -1654,3 +1654,14 @@ p + p { margin-top: 10px; }
     border-color: var(--accent);
     color: var(--accent);
 }
+
+.auth-feature-link {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.auth-feature-link:hover { opacity: 1; }

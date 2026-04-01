@@ -29,7 +29,8 @@ SpenGo is a lightweight, mobile-first web application for tracking personal expe
 ## Pages
 
 - [App](https://webspengo.xyz/): Main expense tracker interface. The homepage includes a three-panel landing layout explaining the app's purpose — expense tracking on the left, sign-in in the center, and statistics overview on the right. All tracking features are available after signing in via Google.
-- [Privacy Policy](https://webspengo.xyz/privacy-policy/): Data usage and privacy information
+- [Privacy Policy](https://webspengo.xyz/privacy-policy/): Data usage and privacy information.
+- [Features](https://webspengo.xyz/features/): Features and functionality insights.
 
 ## Privacy
 

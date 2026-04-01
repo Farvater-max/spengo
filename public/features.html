@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="description" content="SpenGo Features — fast expense logging, category filters, visual statistics, shared budgets and more. All your data stays in Google Sheets.">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://webspengo.xyz/features/">
+  <meta property="og:title"       content="SpenGo Features — Expense Tracker">
+  <meta property="og:description" content="Explore all SpenGo features: instant expense logging, category filters, bar charts, donut charts, shared budgets and more.">
+  <meta property="og:image"       content="https://webspengo.xyz/ogimage.png">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="SpenGo Features — Expense Tracker">
+  <meta name="twitter:description" content="Explore all SpenGo features: instant logging, charts, shared budgets.">
+  <meta name="twitter:image"       content="https://webspengo.xyz/ogimage.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Features — SpenGo</title>
+  <link rel="canonical" href="https://webspengo.xyz/features/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root {
+      --bg:       #0d0d0f;
+      --surface:  #151518;
+      --surface2: #1e1e23;
+      --border:   #2a2a32;
+      --accent:   #c8f135;
+      --text:     #f0f0f5;
+      --muted:    #6b6b7e;
+      --r-md:     18px;
+      --r-lg:     28px;
+      --font-display: 'Unbounded', sans-serif;
+      --font-body:    'Manrope', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Smooth scroll for anchor navigation */
+    html { scroll-behavior: smooth; }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-family: var(--font-body);
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--text); }
+    .back-btn svg { flex-shrink: 0; }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-left: auto;
+    }
+
+    /* ── Title block ── */
+    .title-block { margin-bottom: 48px; }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.65;
+    }
+
+    /* ── TOC ── */
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+
+    .toc-title {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 24px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #b0b0c0;
+      text-decoration: none;
+      font-size: 14px;
+      padding: 4px 0;
+      transition: color 0.2s;
+    }
+    .toc-link:hover { color: var(--accent); }
+    .toc-icon { font-size: 15px; flex-shrink: 0; }
+
+    /* ── Section ── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px 24px;
+      margin-bottom: 16px;
+      /* Offset for sticky-header-like anchor landing */
+      scroll-margin-top: 24px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-emoji {
+      font-size: 28px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .section-meta { flex: 1; min-width: 0; }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .section-headline {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    p { color: #b0b0c0; font-size: 14px; line-height: 1.75; }
+    p + p { margin-top: 10px; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Detail list ── */
+    .detail-list {
+      list-style: none;
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .detail-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: #b0b0c0;
+      line-height: 1.6;
+    }
+
+    .detail-list li::before {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 8px;
+    }
+
+    /* ── Pills ── */
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .pill.accent { border-color: #c8f13540; color: var(--accent); }
+
+    /* ── CTA banner ── */
+    .cta-banner {
+      background: linear-gradient(135deg, #1a1f0e 0%, #151518 60%);
+      border: 1px solid #c8f13530;
+      border-radius: var(--r-lg);
+      padding: 36px 28px;
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .cta-banner h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .cta-banner p {
+      font-size: 14px;
+      color: var(--muted);
+      max-width: 420px;
+      margin: 0 auto 24px;
+    }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #0d0d0f;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 100px;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-cta:hover { opacity: 1; filter: brightness(1.12); transform: translateY(-1px); text-decoration: none; }
+    .btn-cta svg { flex-shrink: 0; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer a { color: var(--muted); }
+    .footer a:hover { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 540px) {
+      h1 { font-size: 20px; }
+
+      .section { padding: 20px 16px; }
+
+      .section-emoji { font-size: 22px; }
+
+      h2 { font-size: 11px; }
+
+      .section-headline { font-size: 14px; }
+
+      .section-head { gap: 12px; margin-bottom: 14px; }
+
+      .toc-grid { grid-template-columns: 1fr; }
+
+      .pill-row { gap: 6px; }
+      .pill { font-size: 12px; padding: 4px 11px; }
+
+      .detail-list li { font-size: 13px; }
+
+      .cta-banner { padding: 28px 20px; }
+      .cta-banner h3 { font-size: 16px; }
+      .btn-cta { font-size: 13px; padding: 12px 22px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <a class="back-btn" href="/">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      Back to app
+    </a>
+    <span class="logo">SpenGo</span>
+  </div>
+
+  <!-- Title -->
+  <div class="title-block">
+    <h1>Features</h1>
+    <p class="subtitle">Everything SpenGo can do — from instant expense logging to shared budgets and visual analytics. Your data stays in Google Sheets, always.</p>
+  </div>
+
+  <!-- Table of Contents -->
+  <div class="toc">
+    <p class="toc-title">Jump to a feature</p>
+    <div class="toc-grid">
+      <a class="toc-link" href="#add-in-seconds"><span class="toc-icon">⚡</span>Add in seconds</a>
+      <a class="toc-link" href="#bar-chart"><span class="toc-icon">📊</span>Bar chart by period</a>
+      <a class="toc-link" href="#edit-delete"><span class="toc-icon">✏️</span>Edit or delete anytime</a>
+      <a class="toc-link" href="#donut-chart"><span class="toc-icon">🍩</span>Category breakdown</a>
+      <a class="toc-link" href="#filter-category"><span class="toc-icon">🗂️</span>Filter by category</a>
+      <a class="toc-link" href="#time-frames"><span class="toc-icon">📅</span>Week · Month · Year</a>
+      <a class="toc-link" href="#your-sheet"><span class="toc-icon">🔐</span>Your Google Sheet</a>
+      <a class="toc-link" href="#share-partner"><span class="toc-icon">🔗</span>Share with a partner</a>
+    </div>
+  </div>
+
+  <!-- ── TRACK EXPENSES GROUP ── -->
+
+  <!-- 1. Add in seconds -->
+  <div class="section" id="add-in-seconds">
+    <div class="section-head">
+      <div class="section-emoji">⚡</div>
+      <div class="section-meta">
+        <h2>Track expenses</h2>
+        <div class="section-headline">Add in seconds</div>
+      </div>
+    </div>
+    <p>Logging an expense should be friction-free. SpenGo is designed so that the whole flow — opening the app, entering a number, picking a category — takes under 5 seconds. When logging is this fast, you'll actually do it every time.</p>
+    <ul class="detail-list">
+      <li>Tap the + button from anywhere in the app to open the add panel instantly.</li>
+      <li>Enter the amount with a numeric keyboard — no text fields to navigate.</li>
+      <li>Pick a category from a visual icon grid. No scrolling through long lists.</li>
+      <li>Optionally add a note. Then confirm — the entry appears at the top of your list immediately.</li>
+      <li>The record is written to your Google Sheet in the background without blocking the UI.</li>
+    </ul>
+    <div class="pill-row">
+      <span class="pill accent">Under 5 seconds per entry</span>
+      <span class="pill accent">Instant UI feedback</span>
+    </div>
+  </div>
+
+  <!-- 2. Edit or delete -->
+  <div class="section" id="edit-delete">
+    <div class="section-head">
+      <div class="section-emoji">✏️</div>
+      <div class="section-meta">
+        <h2>Track expenses</h2>
+        <div class="section-headline">Edit or delete anytime</div>
+      </div>
+    </div>
+    <p>Mistakes happen — a mistyped amount, a wrong category, or a duplicate entry. SpenGo lets you fix anything without leaving the app.</p>
+    <ul class="detail-list">
+      <li>Tap the pencil icon on any expense row to open the edit panel.</li>
+      <li>Change the amount, category, note, or date — all fields are editable.</li>
+      <li>Tap the trash icon inside the edit panel to permanently remove the entry.</li>
+      <li>All changes sync to your Google Sheet immediately — no "save" step required.</li>
+    </ul>
+    <div class="pill-row">
+      <span class="pill accent">Edit amount, category, date &amp; note</span>
+      <span class="pill accent">Instant sync to Google Sheets</span>
+    </div>
+  </div>
+
+  <!-- 3. Filter by category -->
+  <div class="section" id="filter-category">
+    <div class="section-head">
+      <div class="section-emoji">🗂️</div>
+      <div class="section-meta">
+        <h2>Track expenses</h2>
+        <div class="section-headline">Filter by category</div>
+      </div>
+    </div>
+    <p>When your expense list grows, finding specific entries becomes important. SpenGo's category filter lets you narrow the list to exactly the type of spending you care about.</p>
+    <ul class="detail-list">
+      <li>Tap any category icon in the filter row to show only those expenses.</li>
+      <li>Tap the same icon again to clear the filter and show everything.</li>
+      <li>Combine filtering with sorting (newest first, oldest first, highest amount) for precise views.</li>
+      <li>The filter works across all time periods — daily, weekly, monthly, or all-time.</li>
+    </ul>
+    <div class="pill-row">
+      <span class="pill accent">Food</span>
+      <span class="pill accent">Transport</span>
+      <span class="pill accent">Housing</span>
+      <span class="pill accent">Entertainment</span>
+      <span class="pill accent">+ more useful categories</span>
+    </div>
+  </div>
+
+  <!-- 4. Your Google Sheet -->
+  <div class="section" id="your-sheet">
+    <div class="section-head">
+      <div class="section-emoji">🔐</div>
+      <div class="section-meta">
+        <h2>Privacy &amp; storage</h2>
+        <div class="section-headline">Your expenses. Your Google Sheet.</div>
+      </div>
+    </div>
+    <p>SpenGo is a fast, mobile-first expense tracker built on a simple principle: your financial data belongs to you. Every expense you log is written directly into a Google Spreadsheet in your own Google Drive — not into any SpenGo database or server.</p>
+    <ul class="detail-list">
+      <li>On first sign-in, SpenGo automatically creates a spreadsheet named SpenGo in your Drive.</li>
+      <li>Each expense row contains: date, amount, category, and an optional note.</li>
+      <li>You can open the spreadsheet in Google Sheets at any time to view, export, or back up your data.</li>
+      <li>SpenGo has no backend server. All API calls go directly from your browser to Google's servers.</li>
+      <li>Revoking SpenGo's Google access at any time is possible from myaccount.google.com/permissions page</a>.</li>
+    </ul>
+    <div class="pill-row">
+      <span class="pill accent">No servers</span>
+      <span class="pill accent">No ads</span>
+      <span class="pill accent">No third-party storage</span>
+      <span class="pill accent">Data stays in your Drive</span>
+    </div>
+  </div>
+
+  <!-- 5. Share with a partner -->
+  <div class="section" id="share-partner">
+    <div class="section-head">
+      <div class="section-emoji">🔗</div>
+      <div class="section-meta">
+        <h2>Collaboration</h2>
+        <div class="section-headline">Share with a partner</div>
+      </div>
+    </div>
+    <p>Managing a shared budget — with a partner, a spouse, or a housemate — is much easier when both people can see and log expenses in the same place. SpenGo lets the sheet owner invite one other Google account to collaborate.</p>
+    <ul class="detail-list">
+      <li>Open the Share panel from your profile screen and enter the other person's Google email.</li>
+      <li>SpenGo grants them writer access to your SpenGo spreadsheet via the Drive Permissions API.</li>
+      <li>The other person signs into SpenGo with their own Google account and sees the shared sheet automatically.</li>
+      <li>Both accounts can add, edit, and delete expenses — changes appear on both sides in real time.</li>
+      <li>The owner can revoke access at any time from the Share panel — the other person immediately loses access.</li>
+    </ul>
+    <div class="pill-row">
+      <span class="pill accent">Shared budget tracking</span>
+      <span class="pill accent">Perfect for couples &amp; housemates</span>
+      <span class="pill accent">Revoke access anytime</span>
+    </div>
+  </div>
+
+  <!-- ── STATISTICS GROUP ── -->
+
+  <!-- 6. Bar chart -->
+  <div class="section" id="bar-chart">
+    <div class="section-head">
+      <div class="section-emoji">📊</div>
+      <div class="section-meta">
+        <h2>Statistics insights</h2>
+        <div class="section-headline">Bar chart by period</div>
+      </div>
+    </div>
+    <p>Numbers in a list tell you what you spent. A bar chart tells you when and how your spending behaves over time. SpenGo's statistics screen renders a bar chart for the selected time frame so you can spot patterns and outliers instantly.</p>
+    <ul class="detail-list">
+      <li>Each bar represents one unit of time — a day within the current week, a week within the month, or a month within the year.</li>
+      <li>The tallest bar is always the highest-spending period — easy to identify at a glance.</li>
+      <li>Bars are colour-coded by the dominant category of that period, so you can see what drove the spike.</li>
+      <li>Switch between Week, Month, and Year with a single tap — the chart re-renders instantly with no loading delay.</li>
+    </ul>
+    <div class="pill-row">
+      <span class="pill accent">Daily view in Week mode</span>
+      <span class="pill accent">Weekly view in Month mode</span>
+      <span class="pill accent">Monthly view in Year mode</span>
+    </div>
+  </div>
+
+  <!-- 7. Donut chart -->
+  <div class="section" id="donut-chart">
+    <div class="section-head">
+      <div class="section-emoji">🍩</div>
+      <div class="section-meta">
+        <h2>Statistics insights</h2>
+        <div class="section-headline">Category breakdown</div>
+      </div>
+    </div>
+    <p>Knowing your total spending is useful. Knowing <em>where it all went</em> is actionable. The category donut chart breaks your spending into labelled segments so nothing stays hidden in the totals.</p>
+    <ul class="detail-list">
+      <li>Every category with at least one expense in the selected period appears as a coloured segment.</li>
+      <li>Percentage labels show exactly how much of your budget each category consumed.</li>
+      <li>A ranked list below the chart shows the absolute amount per category, sorted from highest to lowest.</li>
+      <li>The chart updates instantly when you switch between Week, Month, and Year — no refresh needed.</li>
+    </ul>
+    <div class="pill-row">
+      <span class="pill accent">Percentage labels</span>
+      <span class="pill accent">Ranked category list</span>
+      <span class="pill accent">Synced with time frame selector</span>
+    </div>
+  </div>
+
+  <!-- 8. Week Month Year -->
+  <div class="section" id="time-frames">
+    <div class="section-head">
+      <div class="section-emoji">📅</div>
+      <div class="section-meta">
+        <h2>Statistics insights</h2>
+        <div class="section-headline">Week · Month · Year</div>
+      </div>
+    </div>
+    <p>Different questions need different time windows. Are you overspending this week? How did this month compare to last? SpenGo's time-frame selector lets you answer all of them without navigating away from the stats screen.</p>
+    <ul class="detail-list">
+      <li>Week — shows the current 7-day window; great for catching short-term overspending early.</li>
+      <li>Month — tracks the current calendar month; useful for monthly budget goals.</li>
+      <li>Year — shows all 12 months of the current year; reveals seasonal spending patterns.</li>
+      <li>Tap the back and forward arrows to step through previous periods — compare this month vs. last month with one tap.</li>
+      <li>Both the bar chart and the donut chart update together when you change the time frame or navigate to a different period.</li>
+    </ul>
+    <div class="pill-row">
+      <span class="pill accent">Navigate to past periods</span>
+      <span class="pill accent">Bar + donut sync automatically</span>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-banner">
+    <h3>Ready to take control of your spending?</h3>
+    <p>SpenGo is free, serverless, and lives in your Google Sheets. Start tracking in under a minute.</p>
+    <a class="btn-cta" href="/">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
+        <path d="M9 21V12h6v9"/>
+      </svg>
+      Go to home page
+    </a>
+  </div>
+
+  <div class="footer">
+    © 2026 SpenGo ·
+    <a href="/privacy-policy/">Privacy Policy</a> ·
+    <a href="/">Back to app</a>
+  </div>
+
+</div>
+</body>
+</html>
