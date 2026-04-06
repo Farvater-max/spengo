@@ -52,6 +52,56 @@ let _callbacks = {
     onError:      () => {},
 };
 
+// ---------------------------------------------------------------------------
+// Session type resolution
+// ---------------------------------------------------------------------------
+
+/**
+ * @typedef {'fresh' | 'restore' | 'silent' | 'unauthenticated'} SessionType
+ */
+
+/**
+ * @typedef {Object} SessionSnapshot
+ * @property {SessionType} type
+ * @property {string|null}  accessToken
+ * @property {string|null}  sheetId
+ * @property {Array}        expenses
+ */
+
+/**
+ * Reads storage once and decides what kind of session startup to perform.
+ * This is the single place that owns the "what do we do on app load?" logic —
+ * the controller simply branches on the returned type.
+ *
+ * | type             | meaning                                                      |
+ * |------------------|--------------------------------------------------------------|
+ * | 'unauthenticated'| No sheetId — first visit or fully signed out                 |
+ * | 'fresh'          | Valid token + sheetId — restore without a network round-trip |
+ * | 'restore'        | sheetId present but token is missing/expired — silent refresh needed, cached expenses available to show immediately |
+ * | 'silent'         | sheetId present, no token, no cached expenses — silent refresh needed but nothing to show yet |
+ *
+ * @returns {SessionSnapshot}
+ */
+export function resolveSessionType() {
+    const { accessToken, sheetId, expenses, tokenExpired } = Storage.getStoredSession();
+
+    if (!sheetId) {
+        return { type: 'unauthenticated', accessToken: null, sheetId: null, expenses: [] };
+    }
+
+    if (accessToken && !tokenExpired) {
+        return { type: 'fresh', accessToken, sheetId, expenses };
+    }
+
+    // sheetId exists but token needs renewal
+    const type = expenses.length > 0 ? 'restore' : 'silent';
+    return { type, accessToken: null, sheetId, expenses };
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle
+// ---------------------------------------------------------------------------
+
 export async function init(callbacks = {}) {
     _callbacks = { ..._callbacks, ...callbacks };
     try {
@@ -107,9 +157,6 @@ export function silentRefresh() {
  * - If a silentRefresh is already in flight → waits for it to complete.
  * - If the token is expired and no refresh is running → starts one.
  *
- * This lets API callers (submitExpense, deleteExpense, etc.) simply
- * `await AuthService.waitForToken()` instead of hoping the token is ready.
- *
  * @returns {Promise<string>} A valid access token
  */
 export function waitForToken() {
@@ -124,6 +171,19 @@ export function waitForToken() {
             silentRefresh();
         }
     });
+}
+
+/**
+ * Resolves a fresh token and passes it to fn, returning whatever fn returns.
+ * Single source of truth for token-gated API calls.
+ *
+ * @template T
+ * @param {(token: string) => Promise<T>} fn
+ * @returns {Promise<T>}
+ */
+export async function withToken(fn) {
+    const token = await waitForToken();
+    return fn(token);
 }
 
 /**
@@ -142,10 +202,31 @@ export async function signOut() {
     _callbacks.onSignOut();
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 /**
- * Creates and stores the GIS token client.
- * Separated from `init` so it can be reasoned about independently.
+ * Fetches the basic profile of the authenticated user.
+ *
+ * @param {string} accessToken
+ * @returns {Promise<{ email: string, name: string, picture: string, letter: string }|null>}
  */
+export function getUserProfile(accessToken) {
+    return fetchUserProfile(accessToken);
+}
+
+/**
+ * @returns {boolean} True if the cached token is absent or past its expiry window.
+ */
+export function isTokenExpired() {
+    return Storage.isTokenExpired();
+}
+
+// ---------------------------------------------------------------------------
+// Private
+// ---------------------------------------------------------------------------
+
 function _clearSilentTimer() {
     if (_silentRefreshTimer !== null) {
         clearTimeout(_silentRefreshTimer);
@@ -184,30 +265,10 @@ function _onTokenResponse(response) {
     const expiresAt = Date.now() + (response.expires_in - 60) * 1000;
     Storage.saveSession(_accessToken, expiresAt);
 
-    // Resolve any callers that were waiting for a fresh token
     const waiters = _tokenWaiters.splice(0);
     waiters.forEach(w => w.resolve(_accessToken));
 
     _callbacks.onSignIn({ accessToken: _accessToken });
-}
-
-/**
- * Fetches the basic profile of the authenticated user.
- * Delegates to googleClient — callers don't need to know the API details.
- *
- * @param {string} accessToken
- * @returns {Promise<{ email: string, name: string, picture: string, letter: string }|null>}
- */
-export function getUserProfile(accessToken) {
-    return fetchUserProfile(accessToken);
-}
-
-/**
- * @returns {boolean} True if the cached token is absent or past its expiry window.
- * Delegates to storageService — single source of truth for token expiry.
- */
-export function isTokenExpired() {
-    return Storage.isTokenExpired();
 }
 
 /**
@@ -231,14 +292,12 @@ function _onTokenError(err) {
 }
 
 /**
- * Routes a failed auth flow to the appropriate callback depending on
- * whether it was a silent background attempt or an interactive one.
+ * Routes a failed auth flow to the appropriate callback.
  *
  * @param {'silent' | 'interactive' | null} flowType
  * @param {string} errorMessage
  */
 function _handleFailedFlow(flowType, errorMessage) {
-    // Reject any callers waiting for a token so they don't hang forever
     const waiters = _tokenWaiters.splice(0);
     waiters.forEach(w => w.reject(new Error(errorMessage)));
 

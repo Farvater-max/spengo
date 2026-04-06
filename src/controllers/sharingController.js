@@ -1,6 +1,6 @@
 import { STATE } from '../state.js';
 import { isGoogleEmail } from '../utils/helpers.js';
-import * as AuthService from '../services/authService.js';
+import { withToken } from '../services/authService.js';
 import * as SharingService from '../services/sharingService.js';
 import * as Storage from '../services/storageService.js';
 import { getI18nValue } from '../i18n/localization.js';
@@ -8,25 +8,15 @@ import { showToast } from '../utils/helpers.js';
 import { renderShareModal } from '../ui/renderer.jsx';
 
 /**
- * sharingController.js
- *
  * Orchestrates the full share lifecycle:
  *   openShareModal  → load current permissions → show modal
  *   submitShare     → add permission → refresh list → re-render modal
  *   removeShare     → delete permission → refresh list → re-render modal
- *
- * Mirrors the structure of expenseController — uses _withToken so all API
- * calls transparently handle expired tokens the same way.
  */
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
-
-async function _withToken(fn) {
-    STATE.accessToken = await AuthService.waitForToken();
-    return fn(STATE.accessToken);
-}
 
 /**
  * Fetches the current permissions list from Drive, updates the storage cache,
@@ -34,7 +24,7 @@ async function _withToken(fn) {
  * Returns the resolved { sharedUsers, ownerEmail }.
  */
 async function _refreshSharedUsers() {
-    const result = await _withToken(token =>
+    const result = await withToken(token =>
         SharingService.getSharedUsers(token, STATE.spreadsheetId)
     );
 
@@ -55,7 +45,6 @@ async function _refreshSharedUsers() {
  * then fires a background API call to refresh — re-renders once data arrives.
  */
 export async function openShareModal() {
-    // Render immediately with whatever is cached — no spinner flash
     renderShareModal({
         open:        true,
         sharedUsers: Storage.getSharedUsers(),
@@ -65,7 +54,6 @@ export async function openShareModal() {
         onClose:     () => renderShareModal({ open: false }),
     });
 
-    // Refresh from Drive in the background; re-render when done
     try {
         const { sharedUsers } = await _refreshSharedUsers();
         renderShareModal({
@@ -78,7 +66,6 @@ export async function openShareModal() {
         });
     } catch (err) {
         console.warn('[SpenGo] Failed to load sharing list:', err);
-        // Keep the modal open with the stale cached list — don't crash the UI
     }
 }
 
@@ -114,7 +101,6 @@ export async function submitShare(email) {
         return;
     }
 
-    // Show loading state in modal immediately
     renderShareModal({
         open:        true,
         sharedUsers: Storage.getSharedUsers(),
@@ -125,13 +111,12 @@ export async function submitShare(email) {
     });
 
     try {
-        await _withToken(token =>
+        await withToken(token =>
             SharingService.shareSpreadsheet(token, STATE.spreadsheetId, trimmed)
         );
         showToast(getI18nValue('share.success'), 'success');
     } catch (err) {
         showToast(getI18nValue('share.error_prefix') + err.message, 'error');
-        // Restore modal without loading state
         renderShareModal({
             open:        true,
             sharedUsers: Storage.getSharedUsers(),
@@ -143,7 +128,6 @@ export async function submitShare(email) {
         return;
     }
 
-    // Reload list from Drive to get the canonical permissionId + displayName
     try {
         const { sharedUsers } = await _refreshSharedUsers();
         renderShareModal({
@@ -177,7 +161,7 @@ export async function submitShare(email) {
  */
 export async function removeShare(permissionId) {
     try {
-        await _withToken(token =>
+        await withToken(token =>
             SharingService.unshareSpreadsheet(token, STATE.spreadsheetId, permissionId)
         );
         showToast(getI18nValue('share.removed'), 'success');
@@ -197,7 +181,6 @@ export async function removeShare(permissionId) {
             onClose:     () => renderShareModal({ open: false }),
         });
     } catch {
-        // Fallback: remove from cache optimistically
         const updated = Storage.getSharedUsers().filter(u => u.permissionId !== permissionId);
         Storage.saveSharedUsers(updated);
         renderShareModal({

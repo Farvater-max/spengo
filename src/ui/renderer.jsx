@@ -3,17 +3,10 @@ import { getFilteredExpenses, sumAmounts } from '../utils/helpers.js';
 import { LANG, setLang, getI18nValue } from '../i18n/localization.js';
 import { openEditModal, openAddModal } from '../controllers/expenseController.js';
 import { openShareModal } from '../controllers/sharingController.js';
+import { openProfileModal } from '../controllers/authController.js';
 import { renderChart } from './statistics/statistics-chart.js';
 import { renderDonutChart } from './statistics/statistics-donut.js';
 import { getPeriod, setPeriod } from './statistics/statistics-state.js';
-import * as AuthService from '../services/authService.js';
-import * as Storage from '../services/storageService.js';
-import {
-    selectCategory,
-    selectPeriod,
-    selectAddCategory,
-    selectEditCategory,
-} from '../controllers/uiController.js';
 import { createRoot } from 'react-dom/client';
 import { ExpenseList }        from './components/ExpenseList.jsx';
 import { CategoryFilter }     from './components/CategoryFilter.jsx';
@@ -39,7 +32,6 @@ export function setNavEnabled(enabled) {
     renderBottomNav();
 }
 
-
 // ─── Sort state ───────────────────────────────────────
 
 let _sortField = 'date';
@@ -60,11 +52,11 @@ export function renderUI() {
 // ─── AuthScreen ───────────────────────────────────────
 
 let _authRoot  = null;
-let _authState = { loading: false, error: null };
+let _authState = { loading: false, error: null, onSignIn: null };
 let _authKey   = 0;
 
-export function renderAuthScreen({ loading = false, error = null, resetKey = false } = {}) {
-    _authState = { loading, error };
+export function renderAuthScreen({ loading = false, error = null, onSignIn = null, resetKey = false } = {}) {
+    _authState = { loading, error, onSignIn };
     if (resetKey) _authKey++;
     const container = document.getElementById('screen-auth-root');
     if (!container) return;
@@ -73,7 +65,7 @@ export function renderAuthScreen({ loading = false, error = null, resetKey = fal
     _authRoot.render(
         <AuthScreen
             key={_authKey}
-            onSignIn={AuthService.signIn}
+            onSignIn={onSignIn}
             loading={loading}
             error={error}
         />
@@ -155,7 +147,7 @@ export function renderMainHeader() {
                 });
                 renderMainHeader();
             }}
-            onAvatarClick={() => renderProfileModal({ open: true })}
+            onAvatarClick={openProfileModal}
             profile={STATE.userProfile}
         />
     );
@@ -174,7 +166,7 @@ export function renderStatsHeader() {
         <StatsHeader
             currentPeriod={getPeriod()}
             onPeriodChange={period => { setPeriod(period); renderStatsHeader(); }}
-            onAvatarClick={() => renderProfileModal({ open: true })}
+            onAvatarClick={openProfileModal}
             profile={STATE.userProfile}
         />
     );
@@ -193,7 +185,7 @@ export function renderSummary() {
         <SummaryCard
             total={sumAmounts(getFilteredExpenses(STATE))}
             currentPeriod={STATE.currentPeriod}
-            onPeriodChange={selectPeriod}
+            onPeriodChange={period => { STATE.currentPeriod = period; }}
         />
     );
 }
@@ -221,8 +213,8 @@ export function renderSectionHeader() {
     }
 
     const fieldLabel = _sortField === 'date'
-        ? (getI18nValue('sort.date'))
-        : (getI18nValue('sort.amount'));
+        ? getI18nValue('sort.date')
+        : getI18nValue('sort.amount');
 
     _sectionHeaderRoot.render(
         <div className="section-header">
@@ -289,12 +281,12 @@ export function renderCategoryFilter() {
         <CategoryFilter
             expenses={STATE.expenses}
             activeCat={STATE.currentCategoryFilter}
-            onSelect={selectCategory}
+            onSelect={catId => { STATE.currentCategoryFilter = catId; }}
         />
     );
 }
 
-// ─── CategorySelectGrid ───────────────────────────────
+// ─── CategorySelectGrid (add form) ────────────────────
 
 let _catSelectRoot = null;
 
@@ -306,12 +298,12 @@ export function renderCategorySelectGrid() {
     _catSelectRoot.render(
         <CategorySelectGrid
             selectedCat={STATE.selectedCat}
-            onSelect={selectAddCategory}
+            onSelect={catId => { STATE.selectedCat = catId; }}
         />
     );
 }
 
-// ─── CategoryEditGrid ─────────────────────────────────
+// ─── CategoryEditGrid (edit form) ─────────────────────
 
 let _catEditRoot = null;
 
@@ -323,7 +315,7 @@ export function renderCategoryEditGrid() {
     _catEditRoot.render(
         <CategorySelectGrid
             selectedCat={STATE.selectedCat}
-            onSelect={selectEditCategory}
+            onSelect={catId => { STATE.selectedCat = catId; }}
         />
     );
 }
@@ -370,34 +362,36 @@ export function renderEditModal({ expense = null, loading = false, onUpdate, onD
 }
 
 // ─── ProfileModal ─────────────────────────────────────
+//
+// Renders with whatever data the caller provides.
+// Ownership logic lives in authController.openProfileModal — not here.
 
 let _profileModalRoot = null;
 
-export function renderProfileModal({ open = false }) {
+export function renderProfileModal({
+    open          = false,
+    profile       = null,
+    sharedUsers   = [],
+    ownerEmail    = null,
+    isOwner       = true,
+    spreadsheetId = null,
+    onSignOut,
+} = {}) {
     const container = document.getElementById('modal-profile-root');
     if (!container) return;
     if (!_profileModalRoot) _profileModalRoot = createRoot(container);
 
     if (!open) { _profileModalRoot.render(null); return; }
 
-    // Determine ownership: compare current user's email to the cached owner email.
-    // On first open before any sharing API call, ownerEmail is null → we treat
-    // the current user as owner (safe default: they see the Share button and
-    // no "shared by" banner). The real value arrives after openShareModal fires.
-    const ownerEmail  = Storage.getSheetOwnerEmail();
-    const myEmail     = STATE.userProfile?.email ?? null;
-    const isOwner     = !ownerEmail || !myEmail || ownerEmail.toLowerCase() === myEmail.toLowerCase();
-    const sharedUsers = Storage.getSharedUsers();
-
     _profileModalRoot.render(
         <ProfileModal
-            profile={STATE.userProfile}
+            profile={profile}
             sharedUsers={sharedUsers}
             ownerEmail={ownerEmail}
             isOwner={isOwner}
             onOpenSheet={() => {
-                if (STATE.spreadsheetId) {
-                    window.open(`https://docs.google.com/spreadsheets/d/${STATE.spreadsheetId}`, '_blank');
+                if (spreadsheetId) {
+                    window.open(`https://docs.google.com/spreadsheets/d/${spreadsheetId}`, '_blank');
                 }
                 renderProfileModal({ open: false });
             }}
@@ -405,11 +399,7 @@ export function renderProfileModal({ open = false }) {
                 renderProfileModal({ open: false });
                 openShareModal();
             }}
-            onSignOut={() => {
-                renderProfileModal({ open: false });
-                renderAuthScreen({ resetKey: true });
-                AuthService.signOut();
-            }}
+            onSignOut={onSignOut}
             onClose={() => renderProfileModal({ open: false })}
         />
     );
@@ -426,7 +416,7 @@ export function renderShareModal({
     onShare,
     onRemove,
     onClose,
-}) {
+} = {}) {
     const container = document.getElementById('modal-share-root');
     if (!container) return;
     if (!_shareModalRoot) _shareModalRoot = createRoot(container);
@@ -462,8 +452,6 @@ export function updateAvatarUI() {
 // ─── Reactive bindings ────────────────────────────────
 //
 // Wire STATE changes to renders once, at app startup (called from app.js).
-// After this point any code can mutate STATE directly — the right renders
-// fire automatically, with no manual render() calls needed at the call site.
 
 export function initReactiveBindings() {
     STATE.subscribe('expenses', () => {
@@ -483,9 +471,6 @@ export function initReactiveBindings() {
         renderSummary();
     });
 
-    // Render bottom nav and section title whenever the active screen changes.
-    // Section title is static but lives on the main screen — it must be mounted
-    // at least once after navigation, since renderUI() no longer runs on data load.
     STATE.subscribe('currentScreen', () => {
         renderBottomNav();
         renderSectionHeader();

@@ -4,7 +4,7 @@ import { loadTranslations, applyTranslations, updateCategoryLabels } from './i18
 import { onAuthReady, onSignIn, onSignOut, onSilentFail, _enableSignInButton } from './controllers/authController.js';
 import { restoreCachedExpenses } from './controllers/expenseController.js';
 import { showAuthError, navigate } from './ui/navigation.js';
-import { renderAuthScreen, renderSetupScreen, mountStatsScreen, initReactiveBindings } from './ui/renderer.jsx';
+import { renderAuthScreen, mountStatsScreen, initReactiveBindings } from './ui/renderer.jsx';
 
 document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('spengo:navigate', e => navigate(e.detail.name));
