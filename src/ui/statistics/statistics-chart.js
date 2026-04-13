@@ -2,7 +2,9 @@ import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip }
 import { formatMoney, sumAmounts, isInPeriod } from '../../utils/helpers.js';
 import { STATE } from '../../state.js';
 import { getI18nValue } from '../../i18n/localization.js';
-import { getPeriod, setPeriod, onPeriodChange } from './statistics-state.js';
+import { getPeriod, onPeriodChange } from './statistics-state.js';
+import * as SheetsService from '../../services/sheetsService.js';
+import { withToken } from '../../services/authService.js';
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -18,6 +20,76 @@ const TEXT_COLOR  = '#6b6b7e';
 
 let _chartInstance = null;
 
+/**
+ * In-memory cache for yearly expenses: { 2024: [...], 2025: [...] }
+ * Lives for the session; invalidated externally via clearYearCache().
+ * @type {Object<number, Array>}
+ */
+const _yearCache = {};
+
+// ─── Year data loader ─────────────────────────────────
+
+/**
+ * Returns expenses for the given year, fetching from Sheets on first access.
+ * Hot-layer expenses (STATE.expenses) for the same year are merged in so
+ * recently added items are always visible without a second request.
+ * @param {number} year
+ * @returns {Promise<Array>}
+ */
+async function _getYearExpenses(year) {
+    if (!_yearCache[year]) {
+        const fromSheets = await withToken(token =>
+            SheetsService.loadExpensesByYear(token, STATE.spreadsheetId, year)
+        );
+        // Merge with hot layer to include expenses added this session
+        const prefix = String(year);
+        const hot    = STATE.expenses.filter(e => e.date.startsWith(prefix));
+        const hotIds = new Set(hot.map(e => e.id));
+        _yearCache[year] = [
+            ...fromSheets.filter(e => !hotIds.has(e.id)),
+            ...hot,
+        ];
+    }
+    return _yearCache[year];
+}
+
+/**
+ * Invalidates the cache for a given year.
+ * Call after add / edit / delete of an expense so the next year-view re-fetches.
+ * @param {number} year
+ */
+export function clearYearCache(year) {
+    delete _yearCache[year];
+}
+
+// ─── Per-canvas loading overlay ───────────────────────
+
+/**
+ * Mounts a spinner overlay inside the parent of the given canvas.
+ * Creates it fresh each time so it appears on every new fetch.
+ * @param {string} canvasId
+ */
+function _showCanvasLoading(canvasId) {
+    _hideCanvasLoading(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    // Mount on the wrap div (.stats-chart-wrap) which is already position:relative
+    const wrap = canvas.closest('.stats-chart-wrap') ?? canvas.parentElement;
+    if (!wrap) return;
+    const el = document.createElement('div');
+    el.id = `${canvasId}-overlay`;
+    el.className = 'stats-loading-overlay';
+    wrap.appendChild(el);
+}
+
+/**
+ * Removes the spinner overlay for the given canvas.
+ * @param {string} canvasId
+ */
+function _hideCanvasLoading(canvasId) {
+    document.getElementById(`${canvasId}-overlay`)?.remove();
+}
+
 // ─── Public API ───────────────────────────────────────
 
 /**
@@ -25,9 +97,15 @@ let _chartInstance = null;
  * changes, and renders for the current period.
  * Safe to call multiple times — re-binds buttons and re-renders.
  */
-export function renderChart() {
-    renderingChartByPeriod(getPeriod());
-    updateStatsTotals(getPeriod());
+export async function renderChart() {
+    const period = getPeriod();
+    if (period === 'year') _showCanvasLoading('stats-chart');
+    try {
+        await renderingChartByPeriod(period);
+        await updateStatsTotals(period);
+    } finally {
+        _hideCanvasLoading('stats-chart');
+    }
 }
 
 /**
@@ -35,10 +113,14 @@ export function renderChart() {
  * for the given period.
  * @param {'week' | 'month' | 'year'} period
  */
-export function updateStatsTotals(period) {
+export async function updateStatsTotals(period) {
     const now = new Date();
 
-    const filtered = STATE.expenses.filter(e => {
+    const source = period === 'year'
+        ? await _getYearExpenses(now.getFullYear())
+        : STATE.expenses;
+
+    const filtered = source.filter(e => {
         if (period === 'week')  return isInPeriod(e.date, 'week');
         if (period === 'month') return isInPeriod(e.date, 'month');
         if (period === 'year')  return new Date(e.date).getFullYear() === now.getFullYear();
@@ -61,11 +143,11 @@ export function updateStatsTotals(period) {
 
 // ─── Chart rendering ──────────────────────────────────
 
-function renderingChartByPeriod(period) {
+async function renderingChartByPeriod(period) {
     const canvas = document.getElementById('stats-chart');
     if (!canvas) return;
 
-    const { labels, data, barColors } = buildChartDataByPeriod(period);
+    const { labels, data, barColors } = await buildChartDataByPeriod(period);
 
     if (_chartInstance) {
         _chartInstance.destroy();
@@ -129,17 +211,22 @@ function renderingChartByPeriod(period) {
 }
 
 // Subscribe once at module load — re-render whenever period changes
-onPeriodChange(period => {
-    renderingChartByPeriod(period);
-    updateStatsTotals(period);
+onPeriodChange(async period => {
+    if (period === 'year') _showCanvasLoading('stats-chart');
+    try {
+        await renderingChartByPeriod(period);
+        await updateStatsTotals(period);
+    } finally {
+        _hideCanvasLoading('stats-chart');
+    }
 });
 
 // ─── Data builders ────────────────────────────────────
 
-function buildChartDataByPeriod(period) {
+async function buildChartDataByPeriod(period) {
     if (period === 'week')  return buildWeekData();
     if (period === 'month') return buildMonthData();
-    if (period === 'year')  return buildYearData();
+    if (period === 'year')  return await buildYearData();
     return { labels: [], data: [], barColors: [] };
 }
 
@@ -195,22 +282,21 @@ function buildMonthData() {
 }
 
 /** 4 bars — 3 previous months + current month. Current is highlighted. */
-function buildYearData() {
-    const now = new Date();
+async function buildYearData() {
+    const now      = new Date();
+    const expenses = await _getYearExpenses(now.getFullYear());
     const labels = [], data = [];
 
     for (let i = 3; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const m = d.getMonth();
         const y = d.getFullYear();
-
         const sum = sumAmounts(
-            STATE.expenses.filter(e => {
+            expenses.filter(e => {
                 const ed = new Date(e.date);
                 return ed.getFullYear() === y && ed.getMonth() === m;
             })
         );
-
         labels.push(_monthLabel(d));
         data.push(sum);
     }
