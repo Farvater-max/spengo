@@ -135,18 +135,67 @@ export async function createSpreadsheet(accessToken, { title, sheetName }) {
 }
 
 /**
- * Reads all data rows from the expenses sheet range.
+ * Fetches all rows from the sheet with no row-count limit.
+ * Open-ended range "A2:E" reads to the last populated row — no silent truncation.
+ * @param {string} accessToken
+ * @param {string} spreadsheetId
+ * @param {string} sheetName
+ * @returns {Promise<Array<Array>>} raw 2-D array
+ */
+async function _fetchAllRows(accessToken, spreadsheetId, sheetName) {
+    const data = await SheetsClient.get(
+        accessToken,
+        `${CONFIG.SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range(sheetName, 'A2:E'))}`
+    );
+    return data.values || [];
+}
+
+/**
+ * Loads "hot" expenses: current month + previous month.
+ * Used on app startup so the main screen is ready with minimal data transferred.
  * @param {string} accessToken
  * @param {string} spreadsheetId
  * @param {string} sheetName
  * @returns {Promise<Array>}
  */
+export async function fetchRecentExpenses(accessToken, spreadsheetId, sheetName) {
+    const rows    = await _fetchAllRows(accessToken, spreadsheetId, sheetName);
+    const cutoff  = _prevMonthStart();
+    return rowsToExpenses(rows).filter(e => e.date >= cutoff);
+}
+
+/**
+ * Loads all expenses for a specific calendar year.
+ * Used by the Statistics screen on demand.
+ * @param {string} accessToken
+ * @param {string} spreadsheetId
+ * @param {string} sheetName
+ * @param {number} year
+ * @returns {Promise<Array>}
+ */
+export async function fetchExpensesByYear(accessToken, spreadsheetId, sheetName, year) {
+    const rows   = await _fetchAllRows(accessToken, spreadsheetId, sheetName);
+    const prefix = String(year);
+    return rowsToExpenses(rows).filter(e => e.date.startsWith(prefix));
+}
+
+/**
+ * @deprecated  Use fetchRecentExpenses for startup, fetchExpensesByYear for statistics.
+ */
 export async function fetchExpenses(accessToken, spreadsheetId, sheetName) {
-    const data = await SheetsClient.get(
-        accessToken,
-        `${CONFIG.SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range(sheetName, 'A2:E1000'))}`
-    );
-    return rowsToExpenses(data.values);
+    const rows = await _fetchAllRows(accessToken, spreadsheetId, sheetName);
+    return rowsToExpenses(rows);
+}
+
+/**
+ * Returns the ISO date string (YYYY-MM-DD) for the 1st of the previous month.
+ * @returns {string}
+ */
+function _prevMonthStart() {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 }
 
 /**

@@ -1,27 +1,11 @@
-/**
- * storageService.js
- *
- * Single owner of every read/write to localStorage and sessionStorage.
- * No other module should touch storage directly.
- *
- * localStorage  — survives browser restarts: sheetId, expenses, login_hint
- * sessionStorage — tab-scoped: access token, token expiry
- *
- * Consumers call the named methods; the key strings live here and nowhere else.
- */
-
-// ---------------------------------------------------------------------------
-// Keys
-// ---------------------------------------------------------------------------
-
 const LOCAL_STORAGE = {
     SHEET_ID:          'spengo_sheet_id',
     EXPENSES:          'spengo_expenses',
     LOGIN_HINT:        'google_login_hint',
     NUMERIC_SHEET_ID:  'spengo_numeric_sheet_id',
     PROFILE:           'spengo_profile',
-    SHARED_USERS:      'spengo_shared_users',   // [{ permissionId, email, displayName, role, isPending }]
-    SHEET_OWNER_EMAIL: 'spengo_sheet_owner',    // email of the spreadsheet owner
+    SHARED_USERS:      'spengo_shared_users',   
+    SHEET_OWNER_EMAIL: 'spengo_sheet_owner', 
 };
 
 const SESSION_STORAGE = {
@@ -29,9 +13,6 @@ const SESSION_STORAGE = {
     EXPIRES_AT:   'google_token_expires_at',
 };
 
-// ---------------------------------------------------------------------------
-// Session (tab-scoped token storage)
-// ---------------------------------------------------------------------------
 
 /**
  * Persists a fresh access token and its expiry timestamp.
@@ -70,10 +51,6 @@ export function isTokenExpired() {
     return Date.now() > Number(expiresAt);
 }
 
-// ---------------------------------------------------------------------------
-// Persistent auth hints
-// ---------------------------------------------------------------------------
-
 /**
  * Saves the user's email so GIS can skip the account-picker on silent refresh.
  * @param {string} email
@@ -90,10 +67,6 @@ export function getLoginHint() {
     return localStorage.getItem(LOCAL_STORAGE.LOGIN_HINT) ?? '';
 }
 
-// ---------------------------------------------------------------------------
-// Spreadsheet identity
-// ---------------------------------------------------------------------------
-
 /**
  * Persists the Google Sheets spreadsheet ID.
  * @param {string} spreadsheetId
@@ -109,10 +82,6 @@ export function saveSheetId(spreadsheetId) {
 export function getSheetId() {
     return localStorage.getItem(LOCAL_STORAGE.SHEET_ID);
 }
-
-// ---------------------------------------------------------------------------
-// Expenses cache
-// ---------------------------------------------------------------------------
 
 /**
  * Serialises and persists the expenses array.
@@ -136,10 +105,6 @@ export function getExpenses() {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Bulk operations
-// ---------------------------------------------------------------------------
-
 /**
  * Returns everything needed to restore a session in one call.
  * @returns {{ accessToken: string|null, sheetId: string|null, expenses: Array, loginHint: string, tokenExpired: boolean }}
@@ -153,12 +118,6 @@ export function getStoredSession() {
         tokenExpired: isTokenExpired(),
     };
 }
-
-// ---------------------------------------------------------------------------
-// Numeric sheet ID cache
-// The numeric sheetId (used in batchUpdate) never changes for a given
-// spreadsheet. Caching it removes one GET per delete operation.
-// ---------------------------------------------------------------------------
 
 /**
  * @param {number} numericSheetId
@@ -191,11 +150,6 @@ export function clearAll() {
     localStorage.removeItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL);
 }
 
-// ---------------------------------------------------------------------------
-// User profile cache
-// Persisted across restarts so the avatar is visible before the network call.
-// ---------------------------------------------------------------------------
-
 /**
  * Serialises and persists the user profile object.
  * Silently no-ops if serialisation fails (e.g. storage quota exceeded).
@@ -227,12 +181,6 @@ export function clearProfile() {
     localStorage.removeItem(LOCAL_STORAGE.PROFILE);
 }
 
-// ---------------------------------------------------------------------------
-// Shared users cache
-// Cached after every sharingService call so the ProfileModal can render
-// the shared-with list instantly without waiting for Drive API.
-// ---------------------------------------------------------------------------
-
 /**
  * Persists the list of users the spreadsheet is shared with.
  * @param {Array<{ permissionId: string, email: string, displayName: string, role: string, isPending: boolean }>} users
@@ -255,12 +203,6 @@ export function getSharedUsers() {
         return [];
     }
 }
-
-// ---------------------------------------------------------------------------
-// Sheet owner email cache
-// Stored so a guest user (non-owner) can see "Shared by owner@mail.com"
-// in their ProfileModal without an extra API call.
-// ---------------------------------------------------------------------------
 
 /**
  * @param {string} email

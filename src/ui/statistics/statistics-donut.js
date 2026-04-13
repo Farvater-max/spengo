@@ -4,6 +4,8 @@ import { STATE } from '../../state.js';
 import { getI18nValue } from '../../i18n/localization.js';
 import { CATEGORIES } from '../../constants/categories.js';
 import { onPeriodChange } from './statistics-state.js';
+import * as SheetsService from '../../services/sheetsService.js';
+import { withToken } from '../../services/authService.js';
 
 Chart.register(DoughnutController, ArcElement, Tooltip);
 
@@ -11,56 +13,92 @@ Chart.register(DoughnutController, ArcElement, Tooltip);
 
 let _donutInstance = null;
 
+// ─── Per-canvas loading overlay ───────────────────────
+
+function _showLoading() {
+    _hideLoading();
+    const canvas = document.getElementById('stats-donut');
+    if (!canvas) return;
+    const wrap = canvas.closest('.stats-donut-wrap') ?? canvas.parentElement;
+    if (!wrap) return;
+    const el = document.createElement('div');
+    el.id = 'stats-donut-overlay';
+    el.className = 'stats-loading-overlay';
+    wrap.appendChild(el);
+}
+
+function _hideLoading() {
+    document.getElementById('stats-donut-overlay')?.remove();
+}
+
 // ─── Public API ───────────────────────────────────────
 
 /**
  * Builds and renders the donut chart for the given period.
+ * For the 'year' period, fetches full-year data on demand (cached in statistics-chart).
  * Safe to call multiple times — destroys the previous instance first.
  * @param {'week' | 'month' | 'year'} period
  */
-export function renderDonutChart(period = 'month') {
+export async function renderDonutChart(period = 'month') {
     const canvas = document.getElementById('stats-donut');
     if (!canvas) return;
 
     const titleEl = document.getElementById('stats-by-cat-title');
     if (titleEl) titleEl.textContent = getI18nValue(`stats.by_cat.${period}`);
 
-    const { sorted, total } = buildDonutDataByPeriod(period);
+    if (period === 'year') _showLoading();
+    try {
+        const { sorted, total } = await buildDonutDataByPeriod(period);
 
-    destroyInstanceHelper();
+        destroyInstanceHelper();
 
-    if (!sorted.length) {
-        showDonutEmpty(canvas);
-        return;
+        if (!sorted.length) {
+            showDonutEmpty(canvas);
+            return;
+        }
+
+        hideDonutEmpty(canvas);
+        drawDonutChart(canvas, sorted, total);
+        drawDonutLegend(sorted, total);
+    } finally {
+        _hideLoading();
     }
-
-    hideDonutEmpty(canvas);
-    drawDonutChart(canvas, sorted, total);
-    drawDonutLegend(sorted, total);
 }
 
 // Subscribe once at module load — re-render whenever period changes
-onPeriodChange(period => renderDonutChart(period));
+onPeriodChange(async period => renderDonutChart(period));
 
 // ─── Data ─────────────────────────────────────────────
 
-function buildDonutDataByPeriod(period) {
+async function buildDonutDataByPeriod(period) {
     const now = new Date();
 
-    const expenses = STATE.expenses.filter(e => {
+    let expenses;
+    if (period === 'year') {
+        // Re-use the same cache owned by statistics-chart via loadExpensesByYear.
+        // We call the service directly here; the chart module owns the cache key
+        // and exposes clearYearCache() for invalidation.
+        expenses = await withToken(token =>
+            SheetsService.loadExpensesByYear(token, STATE.spreadsheetId, now.getFullYear())
+        );
+    } else {
+        expenses = STATE.expenses;
+    }
+
+    const filtered = expenses.filter(e => {
         if (period === 'week')  return isInPeriod(e.date, 'week');
         if (period === 'month') return isInPeriod(e.date, 'month');
         if (period === 'year')  return new Date(e.date).getFullYear() === now.getFullYear();
         return false;
     });
 
-    const grouped = expenses.reduce((acc, e) => {
+    const grouped = filtered.reduce((acc, e) => {
         acc[e.category] = sumAmounts([{ amount: acc[e.category] || 0 }, { amount: e.amount }]);
         return acc;
     }, {});
 
     const sorted = Object.entries(grouped).sort(([, a], [, b]) => b - a);
-    const total  = sumAmounts(expenses);
+    const total  = sumAmounts(filtered);
 
     return { sorted, total };
 }

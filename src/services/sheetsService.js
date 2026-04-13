@@ -4,6 +4,8 @@ import {
     findExistingSpreadsheet,
     createSpreadsheet,
     fetchExpenses,
+    fetchRecentExpenses,
+    fetchExpensesByYear,
     insertExpense,
     updateExpenseRow,
     removeExpenseRow,
@@ -35,7 +37,32 @@ export async function resolveSpreadsheet(accessToken, cachedId = null) {
 }
 
 /**
- * Loads all expenses from the sheet. Caching is handled by the caller.
+ * Loads "hot" expenses: current month + previous month.
+ * Call this on app startup instead of loadExpenses.
+ *
+ * @param {string} accessToken
+ * @param {string} spreadsheetId
+ * @returns {Promise<Array>}
+ */
+export async function loadRecentExpenses(accessToken, spreadsheetId) {
+    return await fetchRecentExpenses(accessToken, spreadsheetId, CONFIG.SHEET_NAME);
+}
+
+/**
+ * Loads all expenses for a specific calendar year.
+ * Call this from the Statistics screen when the user selects the "year" period.
+ *
+ * @param {string} accessToken
+ * @param {string} spreadsheetId
+ * @param {number} year
+ * @returns {Promise<Array>}
+ */
+export async function loadExpensesByYear(accessToken, spreadsheetId, year) {
+    return await fetchExpensesByYear(accessToken, spreadsheetId, CONFIG.SHEET_NAME, year);
+}
+
+/**
+ * @deprecated  Prefer loadRecentExpenses for startup loads.
  *
  * @param {string} accessToken
  * @param {string} spreadsheetId

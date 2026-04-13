@@ -166,7 +166,7 @@ async function _loadAndCacheExpenses() {
         sub:   getI18nValue('setup.reading'),
     });
     const expenses = await AuthService.withToken(token =>
-        SheetsService.loadExpenses(token, STATE.spreadsheetId)
+        SheetsService.loadRecentExpenses(token, STATE.spreadsheetId)
     );
     STATE.expenses = expenses;
     Storage.saveExpenses(expenses);
