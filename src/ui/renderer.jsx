@@ -362,9 +362,6 @@ export function renderEditModal({ expense = null, loading = false, onUpdate, onD
 }
 
 // ─── ProfileModal ─────────────────────────────────────
-//
-// Renders with whatever data the caller provides.
-// Ownership logic lives in authController.openProfileModal — not here.
 
 let _profileModalRoot = null;
 
@@ -406,6 +403,11 @@ export function renderProfileModal({
 }
 
 // ─── ShareModal ───────────────────────────────────────
+//
+// shareUrl: the https://webspengo.xyz/?sheets=<id> link shown to the owner
+// after sharing. Built in sharingController._buildShareUrl() and passed
+// through every renderShareModal call. Was missing from this function
+// previously — that's why the copy-link block never appeared.
 
 let _shareModalRoot = null;
 
@@ -413,6 +415,7 @@ export function renderShareModal({
     open        = false,
     sharedUsers = [],
     loading     = false,
+    shareUrl    = null,   // ← was missing; now forwarded to ShareModal
     onShare,
     onRemove,
     onClose,
@@ -427,6 +430,7 @@ export function renderShareModal({
         <ShareModal
             sharedUsers={sharedUsers}
             loading={loading}
+            shareUrl={shareUrl}
             onShare={onShare}
             onRemove={onRemove}
             onClose={onClose}
@@ -450,8 +454,6 @@ export function updateAvatarUI() {
 }
 
 // ─── Reactive bindings ────────────────────────────────
-//
-// Wire STATE changes to renders once, at app startup (called from app.js).
 
 export function initReactiveBindings() {
     STATE.subscribe('expenses', () => {

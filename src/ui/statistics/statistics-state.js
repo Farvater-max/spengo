@@ -1,17 +1,3 @@
-/**
- * statistics-state.js
- *
- * Single source of truth for the active statistics period.
- * Both statistics-chart.js and statistics-donut.js subscribe to period
- * changes here — neither module needs to know about the other.
- *
- * Usage:
- *   import { getPeriod, setPeriod, onPeriodChange } from './statistics-state.js';
- *
- *   onPeriodChange(period => renderDonutChart(period));
- *   setPeriod('week'); // notifies all subscribers
- */
-
 // ─── State ────────────────────────────────────────────
 
 /** @type {'week' | 'month' | 'year'} */

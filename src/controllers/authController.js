@@ -3,6 +3,7 @@ import * as AuthService from '../services/authService.js';
 import * as SheetsService from '../services/sheetsService.js';
 import * as SharingService from '../services/sharingService.js';
 import * as Storage from '../services/storageService.js';
+import { resolveSubuserAccess } from '../controllers/sharingController.js';
 import { showScreen } from '../ui/navigation.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { showToast } from '../utils/helpers.js';
@@ -15,30 +16,21 @@ import {
 } from '../ui/renderer.jsx';
 
 // ─── Auth lifecycle ────────────────────────────────────
-
-/**
- * Entry point called once the GIS SDK is ready.
- * Delegates session-type resolution entirely to AuthService so this function
- * only decides *what to do*, not *how to read storage*.
- *
- * Session types:
- *   'fresh'           — valid token + sheetId → restore in-memory, background refresh
- *   'restore'         — token expired, cached expenses available → show UI immediately, silent refresh
- *   'silent'          — token expired, no cache → show spinner, silent refresh
- *   'unauthenticated' — no sheetId at all → show sign-in screen
- */
 export function onAuthReady() {
+    if (Storage.getPendingSheetId()) {
+        _toUnauthenticated();
+        return;
+    }
+
     const session = AuthService.resolveSessionType();
 
     switch (session.type) {
         case 'unauthenticated':
             _toUnauthenticated();
             break;
-
         case 'fresh':
             _restoreSession(session);
             break;
-
         case 'restore':
         case 'silent':
             _startSilentRestore(session);
@@ -71,12 +63,20 @@ export async function onSignIn({ accessToken }) {
         updateAvatarUI();
     }
 
-    if (STATE.spreadsheetId) {
+    const pendingSheetId = Storage.getPendingSheetId();
+
+if (pendingSheetId) {
+    await _initSubuserSession(pendingSheetId);
+    } else if (!Storage.getIsOwner() && STATE.spreadsheetId) {
         await _refreshDataInBackground();
     } else {
-        await _initSpreadsheet();
-    }
-}
+        if (STATE.spreadsheetId) {
+            await _refreshDataInBackground();
+        } else {
+            await _initSpreadsheet();
+        }   
+    }     
+}       
 
 export function onSignOut() {
     STATE.reset();
@@ -85,6 +85,7 @@ export function onSignOut() {
     STATE.selectedCat           = null;
 
     Storage.clearAll();
+    Storage.saveIsOwner(true);
 
     setNavEnabled(false);
     renderProfileModal({ open: false });
@@ -94,40 +95,62 @@ export function onSignOut() {
     _enableSignInButton();
 }
 
-// ─── Profile modal ────────────────────────────────────
-//
-// Ownership logic lives here, not in the renderer.
-// renderer receives ready-made values and just renders them.
+// ─── Profile modal ─────────────────────────────────────
 
 export function openProfileModal() {
-    const ownerEmail  = Storage.getSheetOwnerEmail();
-    const myEmail     = STATE.userProfile?.email ?? null;
-    const isOwner     = !ownerEmail || !myEmail || ownerEmail.toLowerCase() === myEmail.toLowerCase();
+    const isOwner     = Storage.getIsOwner();
     const sharedUsers = Storage.getSharedUsers();
+    const ownerEmail  = Storage.getSheetOwnerEmail();
 
     renderProfileModal({
-        open:        true,
-        profile:     STATE.userProfile,
+        open:          true,
+        profile:       STATE.userProfile,
         sharedUsers,
         ownerEmail,
         isOwner,
         spreadsheetId: STATE.spreadsheetId,
-        onSignOut:   _handleSignOut,
+        onSignOut:     _handleSignOut,
     });
 }
 
-// Separated so renderer can call close then trigger sign-out
-// without knowing about AuthService.
 function _handleSignOut() {
     renderProfileModal({ open: false });
     renderAuthScreen({ loading: false, error: null, onSignIn: AuthService.signIn, resetKey: true });
     AuthService.signOut();
 }
 
-// ─── Session init & refresh ───────────────────────────
+// ─── Subuser flow ──────────────────────────────────────
+async function _initSubuserSession(pendingSheetId) {
+    renderSetupScreen({
+        title: getI18nValue('setup.finding'),
+        sub:   getI18nValue('setup.checking'),
+    });
+
+    const spreadsheetId = await resolveSubuserAccess(STATE.accessToken, pendingSheetId);
+
+    if (!spreadsheetId) {
+        Storage.clearPendingSheetId();
+        _toUnauthenticated();
+        return;
+    }
+
+    STATE.spreadsheetId = spreadsheetId;
+
+    try {
+        await _loadAndCacheExpenses();
+        await _transitionToMain();
+    } catch (err) {
+        console.error('[SpenGo] Subuser expense load failed:', err);
+        showToast(getI18nValue('toast.sheet_error') + err.message, 'error');
+        showScreen('auth');
+    }
+}
+
+// ─── Owner: session init & refresh ────────────────────
 
 async function _initSpreadsheet() {
     try {
+        Storage.saveIsOwner(true);
         await _resolveAndSaveSpreadsheet();
         await _loadAndCacheExpenses();
         await _transitionToMain();
@@ -180,7 +203,9 @@ async function _refreshDataInBackground() {
     try {
         await _loadAndCacheExpenses();
         await _transitionToMain();
-        _syncOwnershipInBackground();
+        if (Storage.getIsOwner()) {
+            _syncOwnershipInBackground();
+        }
     } catch (err) {
         console.warn('[SpenGo] Background refresh failed:', err);
         const isAuthError = err.message.includes('401') || err.message.includes('403');
@@ -202,6 +227,7 @@ async function _syncOwnershipInBackground() {
         );
         if (ownerEmail) Storage.saveSheetOwnerEmail(ownerEmail);
         Storage.saveSharedUsers(sharedUsers);
+        Storage.saveIsOwner(true);
     } catch (err) {
         console.warn('[SpenGo] Background ownership sync failed:', err);
     }
@@ -214,12 +240,6 @@ async function _transitionToMain() {
 
 // ─── Session restore helpers ──────────────────────────
 
-/**
- * Restores a session that has a valid token — no network round-trip needed.
- * Kicks off a background data refresh via onSignIn's existing path.
- *
- * @param {{ accessToken: string, sheetId: string, expenses: Array }} session
- */
 function _restoreSession({ accessToken, sheetId, expenses }) {
     STATE.accessToken   = accessToken;
     STATE.spreadsheetId = sheetId;
@@ -238,13 +258,6 @@ function _restoreSession({ accessToken, sheetId, expenses }) {
     AuthService.silentRefresh();
 }
 
-/**
- * Starts a silent refresh when the token is expired or absent.
- * Shows cached expenses immediately if available ('restore'),
- * or just a spinner if there's nothing cached yet ('silent').
- *
- * @param {{ sheetId: string, expenses: Array }} session
- */
 function _startSilentRestore({ sheetId, expenses }) {
     STATE.spreadsheetId = sheetId;
     STATE.authStatus    = 'restoring';

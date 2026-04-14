@@ -1,5 +1,6 @@
 import { getI18nValue } from '../../i18n/localization.js';
 import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
+import { getIsOwner } from '../../services/storageService.js';
 
 export function ProfileModal({
     profile,
@@ -8,7 +9,7 @@ export function ProfileModal({
     onSignOut,
     onClose,
     sharedUsers = [],
-    isOwner     = true,
+    isOwner     = getIsOwner(),
 }) {
     if (!profile) return null;
 
@@ -36,7 +37,7 @@ export function ProfileModal({
                     {getI18nValue('auth.featureOne')}
                 </div>
 
-                {/* Open sheet */}
+                {/* Open sheet — available for all users */}
                 <div className="profile-row" onClick={onOpenSheet}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                         <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
@@ -44,12 +45,16 @@ export function ProfileModal({
                     <span>{getI18nValue('profile.open_sheet')}</span>
                 </div>
 
-                <div className="profile-row" onClick={isOwner ? onShare : undefined}
-                     style={{ cursor: isOwner ? 'pointer' : 'default' }}>
+                {/* Share row — clickable for owner only */}
+                <div
+                    className="profile-row"
+                    onClick={isOwner ? onShare : undefined}
+                    style={{ cursor: isOwner ? 'pointer' : 'default' }}
+                >
                     <ShareDotsIcon />
                     <span style={{ flex: 1 }}>{getI18nValue('profile.share')}</span>
 
-                    {/* Owner badge — shows their own access role */}
+                    {/* Owner: show owner badge when sheet is already shared */}
                     {isOwner && sharedCount > 0 && (
                         <>
                             <span style={{
@@ -64,16 +69,10 @@ export function ProfileModal({
                             }}>
                                 {getI18nValue('share.role_owner')}
                             </span>
-
                             <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                                width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" strokeWidth="2"
+                                strokeLinecap="round" strokeLinejoin="round"
                                 style={{ marginLeft: '6px' }}
                             >
                                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
@@ -82,7 +81,7 @@ export function ProfileModal({
                         </>
                     )}
 
-                    {/* Guest badge — shows their own access role */}
+                    {/* Guest: always show writer badge */}
                     {!isOwner && (
                         <span style={{
                             fontSize:      '11px',
@@ -96,7 +95,6 @@ export function ProfileModal({
                         }}>
                             {getI18nValue('share.role_writer')}
                         </span>
-                        
                     )}
                 </div>
 

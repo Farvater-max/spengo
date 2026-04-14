@@ -34,9 +34,6 @@ function _hideLoading() {
 // ─── Public API ───────────────────────────────────────
 
 /**
- * Builds and renders the donut chart for the given period.
- * For the 'year' period, fetches full-year data on demand (cached in statistics-chart).
- * Safe to call multiple times — destroys the previous instance first.
  * @param {'week' | 'month' | 'year'} period
  */
 export async function renderDonutChart(period = 'month') {

@@ -92,11 +92,6 @@ function _hideCanvasLoading(canvasId) {
 
 // ─── Public API ───────────────────────────────────────
 
-/**
- * Initialises the bar chart: binds period buttons, subscribes to period
- * changes, and renders for the current period.
- * Safe to call multiple times — re-binds buttons and re-renders.
- */
 export async function renderChart() {
     const period = getPeriod();
     if (period === 'year') _showCanvasLoading('stats-chart');

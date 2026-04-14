@@ -5,24 +5,12 @@ import {
 } from '../api/client/sharingClient.js';
 
 /**
- * sharingService.js
- *
- * Business-logic layer for spreadsheet sharing.
- * Sits between the controller and the raw Drive API client.
- *
- * Responsibilities:
- *  - Filter the raw Drive permissions list to the shape the UI needs
- *  - Distinguish owner vs shared users so callers don't parse roles
- *  - Centralise the "writer" role default so it's changed in one place
- */
-
-/**
  * @typedef {Object} SharedUser
- * @property {string} permissionId   - Drive permission ID (used for removal)
+ * @property {string} permissionId 
  * @property {string} email
- * @property {string} displayName    - May be empty if the user hasn't accepted yet
+ * @property {string} displayName
  * @property {'reader'|'writer'} role
- * @property {boolean} isPending     - true when displayName is absent (invite not yet accepted)
+ * @property {boolean} isPending
  */
 
 /**

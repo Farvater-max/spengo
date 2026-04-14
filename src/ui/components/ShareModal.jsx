@@ -3,15 +3,26 @@ import { getI18nValue } from '../../i18n/localization.js';
 import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
 import { isGoogleEmail } from '../../utils/helpers.js';
 
-export function ShareModal({ sharedUsers = [], loading = false, onShare, onRemove, onClose }) {
-    const [inputValue, setInputValue]   = useState('');
-    const [submitting, setSubmitting]   = useState(false);
-    const [btnHover,   setBtnHover]     = useState(false);
-    const inputRef        = useRef(null);
-    const sheetRef        = useSwipeToClose(onClose);
+export function ShareModal({
+    sharedUsers = [],
+    loading     = false,
+    shareUrl    = null,
+    onShare,
+    onRemove,
+    onClose,
+}) {
+    const [inputValue, setInputValue] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [btnHover,   setBtnHover]   = useState(false);
+    const [copied,     setCopied]     = useState(false);
+    const inputRef = useRef(null);
+    const sheetRef = useSwipeToClose(onClose);
+
     const isAlreadyShared = sharedUsers.length > 0;
     const isLoading       = loading || submitting;
-    const canSubmit       = isGoogleEmail(inputValue) && !isLoading && !isAlreadyShared;
+    // Input is only shown when there are no shared users yet (one-partner limit)
+    const showInput       = !isAlreadyShared;
+    const canSubmit       = showInput && isGoogleEmail(inputValue) && !isLoading;
 
     function handleOverlayClick(e) {
         if (e.target.classList.contains('modal-overlay')) onClose();
@@ -32,7 +43,22 @@ export function ShareModal({ sharedUsers = [], loading = false, onShare, onRemov
         if (e.key === 'Enter') handleSubmit();
     }
 
-    // ── shared-button styles — no CSS class so hover never strips content ──
+    async function handleCopy() {
+        if (!shareUrl) return;
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+        } catch {
+            const el = document.createElement('textarea');
+            el.value = shareUrl;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }
+
     const btnBase = {
         width:          '100%',
         padding:        '17px',
@@ -63,20 +89,51 @@ export function ShareModal({ sharedUsers = [], loading = false, onShare, onRemov
             >
                 <div className="modal-handle" />
 
-                {!isAlreadyShared && (
+                {/* ── SECTION LABEL ──────────────────────────────────── */}
+                <p style={{
+                    fontSize:      '14px',
+                    fontWeight:    600,
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase',
+                    color:         'var(--muted)',
+                    margin:        '0 0 12px',
+                }}>
+                    {getI18nValue('share.people_with_access')}
+                </p>
+
+                {/* ── SHARED USER ROWS ───────────────────────────────── */}
+                {isAlreadyShared && (
                     <>
-                        <p style={{
-                            fontSize:      '14px',
-                            fontWeight:    600,
-                            letterSpacing: '1px',
-                            textTransform: 'uppercase',
-                            color:         'var(--muted)',
-                            margin:        '0 0 4px',
+                        {sharedUsers.map(user => (
+                            <SharedUserRow
+                                key={user.permissionId}
+                                user={user}
+                                onRemove={onRemove}
+                                disabled={isLoading}
+                            />
+                        ))}
+
+                        <div style={{
+                            display:      'flex',
+                            gap:          '8px',
+                            alignItems:   'flex-start',
+                            padding:      '10px 12px',
+                            margin:       '14px 0 0',
+                            borderRadius: 'var(--r-sm)',
+                            background:   '#7b61ff12',
+                            border:       '1px solid #7b61ff35',
                         }}>
-                            {getI18nValue('share.people_with_access')}
-                        </p>
-                        
-                        {/* Email input — same class as other modals */}
+                            <InfoIcon color="var(--accent2)" />
+                            <p style={{ margin: 0, fontSize: '14px', color: 'var(--accent2)', lineHeight: 1.55 }}>
+                                {getI18nValue('share.revoke_hint')}
+                            </p>
+                        </div>
+                    </>
+                )}
+
+                {/* ── EMAIL INPUT + SHARE BUTTON (only before first share) ── */}
+                {showInput && (
+                    <div style={{ marginTop: '0' }}>
                         <input
                             ref={inputRef}
                             type="email"
@@ -89,7 +146,6 @@ export function ShareModal({ sharedUsers = [], loading = false, onShare, onRemov
                             style={{ marginBottom: '12px', opacity: isLoading ? 0.6 : 1 }}
                         />
 
-                        {/* Warning block */}
                         <div style={{
                             display:      'flex',
                             gap:          '8px',
@@ -101,18 +157,11 @@ export function ShareModal({ sharedUsers = [], loading = false, onShare, onRemov
                             border:       '1px solid rgba(255, 180, 0, 0.25)',
                         }}>
                             <InfoIcon color="#ffb400" />
-
-                            <p style={{
-                                margin:      0,
-                                fontSize:    '14px',
-                                color:       '#e6b85c',
-                                lineHeight:  1.55
-                            }}>
+                            <p style={{ margin: 0, fontSize: '14px', color: '#e6b85c', lineHeight: 1.55 }}>
                                 {getI18nValue('share.warning')}
                             </p>
                         </div>
 
-                        {/* Share access button — pure inline styles, no CSS class */}
                         <button
                             onClick={handleSubmit}
                             disabled={!canSubmit}
@@ -129,50 +178,78 @@ export function ShareModal({ sharedUsers = [], loading = false, onShare, onRemov
                                 </>
                             )}
                         </button>
-                    </>
+                    </div>
                 )}
 
-                {/* ── ALREADY SHARED ─────────────────────────────────── */}
-                {isAlreadyShared && (
-                    <>
-                        {/* Section label — same style as form-label */}
+                {/* ── SHARE LINK BLOCK ───────────────────────────────── */}
+                {shareUrl && isAlreadyShared && (
+                    <div style={{ marginTop: '24px' }}>
                         <p style={{
                             fontSize:      '14px',
                             fontWeight:    600,
                             letterSpacing: '1px',
                             textTransform: 'uppercase',
                             color:         'var(--muted)',
-                            margin:        '0 0 4px',
+                            margin:        '0 0 8px',
                         }}>
-                            {getI18nValue('share.people_with_access')}
+                            {getI18nValue('share.link_label') ?? 'Share link'}
                         </p>
 
-                        {sharedUsers.map(user => (
-                            <SharedUserRow
-                                key={user.permissionId}
-                                user={user}
-                                onRemove={onRemove}
-                                disabled={isLoading}
-                            />
-                        ))}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div style={{
+                                flex:          1,
+                                padding:       '11px 14px',
+                                borderRadius:  'var(--r-md)',
+                                background:    'var(--surface2)',
+                                border:        '1.5px solid var(--border)',
+                                fontSize:      '13px',
+                                color:         'var(--muted)',
+                                overflow:      'hidden',
+                                textOverflow:  'ellipsis',
+                                whiteSpace:    'nowrap',
+                                userSelect:    'all',
+                                fontFamily:    'var(--font-mono, monospace)',
+                                letterSpacing: '0.01em',
+                            }}>
+                                {shareUrl}
+                            </div>
 
-                        {/* Info block — how to revoke */}
-                        <div style={{
-                            display:      'flex',
-                            gap:          '8px',
-                            alignItems:   'flex-start',
-                            padding:      '10px 12px',
-                            marginTop:    '14px',
-                            borderRadius: 'var(--r-sm)',
-                            background:   '#7b61ff12',
-                            border:       '1px solid #7b61ff35',
-                        }}>
-                            <InfoIcon color="var(--accent2)" />
-                            <p style={{ margin: 0, fontSize: '14px', color: 'var(--accent2)', lineHeight: 1.55 }}>
-                                {getI18nValue('share.revoke_hint')}
-                            </p>
+                            <button
+                                onClick={handleCopy}
+                                title={copied
+                                    ? (getI18nValue('share.copied') ?? 'Copied!')
+                                    : (getI18nValue('share.copy')   ?? 'Copy link')
+                                }
+                                style={{
+                                    flexShrink:     0,
+                                    width:          '44px',
+                                    height:         '44px',
+                                    borderRadius:   'var(--r-md)',
+                                    border:         copied
+                                        ? '1.5px solid var(--accent)'
+                                        : '1.5px solid var(--border)',
+                                    background:     copied ? '#c8f13518' : 'var(--surface2)',
+                                    color:          copied ? 'var(--accent)' : 'var(--muted)',
+                                    cursor:         'pointer',
+                                    display:        'flex',
+                                    alignItems:     'center',
+                                    justifyContent: 'center',
+                                    transition:     'color .2s, border-color .2s, background .2s',
+                                }}
+                            >
+                                {copied ? <CheckIcon /> : <CopyIcon />}
+                            </button>
                         </div>
-                    </>
+
+                        <p style={{
+                            marginTop:  '8px',
+                            fontSize:   '12px',
+                            color:      'var(--muted)',
+                            lineHeight: 1.5,
+                        }}>
+                            {getI18nValue('share.link_hint') ?? 'Send this link to your partner. They will need to sign in with Google to access the spreadsheet.'}
+                        </p>
+                    </div>
                 )}
             </div>
         </div>
@@ -195,7 +272,6 @@ function SharedUserRow({ user, onRemove, disabled }) {
             padding:    '14px 0',
             borderTop:  '1px solid var(--border)',
         }}>
-            {/* Avatar */}
             <div style={{
                 width:          '42px',
                 height:         '42px',
@@ -214,7 +290,6 @@ function SharedUserRow({ user, onRemove, disabled }) {
                 {initLetter}
             </div>
 
-            {/* Name + email / pending */}
             <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
                     margin:       0,
@@ -242,7 +317,6 @@ function SharedUserRow({ user, onRemove, disabled }) {
                 </p>
             </div>
 
-            {/* Role badge */}
             <span style={{
                 fontSize:      '11px',
                 fontWeight:    600,
@@ -257,7 +331,6 @@ function SharedUserRow({ user, onRemove, disabled }) {
                 {getI18nValue('share.role_' + user.role) || user.role}
             </span>
 
-            {/* Remove button */}
             <button
                 onClick={() => !disabled && onRemove(user.permissionId)}
                 disabled={disabled}
@@ -341,6 +414,25 @@ function RemoveIcon() {
              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="18" y1="6"  x2="6"  y2="18"/>
             <line x1="6"  y1="6"  x2="18" y2="18"/>
+        </svg>
+    );
+}
+
+function CopyIcon() {
+    return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+        </svg>
+    );
+}
+
+function CheckIcon() {
+    return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
         </svg>
     );
 }

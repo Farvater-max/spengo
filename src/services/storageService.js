@@ -4,8 +4,10 @@ const LOCAL_STORAGE = {
     LOGIN_HINT:        'google_login_hint',
     NUMERIC_SHEET_ID:  'spengo_numeric_sheet_id',
     PROFILE:           'spengo_profile',
-    SHARED_USERS:      'spengo_shared_users',   
-    SHEET_OWNER_EMAIL: 'spengo_sheet_owner', 
+    SHARED_USERS:      'spengo_shared_users',
+    SHEET_OWNER_EMAIL: 'spengo_sheet_owner',
+    IS_OWNER:          'spengo_is_owner',         
+    PENDING_SHEET_ID:  'spengo_pending_sheet_id',
 };
 
 const SESSION_STORAGE = {
@@ -13,6 +15,10 @@ const SESSION_STORAGE = {
     EXPIRES_AT:   'google_token_expires_at',
 };
 
+
+// ---------------------------------------------------------------------------
+// Session (access token)
+// ---------------------------------------------------------------------------
 
 /**
  * Persists a fresh access token and its expiry timestamp.
@@ -26,7 +32,6 @@ export function saveSession(accessToken, expiresAt) {
 
 /**
  * Removes the access token and expiry from sessionStorage.
- * Call on sign-out or when a 401 is received.
  */
 export function clearSession() {
     sessionStorage.removeItem(SESSION_STORAGE.ACCESS_TOKEN);
@@ -34,7 +39,6 @@ export function clearSession() {
 }
 
 /**
- * Returns the cached access token, or null if not present.
  * @returns {string|null}
  */
 export function getAccessToken() {
@@ -42,7 +46,6 @@ export function getAccessToken() {
 }
 
 /**
- * Returns true if there is no token or it has passed its expiry window.
  * @returns {boolean}
  */
 export function isTokenExpired() {
@@ -51,49 +54,44 @@ export function isTokenExpired() {
     return Date.now() > Number(expiresAt);
 }
 
-/**
- * Saves the user's email so GIS can skip the account-picker on silent refresh.
- * @param {string} email
- */
+// ---------------------------------------------------------------------------
+// Login hint
+// ---------------------------------------------------------------------------
+
+/** @param {string} email */
 export function saveLoginHint(email) {
     localStorage.setItem(LOCAL_STORAGE.LOGIN_HINT, email);
 }
 
-/**
- * Returns the stored login hint email, or empty string if not set.
- * @returns {string}
- */
+/** @returns {string} */
 export function getLoginHint() {
     return localStorage.getItem(LOCAL_STORAGE.LOGIN_HINT) ?? '';
 }
 
-/**
- * Persists the Google Sheets spreadsheet ID.
- * @param {string} spreadsheetId
- */
+// ---------------------------------------------------------------------------
+// Sheet ID
+// ---------------------------------------------------------------------------
+
+/** @param {string} spreadsheetId */
 export function saveSheetId(spreadsheetId) {
     localStorage.setItem(LOCAL_STORAGE.SHEET_ID, spreadsheetId);
 }
 
-/**
- * Returns the stored spreadsheet ID, or null if not set.
- * @returns {string|null}
- */
+/** @returns {string|null} */
 export function getSheetId() {
     return localStorage.getItem(LOCAL_STORAGE.SHEET_ID);
 }
 
-/**
- * Serialises and persists the expenses array.
- * @param {Array} expenses
- */
+// ---------------------------------------------------------------------------
+// Expenses
+// ---------------------------------------------------------------------------
+
+/** @param {Array} expenses */
 export function saveExpenses(expenses) {
     localStorage.setItem(LOCAL_STORAGE.EXPENSES, JSON.stringify(expenses));
 }
 
 /**
- * Deserialises and returns the cached expenses array.
- * Returns an empty array if nothing is cached or parsing fails.
  * @returns {Array}
  */
 export function getExpenses() {
@@ -105,8 +103,11 @@ export function getExpenses() {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Composite session restore
+// ---------------------------------------------------------------------------
+
 /**
- * Returns everything needed to restore a session in one call.
  * @returns {{ accessToken: string|null, sheetId: string|null, expenses: Array, loginHint: string, tokenExpired: boolean }}
  */
 export function getStoredSession() {
@@ -119,25 +120,28 @@ export function getStoredSession() {
     };
 }
 
-/**
- * @param {number} numericSheetId
- */
+// ---------------------------------------------------------------------------
+// Numeric sheet ID
+// ---------------------------------------------------------------------------
+
+/** @param {number} numericSheetId */
 export function saveNumericSheetId(numericSheetId) {
     localStorage.setItem(LOCAL_STORAGE.NUMERIC_SHEET_ID, String(numericSheetId));
 }
 
-/**
- * Returns the cached numeric sheet ID, or null if not yet stored.
- * @returns {number|null}
- */
+/** @returns {number|null} */
 export function getNumericSheetId() {
     const val = localStorage.getItem(LOCAL_STORAGE.NUMERIC_SHEET_ID);
     return val !== null ? Number(val) : null;
 }
 
+// ---------------------------------------------------------------------------
+// Clear all
+// ---------------------------------------------------------------------------
+
 /**
  * Wipes all app data from both storages.
- * Call on sign-out to prevent data leaking to the next user on the same device.
+ * Does NOT clear pendingSheetId — that's a pre-auth value managed separately.
  */
 export function clearAll() {
     clearSession();
@@ -148,13 +152,14 @@ export function clearAll() {
     localStorage.removeItem(LOCAL_STORAGE.PROFILE);
     localStorage.removeItem(LOCAL_STORAGE.SHARED_USERS);
     localStorage.removeItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL);
+    localStorage.removeItem(LOCAL_STORAGE.IS_OWNER);
 }
 
-/**
- * Serialises and persists the user profile object.
- * Silently no-ops if serialisation fails (e.g. storage quota exceeded).
- * @param {{ email: string, name: string, picture: string, letter: string }} profile
- */
+// ---------------------------------------------------------------------------
+// Profile
+// ---------------------------------------------------------------------------
+
+/** @param {{ email: string, name: string, picture: string, letter: string }} profile */
 export function saveProfile(profile) {
     try {
         localStorage.setItem(LOCAL_STORAGE.PROFILE, JSON.stringify(profile));
@@ -162,7 +167,6 @@ export function saveProfile(profile) {
 }
 
 /**
- * Deserialises and returns the cached profile, or null if absent / corrupt.
  * @returns {{ email: string, name: string, picture: string, letter: string }|null}
  */
 export function getProfile() {
@@ -174,15 +178,15 @@ export function getProfile() {
     }
 }
 
-/**
- * Removes the cached profile from localStorage.
- */
 export function clearProfile() {
     localStorage.removeItem(LOCAL_STORAGE.PROFILE);
 }
 
+// ---------------------------------------------------------------------------
+// Shared users
+// ---------------------------------------------------------------------------
+
 /**
- * Persists the list of users the spreadsheet is shared with.
  * @param {Array<{ permissionId: string, email: string, displayName: string, role: string, isPending: boolean }>} users
  */
 export function saveSharedUsers(users) {
@@ -192,7 +196,6 @@ export function saveSharedUsers(users) {
 }
 
 /**
- * Returns the cached shared-users list, or an empty array on failure.
  * @returns {Array<{ permissionId: string, email: string, displayName: string, role: string, isPending: boolean }>}
  */
 export function getSharedUsers() {
@@ -204,18 +207,68 @@ export function getSharedUsers() {
     }
 }
 
-/**
- * @param {string} email
- */
+// ---------------------------------------------------------------------------
+// Sheet owner email
+// ---------------------------------------------------------------------------
+
+/** @param {string} email */
 export function saveSheetOwnerEmail(email) {
     try {
         localStorage.setItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL, email);
     } catch {}
 }
 
+/** @returns {string|null} */
+export function getSheetOwnerEmail() {
+    return localStorage.getItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Owner flag
+// ---------------------------------------------------------------------------
+
+/**
+ * Persists whether the current user is the owner of the active spreadsheet.
+ * false = subuser who obtained access via share link + Picker consent.
+ * @param {boolean} isOwner
+ */
+export function saveIsOwner(isOwner) {
+    localStorage.setItem(LOCAL_STORAGE.IS_OWNER, isOwner ? 'true' : 'false');
+}
+
+/**
+ * Returns true if the stored flag is explicitly 'false', otherwise defaults to true
+ * (owner is the normal case; subuser is opt-in via URL).
+ * @returns {boolean}
+ */
+export function getIsOwner() {
+    const val = localStorage.getItem(LOCAL_STORAGE.IS_OWNER);
+    return val !== 'false';
+}
+
+// ---------------------------------------------------------------------------
+// Pending sheet ID  (parsed from URL before auth completes)
+// ---------------------------------------------------------------------------
+
+/**
+ * Temporarily stores the sheet ID extracted from the share URL
+ * (?sheets=<id>) so it survives the OAuth redirect / popup flow.
+ * @param {string} sheetId
+ */
+export function savePendingSheetId(sheetId) {
+    localStorage.setItem(LOCAL_STORAGE.PENDING_SHEET_ID, sheetId);
+}
+
 /**
  * @returns {string|null}
  */
-export function getSheetOwnerEmail() {
-    return localStorage.getItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL) ?? null;
+export function getPendingSheetId() {
+    return localStorage.getItem(LOCAL_STORAGE.PENDING_SHEET_ID) ?? null;
+}
+
+/**
+ * Clears the pending sheet ID after it has been consumed by the auth flow.
+ */
+export function clearPendingSheetId() {
+    localStorage.removeItem(LOCAL_STORAGE.PENDING_SHEET_ID);
 }

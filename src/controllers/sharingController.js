@@ -2,68 +2,53 @@ import { STATE } from '../state.js';
 import { isGoogleEmail } from '../utils/helpers.js';
 import { withToken } from '../services/authService.js';
 import * as SharingService from '../services/sharingService.js';
+import * as SheetsService from '../services/sheetsService.js';
 import * as Storage from '../services/storageService.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { showToast } from '../utils/helpers.js';
 import { renderShareModal } from '../ui/renderer.jsx';
-
-/**
- * Orchestrates the full share lifecycle:
- *   openShareModal  → load current permissions → show modal
- *   submitShare     → add permission → refresh list → re-render modal
- *   removeShare     → delete permission → refresh list → re-render modal
- */
+import { CONFIG } from '../constants/config.js';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Fetches the current permissions list from Drive, updates the storage cache,
- * and stores the owner email for guest-user display.
- * Returns the resolved { sharedUsers, ownerEmail }.
- */
+function _buildShareUrl() {
+    return `${CONFIG.SHARE_URL_BASE}?sheets=${STATE.spreadsheetId}`;
+}
+
 async function _refreshSharedUsers() {
     const result = await withToken(token =>
         SharingService.getSharedUsers(token, STATE.spreadsheetId)
     );
-
     Storage.saveSharedUsers(result.sharedUsers);
-    if (result.ownerEmail) {
-        Storage.saveSheetOwnerEmail(result.ownerEmail);
-    }
-
+    if (result.ownerEmail) Storage.saveSheetOwnerEmail(result.ownerEmail);
     return result;
+}
+
+function _render(overrides = {}) {
+    renderShareModal({
+        open:        true,
+        sharedUsers: Storage.getSharedUsers(),
+        loading:     false,
+        shareUrl:    _buildShareUrl(),
+        onShare:     submitShare,
+        onRemove:    removeShare,
+        onClose:     () => renderShareModal({ open: false }),
+        ...overrides,
+    });
 }
 
 // ---------------------------------------------------------------------------
 // Open modal
 // ---------------------------------------------------------------------------
 
-/**
- * Opens the ShareModal. Immediately renders with the cached list (instant UI),
- * then fires a background API call to refresh — re-renders once data arrives.
- */
 export async function openShareModal() {
-    renderShareModal({
-        open:        true,
-        sharedUsers: Storage.getSharedUsers(),
-        loading:     false,
-        onShare:     submitShare,
-        onRemove:    removeShare,
-        onClose:     () => renderShareModal({ open: false }),
-    });
+    _render();
 
     try {
         const { sharedUsers } = await _refreshSharedUsers();
-        renderShareModal({
-            open:        true,
-            sharedUsers,
-            loading:     false,
-            onShare:     submitShare,
-            onRemove:    removeShare,
-            onClose:     () => renderShareModal({ open: false }),
-        });
+        _render({ sharedUsers });
     } catch (err) {
         console.warn('[SpenGo] Failed to load sharing list:', err);
     }
@@ -73,12 +58,6 @@ export async function openShareModal() {
 // Share
 // ---------------------------------------------------------------------------
 
-/**
- * Validates the email, calls Drive to add a writer permission,
- * then refreshes the list and re-renders the modal.
- *
- * @param {string} email
- */
 export async function submitShare(email) {
     const trimmed = email.trim().toLowerCase();
 
@@ -101,14 +80,7 @@ export async function submitShare(email) {
         return;
     }
 
-    renderShareModal({
-        open:        true,
-        sharedUsers: Storage.getSharedUsers(),
-        loading:     true,
-        onShare:     submitShare,
-        onRemove:    removeShare,
-        onClose:     () => renderShareModal({ open: false }),
-    });
+    _render({ loading: true });
 
     try {
         await withToken(token =>
@@ -117,36 +89,15 @@ export async function submitShare(email) {
         showToast(getI18nValue('share.success'), 'success');
     } catch (err) {
         showToast(getI18nValue('share.error_prefix') + err.message, 'error');
-        renderShareModal({
-            open:        true,
-            sharedUsers: Storage.getSharedUsers(),
-            loading:     false,
-            onShare:     submitShare,
-            onRemove:    removeShare,
-            onClose:     () => renderShareModal({ open: false }),
-        });
+        _render();
         return;
     }
 
     try {
         const { sharedUsers } = await _refreshSharedUsers();
-        renderShareModal({
-            open:        true,
-            sharedUsers,
-            loading:     false,
-            onShare:     submitShare,
-            onRemove:    removeShare,
-            onClose:     () => renderShareModal({ open: false }),
-        });
+        _render({ sharedUsers });
     } catch {
-        renderShareModal({
-            open:        true,
-            sharedUsers: Storage.getSharedUsers(),
-            loading:     false,
-            onShare:     submitShare,
-            onRemove:    removeShare,
-            onClose:     () => renderShareModal({ open: false }),
-        });
+        _render();
     }
 }
 
@@ -154,11 +105,6 @@ export async function submitShare(email) {
 // Remove
 // ---------------------------------------------------------------------------
 
-/**
- * Revokes a permission by Drive permission ID, refreshes the list.
- *
- * @param {string} permissionId
- */
 export async function removeShare(permissionId) {
     try {
         await withToken(token =>
@@ -172,24 +118,48 @@ export async function removeShare(permissionId) {
 
     try {
         const { sharedUsers } = await _refreshSharedUsers();
-        renderShareModal({
-            open:        true,
-            sharedUsers,
-            loading:     false,
-            onShare:     submitShare,
-            onRemove:    removeShare,
-            onClose:     () => renderShareModal({ open: false }),
-        });
+        _render({ sharedUsers });
     } catch {
         const updated = Storage.getSharedUsers().filter(u => u.permissionId !== permissionId);
         Storage.saveSharedUsers(updated);
-        renderShareModal({
-            open:        true,
-            sharedUsers: updated,
-            loading:     false,
-            onShare:     submitShare,
-            onRemove:    removeShare,
-            onClose:     () => renderShareModal({ open: false }),
-        });
+        _render({ sharedUsers: updated });
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Subuser: direct access via share URL (no Picker needed)
+// ---------------------------------------------------------------------------
+
+/**
+ * Called by authController after sign-in when a pendingSheetId is present.
+ * @param {string} accessToken
+ * @param {string} pendingSheetId  - Sheet ID from ?sheets= URL param
+ * @returns {Promise<string|null>}  Resolved spreadsheetId, or null on failure
+ */
+export async function resolveSubuserAccess(accessToken, pendingSheetId) {
+    try {
+        const { spreadsheetId } = await SheetsService.resolveSharedSpreadsheet(
+            accessToken,
+            pendingSheetId
+        );
+
+        Storage.saveSheetId(spreadsheetId);
+        Storage.saveIsOwner(false);
+
+        // Remove ?sheets= from URL without triggering a reload
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sheets');
+        window.history.replaceState({}, '', url.toString());
+
+        Storage.clearPendingSheetId();
+
+        return spreadsheetId;
+    } catch (err) {
+        console.error('[SpenGo] resolveSubuserAccess failed:', err);
+        const msg = err.message.includes('no longer accessible')
+            ? (getI18nValue('share.access_revoked') ?? 'Access to this spreadsheet has been revoked.')
+            : (getI18nValue('share.access_error')   ?? 'Could not access the shared spreadsheet: ') + err.message;
+        showToast(msg, 'error');
+        return null;
     }
 }

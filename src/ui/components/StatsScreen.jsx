@@ -1,8 +1,3 @@
-/**
- * Статичная структура экрана статистики.
- * Рендерится один раз — канвасы стабильны для Chart.js.
- * Текстовые значения обновляются напрямую через DOM (statistics-chart.js).
- */
 export function StatsScreen() {
     return (
         <div className="stats-screen-inner">

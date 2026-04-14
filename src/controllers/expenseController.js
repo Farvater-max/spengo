@@ -15,14 +15,19 @@ function _saveExpenses(expenses) {
 
 /**
  * Guards against a date string being in the future.
- * Returns today's date string if the provided date is invalid or future.
  * @param {string} date - YYYY-MM-DD
- * @returns {string} - safe YYYY-MM-DD
+ * @returns {string}
  */
 function _safeDate(date) {
     const today = todayStr();
     if (!date || date > today) return today;
     return date;
+}
+
+function _assertSpreadsheet() {
+    if (!STATE.spreadsheetId) {
+        throw new Error(getI18nValue('toast.no_sheet') ?? 'No active spreadsheet. Please sign in again.');
+    }
 }
 
 // ─── Cache restore (called on app start before auth) ──
@@ -45,6 +50,7 @@ export function openAddModal() {
 }
 
 export async function submitExpense({ amount, category, comment, date }) {
+    _assertSpreadsheet();
     STATE.selectedCat = category;
     const expense = {
         id: uuid(),
@@ -80,6 +86,7 @@ export function openEditModal(id) {
 }
 
 export async function updateExpense(id, amount, category, comment, date) {
+    _assertSpreadsheet();
     const original = STATE.expenses.find(e => e.id === id);
     if (!original) return;
     const updated = {
@@ -103,6 +110,7 @@ export async function updateExpense(id, amount, category, comment, date) {
 }
 
 export async function deleteExpense(id) {
+    _assertSpreadsheet();
     try {
         await withToken(token =>
             SheetsService.deleteExpense(token, STATE.spreadsheetId, id)
