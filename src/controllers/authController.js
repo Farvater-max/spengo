@@ -18,16 +18,63 @@ import {
 
 /**
  * Entry point called once the GIS SDK is ready.
- * Delegates session-type resolution entirely to AuthService so this function
- * only decides *what to do*, not *how to read storage*.
  *
- * Session types:
+ * Guest mode (access URL with ?id=):
+ *   The URL param is read in app.js and stored in STATE.guestSheetId before
+ *   this function runs. If guest mode is active we always require a fresh
+ *   interactive sign-in — we cannot silently reuse the owner's cached token
+ *   because it belongs to a different session context.
+ *
+ *   On subsequent page loads (after the URL param has been stripped) we fall
+ *   back to Storage.getGuestSheetId() so the user stays in guest mode across
+ *   refreshes without needing the URL again.
+ *
+ * Owner mode session types (unchanged):
  *   'fresh'           — valid token + sheetId → restore in-memory, background refresh
  *   'restore'         — token expired, cached expenses available → show UI immediately, silent refresh
  *   'silent'          — token expired, no cache → show spinner, silent refresh
  *   'unauthenticated' — no sheetId at all → show sign-in screen
  */
 export function onAuthReady() {
+    // ── Guest mode: URL param already parsed into STATE by app.js ──────────
+    if (STATE.isGuestMode && STATE.guestSheetId) {
+        _toGuestAuth();
+        return;
+    }
+
+    // ── Guest mode: returning visitor (F5 after URL param was stripped) ────
+    const savedGuestSheetId = Storage.getGuestSheetId();
+    if (savedGuestSheetId) {
+        STATE.guestSheetId = savedGuestSheetId;
+        STATE.isGuestMode  = true;
+
+        // If a valid token is still alive in sessionStorage — restore immediately,
+        // same as owner 'fresh' path. Otherwise attempt a silent refresh so the
+        // guest doesn't have to tap "Sign in" again on every F5.
+        const { accessToken, tokenExpired } = Storage.getStoredSession();
+        const cachedExpenses = Storage.getExpenses();
+
+        if (accessToken && !tokenExpired) {
+            STATE.accessToken = accessToken;
+            _restoreProfileFromStorage();
+            setNavEnabled(false);
+            showScreen('setup');
+            renderSetupScreen({
+                title: getI18nValue('setup.loading'),
+                sub:   getI18nValue('setup.reading'),
+            });
+            if (cachedExpenses.length > 0) {
+                STATE.expenses = cachedExpenses;
+                setNavEnabled(true);
+            }
+            AuthService.silentRefresh();
+        } else {
+            _startGuestSilentRestore(cachedExpenses);
+        }
+        return;
+    }
+
+    // ── Owner mode ─────────────────────────────────────────────────────────
     const session = AuthService.resolveSessionType();
 
     switch (session.type) {
@@ -49,20 +96,21 @@ export function onAuthReady() {
 export function onSilentFail() {
     Storage.clearSession();
     STATE.accessToken = null;
-    _toUnauthenticated();
+
+    // In guest mode a silent-refresh failure just means the user needs to
+    // sign in interactively again — keep guest context alive.
+    if (STATE.isGuestMode) {
+        _toGuestAuth();
+    } else {
+        _toUnauthenticated();
+    }
 }
 
 export async function onSignIn({ accessToken }) {
     STATE.accessToken = accessToken;
     STATE.authStatus  = 'ready';
-    setNavEnabled(true);
 
-    showScreen('setup');
-    renderSetupScreen({
-        title: getI18nValue('setup.finding'),
-        sub:   getI18nValue('setup.checking'),
-    });
-
+    // Load profile first — it's needed for both owner and guest paths.
     const profile = await AuthService.getUserProfile(accessToken);
     if (profile) {
         STATE.userProfile = profile;
@@ -70,6 +118,20 @@ export async function onSignIn({ accessToken }) {
         Storage.saveProfile(profile);
         updateAvatarUI();
     }
+
+    // ── Guest mode ─────────────────────────────────────────────────────────
+    if (STATE.isGuestMode && STATE.guestSheetId) {
+        await _initGuestSession();
+        return;
+    }
+
+    // ── Owner mode ─────────────────────────────────────────────────────────
+    setNavEnabled(true);
+    showScreen('setup');
+    renderSetupScreen({
+        title: getI18nValue('setup.finding'),
+        sub:   getI18nValue('setup.checking'),
+    });
 
     if (STATE.spreadsheetId) {
         await _refreshDataInBackground();
@@ -79,6 +141,9 @@ export async function onSignIn({ accessToken }) {
 }
 
 export function onSignOut() {
+    // Fully exit guest mode so the next load starts as owner.
+    Storage.clearGuestSheetId();
+
     STATE.reset();
     STATE.currentPeriod         = 'day';
     STATE.currentCategoryFilter = 'all';
@@ -102,17 +167,18 @@ export function onSignOut() {
 export function openProfileModal() {
     const ownerEmail  = Storage.getSheetOwnerEmail();
     const myEmail     = STATE.userProfile?.email ?? null;
-    const isOwner     = !ownerEmail || !myEmail || ownerEmail.toLowerCase() === myEmail.toLowerCase();
+    const isOwner     = !STATE.isGuestMode &&
+                        (!ownerEmail || !myEmail || ownerEmail.toLowerCase() === myEmail.toLowerCase());
     const sharedUsers = Storage.getSharedUsers();
 
     renderProfileModal({
-        open:        true,
-        profile:     STATE.userProfile,
+        open:          true,
+        profile:       STATE.userProfile,
         sharedUsers,
         ownerEmail,
         isOwner,
         spreadsheetId: STATE.spreadsheetId,
-        onSignOut:   _handleSignOut,
+        onSignOut:     _handleSignOut,
     });
 }
 
@@ -124,7 +190,86 @@ function _handleSignOut() {
     AuthService.signOut();
 }
 
-// ─── Session init & refresh ───────────────────────────
+// ─── Guest session ────────────────────────────────────
+
+/**
+ * Verifies that the signed-in user can access the shared spreadsheet,
+ * then loads its data and transitions to the main screen.
+ *
+ * Error cases:
+ *  - 403 / sheet not found → show a clear "no access" error on the auth screen.
+ *  - Any other network error → show a generic error and let the user retry.
+ */
+async function _initGuestSession() {
+    showScreen('setup');
+    renderSetupScreen({
+        title: getI18nValue('setup.verifying_access'),
+        sub:   getI18nValue('setup.checking_permissions'),
+    });
+
+    try {
+        const hasAccess = await AuthService.withToken(token =>
+            SheetsService.verifyGuestAccess(token, STATE.guestSheetId)
+        );
+
+        if (!hasAccess) {
+            _showGuestAccessError(getI18nValue('guest.no_access'));
+            return;
+        }
+
+        // Access confirmed — use the guest sheet as the active spreadsheet.
+        STATE.spreadsheetId = STATE.guestSheetId;
+        Storage.saveGuestSheetId(STATE.guestSheetId); // persist for F5
+
+        // Load expenses from the shared sheet.
+        renderSetupScreen({
+            title: getI18nValue('setup.loading'),
+            sub:   getI18nValue('setup.reading'),
+        });
+        const expenses = await AuthService.withToken(token =>
+            SheetsService.loadRecentExpenses(token, STATE.spreadsheetId)
+        );
+        STATE.expenses = expenses;
+        Storage.saveExpenses(expenses);
+
+        setNavEnabled(true);
+        await _transitionToMain();
+
+    } catch (err) {
+        console.error('[SpenGo] _initGuestSession failed:', err);
+
+        const isPermissionError =
+            err.message?.includes('403') ||
+            err.message?.includes('404') ||
+            err.message?.includes('not found');
+
+        _showGuestAccessError(
+            isPermissionError
+                ? getI18nValue('guest.access_denied')
+                : getI18nValue('guest.generic_error')
+        );
+    }
+}
+
+/**
+ * Renders the auth screen with a guest-specific error message.
+ * Preserves guest context so the user can retry with a different account.
+ *
+ * @param {string} message
+ */
+function _showGuestAccessError(message) {
+    setNavEnabled(false);
+    showScreen('auth');
+    renderAuthScreen({
+        loading:     false,
+        error:       message,
+        onSignIn:    AuthService.signIn,
+        isGuestMode: true,
+    });
+    _enableSignInButton();
+}
+
+// ─── Owner session init & refresh ─────────────────────
 
 async function _initSpreadsheet() {
     try {
@@ -196,6 +341,9 @@ async function _refreshDataInBackground() {
 }
 
 async function _syncOwnershipInBackground() {
+    // Sharing metadata only makes sense for the owner.
+    if (STATE.isGuestMode) return;
+
     try {
         const { sharedUsers, ownerEmail } = await AuthService.withToken(token =>
             SharingService.getSharedUsers(token, STATE.spreadsheetId)
@@ -216,7 +364,7 @@ async function _transitionToMain() {
 
 /**
  * Restores a session that has a valid token — no network round-trip needed.
- * Kicks off a background data refresh via onSignIn's existing path.
+ * Kicks off a background data refresh via the existing sign-in path.
  *
  * @param {{ accessToken: string, sheetId: string, expenses: Array }} session
  */
@@ -276,6 +424,51 @@ function _toUnauthenticated() {
     setNavEnabled(false);
     showScreen('auth');
     renderAuthScreen({ loading: false, error: null, onSignIn: AuthService.signIn });
+    _enableSignInButton();
+}
+
+/**
+ * Guest equivalent of _startSilentRestore.
+ * Shows setup screen immediately (optionally with cached expenses),
+ * then fires a silent token refresh. On success onSignIn → _initGuestSession.
+ * On failure falls back to _toGuestAuth so the user can sign in interactively.
+ *
+ * @param {Array} cachedExpenses
+ */
+function _startGuestSilentRestore(cachedExpenses) {
+    STATE.authStatus = 'restoring';
+    _restoreProfileFromStorage();
+
+    showScreen('setup');
+    renderSetupScreen({
+        title: getI18nValue('setup.loading'),
+        sub:   getI18nValue('setup.reading'),
+    });
+
+    if (cachedExpenses.length > 0) {
+        STATE.expenses = cachedExpenses;
+        setNavEnabled(true);
+    } else {
+        setNavEnabled(false);
+    }
+
+    AuthService.silentRefresh();
+}
+
+/**
+ * Shows the auth screen configured for guest sign-in.
+ * Called on first arrival via access URL, or as a fallback when silent refresh fails.
+ */
+function _toGuestAuth() {
+    STATE.authStatus = 'unauthenticated';
+    setNavEnabled(false);
+    showScreen('auth');
+    renderAuthScreen({
+        loading:     false,
+        error:       null,
+        onSignIn:    AuthService.signIn,
+        isGuestMode: true,
+    });
     _enableSignInButton();
 }
 

@@ -412,6 +412,7 @@ let _shareModalRoot = null;
 export function renderShareModal({
     open        = false,
     sharedUsers = [],
+    accessUrl   = null,
     loading     = false,
     onShare,
     onRemove,
@@ -426,6 +427,7 @@ export function renderShareModal({
     _shareModalRoot.render(
         <ShareModal
             sharedUsers={sharedUsers}
+            accessUrl={accessUrl}
             loading={loading}
             onShare={onShare}
             onRemove={onRemove}

@@ -7,10 +7,12 @@ export class AppState {
             status:       'unknown',
         };
 
-        /** @type {{ spreadsheetId: string|null, expenses: Array }} */
+        /** @type {{ spreadsheetId: string|null, expenses: Array, guestSheetId: string|null, isGuestMode: boolean }} */
         this.data = {
             spreadsheetId: null,
             expenses:      [],
+            guestSheetId:  null,
+            isGuestMode:   false,
         };
 
         /** @type {{ currentScreen: string, currentPeriod: string, categoryFilter: string, selectedCat: string|null }} */
@@ -68,6 +70,12 @@ export class AppState {
     get spreadsheetId()  { return this.data.spreadsheetId; }
     set spreadsheetId(v) { this.data.spreadsheetId = v; }
 
+    get guestSheetId()   { return this.data.guestSheetId; }
+    set guestSheetId(v)  { this.data.guestSheetId = v; }
+
+    get isGuestMode()    { return this.data.isGuestMode; }
+    set isGuestMode(v)   { this.data.isGuestMode = v; }
+
     get expenses()       { return this.data.expenses; }
     set expenses(v)      { this.data.expenses = v; this._notify('expenses'); }
 
@@ -85,7 +93,7 @@ export class AppState {
 
     reset() {
         this.auth = { accessToken: null, userProfile: null, status: 'unauthenticated' };
-        this.data = { spreadsheetId: null, expenses: [] };
+        this.data = { spreadsheetId: null, expenses: [], guestSheetId: null, isGuestMode: false };
         // ui state is reset deliberately by the caller (onSignOut)
     }
 }

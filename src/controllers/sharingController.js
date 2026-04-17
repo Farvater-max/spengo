@@ -45,9 +45,15 @@ async function _refreshSharedUsers() {
  * then fires a background API call to refresh — re-renders once data arrives.
  */
 export async function openShareModal() {
+    const existingSharedUsers = Storage.getSharedUsers();
+    const accessUrl = existingSharedUsers.length > 0
+        ? `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`
+        : null;
+
     renderShareModal({
         open:        true,
-        sharedUsers: Storage.getSharedUsers(),
+        sharedUsers: existingSharedUsers,
+        accessUrl,
         loading:     false,
         onShare:     submitShare,
         onRemove:    removeShare,
@@ -56,9 +62,13 @@ export async function openShareModal() {
 
     try {
         const { sharedUsers } = await _refreshSharedUsers();
+        const accessUrl = sharedUsers.length > 0
+            ? `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`
+            : null;
         renderShareModal({
             open:        true,
             sharedUsers,
+            accessUrl,
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,
@@ -104,6 +114,7 @@ export async function submitShare(email) {
     renderShareModal({
         open:        true,
         sharedUsers: Storage.getSharedUsers(),
+        accessUrl:   null,
         loading:     true,
         onShare:     submitShare,
         onRemove:    removeShare,
@@ -120,6 +131,7 @@ export async function submitShare(email) {
         renderShareModal({
             open:        true,
             sharedUsers: Storage.getSharedUsers(),
+            accessUrl:   null,
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,
@@ -128,11 +140,16 @@ export async function submitShare(email) {
         return;
     }
 
+    // After a successful share the list will have at least one entry —
+    // generate the access URL and show it immediately.
+    const accessUrl = `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`;
+
     try {
         const { sharedUsers } = await _refreshSharedUsers();
         renderShareModal({
             open:        true,
             sharedUsers,
+            accessUrl,
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,
@@ -142,6 +159,7 @@ export async function submitShare(email) {
         renderShareModal({
             open:        true,
             sharedUsers: Storage.getSharedUsers(),
+            accessUrl,
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,
@@ -172,9 +190,13 @@ export async function removeShare(permissionId) {
 
     try {
         const { sharedUsers } = await _refreshSharedUsers();
+        const accessUrl = sharedUsers.length > 0
+            ? `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`
+            : null;
         renderShareModal({
             open:        true,
             sharedUsers,
+            accessUrl,
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,
@@ -183,9 +205,13 @@ export async function removeShare(permissionId) {
     } catch {
         const updated = Storage.getSharedUsers().filter(u => u.permissionId !== permissionId);
         Storage.saveSharedUsers(updated);
+        const accessUrl = updated.length > 0
+            ? `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`
+            : null;
         renderShareModal({
             open:        true,
             sharedUsers: updated,
+            accessUrl,
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,

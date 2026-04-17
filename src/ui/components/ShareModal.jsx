@@ -3,7 +3,7 @@ import { getI18nValue } from '../../i18n/localization.js';
 import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
 import { isGoogleEmail } from '../../utils/helpers.js';
 
-export function ShareModal({ sharedUsers = [], loading = false, onShare, onRemove, onClose }) {
+export function ShareModal({ sharedUsers = [], loading = false, accessUrl = null, onShare, onRemove, onClose }) {
     const [inputValue, setInputValue]   = useState('');
     const [submitting, setSubmitting]   = useState(false);
     const [btnHover,   setBtnHover]     = useState(false);
@@ -155,6 +155,46 @@ export function ShareModal({ sharedUsers = [], loading = false, onShare, onRemov
                                 disabled={isLoading}
                             />
                         ))}
+
+                        {/* Access URL block — shown after sharing is active */}
+                        {accessUrl && (
+                            <div style={{ marginTop: '16px' }}>
+                                <p style={{
+                                    fontSize:      '14px',
+                                    fontWeight:    600,
+                                    letterSpacing: '1px',
+                                    textTransform: 'uppercase',
+                                    color:         'var(--muted)',
+                                    margin:        '0 0 8px',
+                                }}>
+                                    {getI18nValue('share.access_url_label')}
+                                </p>
+
+                                <div style={{
+                                    display:       'flex',
+                                    alignItems:    'center',
+                                    gap:           '8px',
+                                    padding:       '10px 12px',
+                                    borderRadius:  'var(--r-sm)',
+                                    background:    'var(--surface2)',
+                                    border:        '1px solid var(--border)',
+                                }}>
+                                    <span style={{
+                                        flex:         1,
+                                        fontSize:     '12px',
+                                        color:        'var(--muted)',
+                                        overflow:     'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace:   'nowrap',
+                                        fontFamily:   'monospace',
+                                        lineHeight:   1.4,
+                                    }}>
+                                        {accessUrl}
+                                    </span>
+                                    <CopyButton url={accessUrl} />
+                                </div>
+                            </div>
+                        )}
 
                         {/* Info block — how to revoke */}
                         <div style={{
@@ -331,6 +371,74 @@ function SpinnerIcon() {
             <circle cx="12" cy="12" r="10" strokeOpacity="0.25"/>
             <path d="M12 2a10 10 0 0 1 10 10"/>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </svg>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// CopyButton
+// ---------------------------------------------------------------------------
+
+function CopyButton({ url }) {
+    const [copied, setCopied] = useState(false);
+
+    async function handleCopy() {
+        try {
+            await navigator.clipboard.writeText(url);
+        } catch {
+            // Fallback for environments where clipboard API is unavailable
+            const ta = document.createElement('textarea');
+            ta.value = url;
+            ta.style.position = 'fixed';
+            ta.style.opacity  = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }
+
+    return (
+        <button
+            onClick={handleCopy}
+            title={getI18nValue('share.copy_url')}
+            style={{
+                flexShrink:     0,
+                width:          '32px',
+                height:         '32px',
+                borderRadius:   'var(--r-sm)',
+                border:         copied ? '1px solid #c8f13340' : '1px solid var(--border)',
+                background:     copied ? '#c8f13515'           : 'var(--surface)',
+                cursor:         'pointer',
+                display:        'flex',
+                alignItems:     'center',
+                justifyContent: 'center',
+                color:          copied ? 'var(--accent)' : 'var(--muted)',
+                transition:     'color .2s, border-color .2s, background .2s',
+            }}
+        >
+            {copied ? <CheckIcon /> : <CopyIcon />}
+        </button>
+    );
+}
+
+function CopyIcon() {
+    return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+        </svg>
+    );
+}
+
+function CheckIcon() {
+    return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
         </svg>
     );
 }
