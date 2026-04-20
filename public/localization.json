@@ -87,7 +87,14 @@
     "share.email_placeholder": "Введите email Google аккаунта",
     "share.btn_share": "Открыть доступ",
     "share.warning": "Этот пользователь получит доступ к вашей таблице SpenGo в Google и сможет просматривать, добавлять, редактировать и удалять все записи расходов.",
-    "share.revoke_hint": "Чтобы отозвать доступ, нажмите кнопку ×. Пользователь сразу потеряет возможность просматривать и редактировать ваши расходы."
+    "share.revoke_hint": "Чтобы отозвать доступ, нажмите кнопку ×. Пользователь сразу потеряет возможность просматривать и редактировать ваши расходы.",
+    "share.access_url_label": "Ссылка доступа",
+    "share.copy_url": "Скопировать ссылку",
+    "setup.verifying_access": "Проверяем доступ…",
+    "setup.checking_permissions": "Проверяем права к таблице",
+    "guest.no_access": "У вашего аккаунта нет доступа к этой таблице. Попросите владельца поделиться доступом заново.",
+    "guest.access_denied": "Доступ запрещён. Возможно, владелец отозвал доступ или ссылка недействительна.",
+    "guest.generic_error": "Не удалось загрузить таблицу. Проверьте подключение и попробуйте ещё раз."
   },
   "en": {
     "auth.logo": "SpenGo",
@@ -177,7 +184,14 @@
     "share.email_placeholder": "Enter Google account email",
     "share.btn_share": "Share access",
     "share.warning": "This person will get access to your SpenGo Google Sheet and will be able to read, add, edit and delete all expense records.",
-    "share.revoke_hint": "To revoke access, tap the × button. The user will immediately lose the ability to view or edit your expenses."
+    "share.revoke_hint": "To revoke access, tap the × button. The user will immediately lose the ability to view or edit your expenses.",
+    "share.access_url_label": "Access link",
+    "share.copy_url": "Copy link",
+    "setup.verifying_access": "Verifying access…",
+    "setup.checking_permissions": "Checking spreadsheet permissions",
+    "guest.no_access": "Your account does not have access to this spreadsheet. Ask the owner to share it with you again.",
+    "guest.access_denied": "Access denied. The owner may have revoked access or the link is no longer valid.",
+    "guest.generic_error": "Could not load the spreadsheet. Check your connection and try again."
   },
   "es": {
     "auth.logo": "SpenGo",
@@ -267,7 +281,14 @@
     "share.email_placeholder": "Introduce el correo de Google",
     "share.btn_share": "Compartir acceso",
     "share.warning": "Esta persona tendrá acceso a tu hoja de Google SpenGo y podrá ver, añadir, editar y eliminar todos los registros de gastos.",
-    "share.revoke_hint": "Para revocar el acceso, pulsa el botón ×. El usuario perderá inmediatamente la posibilidad de ver o editar tus gastos."
+    "share.revoke_hint": "Para revocar el acceso, pulsa el botón ×. El usuario perderá inmediatamente la posibilidad de ver o editar tus gastos.",
+    "share.access_url_label": "Enlace de acceso",
+    "share.copy_url": "Copiar enlace",
+    "setup.verifying_access": "Verificando acceso…",
+    "setup.checking_permissions": "Comprobando permisos de la hoja",
+    "guest.no_access": "Tu cuenta no tiene acceso a esta hoja. Pide al propietario que vuelva a compartirla contigo.",
+    "guest.access_denied": "Acceso denegado. Es posible que el propietario haya revocado el acceso o que el enlace ya no sea válido.",
+    "guest.generic_error": "No se pudo cargar la hoja. Comprueba tu conexión e inténtalo de nuevo."
   },
   "pl": {
     "auth.logo": "SpenGo",
@@ -357,7 +378,14 @@
     "share.email_placeholder": "Wpisz adres e-mail Google",
     "share.btn_share": "Udostępnij dostęp",
     "share.warning": "Ta osoba otrzyma dostęp do Twojego arkusza Google SpenGo i będzie mogła przeglądać, dodawać, edytować i usuwać wszystkie wpisy wydatków.",
-    "share.revoke_hint": "Aby cofnąć dostęp, kliknij przycisk ×. Użytkownik natychmiast utraci możliwość przeglądania i edytowania Twoich wydatków."
+    "share.revoke_hint": "Aby cofnąć dostęp, kliknij przycisk ×. Użytkownik natychmiast utraci możliwość przeglądania i edytowania Twoich wydatków.",
+    "share.access_url_label": "Link dostępowy",
+    "share.copy_url": "Kopiuj link",
+    "setup.verifying_access": "Weryfikacja dostępu…",
+    "setup.checking_permissions": "Sprawdzanie uprawnień do arkusza",
+    "guest.no_access": "Twoje konto nie ma dostępu do tego arkusza. Poproś właściciela o ponowne udostępnienie.",
+    "guest.access_denied": "Odmowa dostępu. Właściciel mógł cofnąć dostęp lub link jest już nieważny.",
+    "guest.generic_error": "Nie można załadować arkusza. Sprawdź połączenie i spróbuj ponownie."
   },
   "cs": {
     "auth.logo": "SpenGo",
@@ -447,6 +475,13 @@
     "share.email_placeholder": "Zadejte e-mail Google účtu",
     "share.btn_share": "Sdílet přístup",
     "share.warning": "Tato osoba získá přístup k vaší tabulce Google SpenGo a bude moci zobrazovat, přidávat, upravovat a mazat všechny záznamy o výdajích.",
-    "share.revoke_hint": "Pro odebrání přístupu klikněte na tlačítko ×. Uživatel okamžitě ztratí možnost zobrazovat nebo upravovat vaše výdaje."
+    "share.revoke_hint": "Pro odebrání přístupu klikněte na tlačítko ×. Uživatel okamžitě ztratí možnost zobrazovat nebo upravovat vaše výdaje.",
+    "share.access_url_label": "Přístupový odkaz",
+    "share.copy_url": "Kopírovat odkaz",
+    "setup.verifying_access": "Ověřujeme přístup…",
+    "setup.checking_permissions": "Kontrolujeme oprávnění k tabulce",
+    "guest.no_access": "Váš účet nemá přístup k této tabulce. Požádejte vlastníka, aby vám přístup znovu sdílel.",
+    "guest.access_denied": "Přístup odepřen. Vlastník mohl přístup odvolat nebo odkaz již není platný.",
+    "guest.generic_error": "Tabulku se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu."
   }
 }

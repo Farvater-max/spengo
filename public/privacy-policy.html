@@ -253,15 +253,11 @@
         <td data-label="Data accessed">Only the Google Spreadsheet created by SpenGo — not your entire Drive</td>
         <td data-label="Why it is needed">To create, read, write, and delete expense records in the SpenGo spreadsheet. Access is limited exclusively to files created by this application.</td>
       </tr>
-      <tr>
-        <td data-label="Scope"><code>drive.metadata.readonly</code></td>
-        <td data-label="Data accessed">File names, IDs, and permission metadata visible to you in Google Drive — no file contents</td>
-        <td data-label="Why it is needed">To search Drive for an existing SpenGo spreadsheet by name (so we don't create a duplicate on every sign-in), and to read the sharing permissions of that spreadsheet so the app can show who has access.</td>
-      </tr>
+
       <tr>
         <td data-label="Scope"><code>spreadsheets</code></td>
-        <td data-label="Data accessed">The content (rows and cells) of any Google Spreadsheet you have been given access to</td>
-        <td data-label="Why it is needed">Required when another user shares their SpenGo spreadsheet with you. The <code>drive.file</code> scope only covers files this app itself created; <code>spreadsheets</code> allows reading and writing a spreadsheet created by someone else's account.</td>
+        <td data-label="Data accessed">The content (rows and cells) of the SpenGo spreadsheet, including shared spreadsheets you have been invited to</td>
+        <td data-label="Why it is needed">To read and write expense records. Also used when you access a spreadsheet shared with you via an access link — <code>drive.file</code> covers only files this app created, while <code>spreadsheets</code> allows reading and writing a spreadsheet owned by another account.</td>
       </tr>
       <tr>
         <td data-label="Scope"><code>userinfo.profile</code></td>
@@ -276,7 +272,7 @@
       </tbody>
     </table>
 
-    <p style="margin-top:14px;">SpenGo requests only the minimum scopes necessary to provide its functionality. <code>drive.metadata.readonly</code> and <code>spreadsheets</code> are classified as <em>sensitive</em> scopes by Google — they are not <em>restricted</em> scopes, and they do not grant access to any Google service beyond Drive file metadata and Sheets data. We do not request access to Gmail, Calendar, Contacts, or any other Google service.</p>
+    <p style="margin-top:14px;">SpenGo requests only the minimum scopes necessary to provide its functionality. The <code>spreadsheets</code> scope is classified as a <em>sensitive</em> scope by Google — it is not a <em>restricted</em> scope, and does not grant access to any Google service beyond Sheets data. We do not request access to Gmail, Calendar, Contacts, or any other Google service.</p>
   </div>
 
   <!-- 3. Data Usage -->
@@ -313,8 +309,8 @@
           <td data-label="What happens">SpenGo calls the Google Drive Permissions API to grant the specified Google account <em>writer</em> access to your SpenGo spreadsheet. Google sends a notification email to that person on your behalf.</td>
         </tr>
         <tr>
-          <td data-label="Action">The other person signs into SpenGo</td>
-          <td data-label="What happens">SpenGo finds and loads your shared spreadsheet using the <code>drive.metadata.readonly</code> and <code>spreadsheets</code> scopes. They can read and edit all expense records in that file.</td>
+          <td data-label="Action">The other person opens the access link and signs into SpenGo</td>
+          <td data-label="What happens">SpenGo reads the spreadsheet ID from the access link and verifies access using the <code>spreadsheets</code> scope. No Drive search is performed. They can read and edit all expense records in that file.</td>
         </tr>
         <tr>
           <td data-label="Action">You revoke access</td>
