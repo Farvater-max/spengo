@@ -12,9 +12,11 @@ import {
 } from '../helpers/sheetsHelpers.js';
 
 /**
- * Ensures a valid spreadsheet exists.
- * Verifies the cached ID if provided, or searches and creates if absent/invalid.
- * Persistence of the resolved ID is handled by the caller (expenseController).
+ * Ensures a valid spreadsheet exists for the owner.
+ * 1. Verifies the cached ID if present — fastest path, no extra round-trip.
+ * 2. Searches Drive for an existing spreadsheet by title (drive.file scope is
+ *    sufficient — the app only finds files it created itself).
+ * 3. Creates a new spreadsheet only if neither step above succeeds.
  *
  * @param {string} accessToken
  * @param {string|null} cachedId  - Previously stored spreadsheet ID, or null
@@ -34,6 +36,19 @@ export async function resolveSpreadsheet(accessToken, cachedId = null) {
         sheetName: CONFIG.SHEET_NAME,
     });
     return { spreadsheetId: created, isNew: true };
+}
+
+/**
+ * Verifies that the authenticated user has access to the given spreadsheet.
+ * Used in guest mode: the sheet ID comes from the access URL, not from storage.
+ * Does NOT create anything — throws if access is denied or the sheet is missing.
+ *
+ * @param {string} accessToken
+ * @param {string} sheetId
+ * @returns {Promise<boolean>} true if accessible, false otherwise
+ */
+export async function verifyGuestAccess(accessToken, sheetId) {
+    return await verifySpreadsheet(accessToken, sheetId);
 }
 
 /**

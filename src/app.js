@@ -14,6 +14,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyTranslations(STATE, null);
     restoreCachedExpenses();
 
+    // ── Guest mode: detect shared access URL (?id=SPREADSHEET_ID) ──────────
+    // Must run before AuthService.init so onAuthReady sees the correct flags.
+    const urlParams     = new URLSearchParams(window.location.search);
+    const sharedSheetId = urlParams.get('id');
+
+    if (sharedSheetId) {
+        STATE.guestSheetId = sharedSheetId;
+        STATE.isGuestMode  = true;
+        // Strip the param from the address bar immediately so it isn't
+        // accidentally bookmarked or shared again as a secondary URL.
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+    // ───────────────────────────────────────────────────────────────────────
+
     renderAuthScreen({ loading: true });
     mountStatsScreen();
     initReactiveBindings();

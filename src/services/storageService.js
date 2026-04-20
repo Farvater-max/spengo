@@ -4,8 +4,9 @@ const LOCAL_STORAGE = {
     LOGIN_HINT:        'google_login_hint',
     NUMERIC_SHEET_ID:  'spengo_numeric_sheet_id',
     PROFILE:           'spengo_profile',
-    SHARED_USERS:      'spengo_shared_users',   
-    SHEET_OWNER_EMAIL: 'spengo_sheet_owner', 
+    SHARED_USERS:      'spengo_shared_users',
+    SHEET_OWNER_EMAIL: 'spengo_sheet_owner',
+    GUEST_SHEET_ID:    'spengo_guest_sheet_id',
 };
 
 const SESSION_STORAGE = {
@@ -148,6 +149,7 @@ export function clearAll() {
     localStorage.removeItem(LOCAL_STORAGE.PROFILE);
     localStorage.removeItem(LOCAL_STORAGE.SHARED_USERS);
     localStorage.removeItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL);
+    localStorage.removeItem(LOCAL_STORAGE.GUEST_SHEET_ID);
 }
 
 /**
@@ -218,4 +220,34 @@ export function saveSheetOwnerEmail(email) {
  */
 export function getSheetOwnerEmail() {
     return localStorage.getItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Guest sheet ID (set when user enters via shared access URL)
+// ---------------------------------------------------------------------------
+
+/**
+ * Persists the sheet ID received from the access URL (?id=...).
+ * Allows guest mode to survive a page refresh without the URL param.
+ * @param {string} sheetId
+ */
+export function saveGuestSheetId(sheetId) {
+    try {
+        localStorage.setItem(LOCAL_STORAGE.GUEST_SHEET_ID, sheetId);
+    } catch {}
+}
+
+/**
+ * Returns the stored guest sheet ID, or null if not in guest mode.
+ * @returns {string|null}
+ */
+export function getGuestSheetId() {
+    return localStorage.getItem(LOCAL_STORAGE.GUEST_SHEET_ID) ?? null;
+}
+
+/**
+ * Removes the guest sheet ID — call on sign-out to fully exit guest mode.
+ */
+export function clearGuestSheetId() {
+    localStorage.removeItem(LOCAL_STORAGE.GUEST_SHEET_ID);
 }
