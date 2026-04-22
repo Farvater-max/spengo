@@ -5,7 +5,7 @@ import * as SharingService from '../services/sharingService.js';
 import * as Storage from '../services/storageService.js';
 import { showScreen } from '../ui/navigation.js';
 import { getI18nValue } from '../i18n/localization.js';
-import { showToast } from '../utils/helpers.js';
+import { showToast, isPermissionError, isAuthError, isSheetOwner } from '../utils/helpers.js';
 import {
     updateAvatarUI,
     renderProfileModal,
@@ -38,7 +38,7 @@ import {
 export function onAuthReady() {
     // ── Guest mode: URL param already parsed into STATE by app.js ──────────
     if (STATE.isGuestMode && STATE.guestSheetId) {
-        _toGuestAuth();
+        _showAuthScreen({ isGuestMode: true });
         return;
     }
 
@@ -59,17 +59,14 @@ export function onAuthReady() {
             _restoreProfileFromStorage();
             setNavEnabled(false);
             showScreen('setup');
-            renderSetupScreen({
-                title: getI18nValue('setup.loading'),
-                sub:   getI18nValue('setup.reading'),
-            });
+            _showLoadingSetup();
             if (cachedExpenses.length > 0) {
                 STATE.expenses = cachedExpenses;
                 setNavEnabled(true);
             }
             AuthService.silentRefresh();
         } else {
-            _startGuestSilentRestore(cachedExpenses);
+            _startSilentRestore({ expenses: cachedExpenses });
         }
         return;
     }
@@ -79,7 +76,7 @@ export function onAuthReady() {
 
     switch (session.type) {
         case 'unauthenticated':
-            _toUnauthenticated();
+            _showAuthScreen();
             break;
 
         case 'fresh':
@@ -100,9 +97,9 @@ export function onSilentFail() {
     // In guest mode a silent-refresh failure just means the user needs to
     // sign in interactively again — keep guest context alive.
     if (STATE.isGuestMode) {
-        _toGuestAuth();
+        _showAuthScreen({ isGuestMode: true });
     } else {
-        _toUnauthenticated();
+        _showAuthScreen();
     }
 }
 
@@ -156,7 +153,7 @@ export function onSignOut() {
     showScreen('auth');
     renderAuthScreen({ loading: false, error: null, onSignIn: AuthService.signIn });
     showToast(getI18nValue('toast.signed_out'));
-    _enableSignInButton();
+    enableSignInButton();
 }
 
 // ─── Profile modal ────────────────────────────────────
@@ -167,8 +164,6 @@ export function onSignOut() {
 export function openProfileModal() {
     const ownerEmail  = Storage.getSheetOwnerEmail();
     const myEmail     = STATE.userProfile?.email ?? null;
-    const isOwner     = !STATE.isGuestMode &&
-                        (!ownerEmail || !myEmail || ownerEmail.toLowerCase() === myEmail.toLowerCase());
     const sharedUsers = Storage.getSharedUsers();
 
     renderProfileModal({
@@ -176,7 +171,7 @@ export function openProfileModal() {
         profile:       STATE.userProfile,
         sharedUsers,
         ownerEmail,
-        isOwner,
+        isOwner:       isSheetOwner(STATE, ownerEmail, myEmail),
         spreadsheetId: STATE.spreadsheetId,
         onSignOut:     _handleSignOut,
     });
@@ -213,7 +208,7 @@ async function _initGuestSession() {
         );
 
         if (!hasAccess) {
-            _showGuestAccessError(getI18nValue('guest.no_access'));
+            _showAuthScreen({ error: getI18nValue('guest.no_access'), isGuestMode: true });
             return;
         }
 
@@ -222,10 +217,7 @@ async function _initGuestSession() {
         Storage.saveGuestSheetId(STATE.guestSheetId); // persist for F5
 
         // Load expenses from the shared sheet.
-        renderSetupScreen({
-            title: getI18nValue('setup.loading'),
-            sub:   getI18nValue('setup.reading'),
-        });
+        _showLoadingSetup();
         const expenses = await AuthService.withToken(token =>
             SheetsService.loadRecentExpenses(token, STATE.spreadsheetId)
         );
@@ -238,35 +230,33 @@ async function _initGuestSession() {
     } catch (err) {
         console.error('[SpenGo] _initGuestSession failed:', err);
 
-        const isPermissionError =
-            err.message?.includes('403') ||
-            err.message?.includes('404') ||
-            err.message?.includes('not found');
-
-        _showGuestAccessError(
-            isPermissionError
-                ? getI18nValue('guest.access_denied')
-                : getI18nValue('guest.generic_error')
-        );
+        _showAuthScreen({
+            error:       isPermissionError(err)
+                             ? getI18nValue('guest.access_denied')
+                             : getI18nValue('guest.generic_error'),
+            isGuestMode: true,
+        });
     }
 }
 
 /**
- * Renders the auth screen with a guest-specific error message.
- * Preserves guest context so the user can retry with a different account.
+ * Transitions to the auth screen.
  *
- * @param {string} message
+ * @param {{ error?: string|null, isGuestMode?: boolean }} [opts]
  */
-function _showGuestAccessError(message) {
+function _showAuthScreen({ error = null, isGuestMode = false } = {}) {
+    STATE.authStatus = 'unauthenticated';
     setNavEnabled(false);
     showScreen('auth');
-    renderAuthScreen({
-        loading:     false,
-        error:       message,
-        onSignIn:    AuthService.signIn,
-        isGuestMode: true,
+    renderAuthScreen({ loading: false, error, onSignIn: AuthService.signIn, isGuestMode });
+    enableSignInButton();
+}
+
+function _showLoadingSetup() {
+    renderSetupScreen({
+        title: getI18nValue('setup.loading'),
+        sub:   getI18nValue('setup.reading'),
     });
-    _enableSignInButton();
 }
 
 // ─── Owner session init & refresh ─────────────────────
@@ -306,10 +296,7 @@ async function _resolveAndSaveSpreadsheet() {
 }
 
 async function _loadAndCacheExpenses() {
-    renderSetupScreen({
-        title: getI18nValue('setup.loading'),
-        sub:   getI18nValue('setup.reading'),
-    });
+    _showLoadingSetup();
     const expenses = await AuthService.withToken(token =>
         SheetsService.loadRecentExpenses(token, STATE.spreadsheetId)
     );
@@ -328,8 +315,7 @@ async function _refreshDataInBackground() {
         _syncOwnershipInBackground();
     } catch (err) {
         console.warn('[SpenGo] Background refresh failed:', err);
-        const isAuthError = err.message.includes('401') || err.message.includes('403');
-        if (isAuthError) {
+        if (isAuthError(err)) {
             Storage.clearSession();
             STATE.accessToken = null;
             if (STATE.expenses.length === 0) showScreen('auth');
@@ -377,7 +363,7 @@ function _restoreSession({ accessToken, sheetId, expenses }) {
 
     if (expenses.length > 0) {
         STATE.expenses = expenses;
-        renderSetupScreen({ title: getI18nValue('setup.loading'), sub: getI18nValue('setup.reading') });
+        _showLoadingSetup();
     } else {
         renderSetupScreen({ title: getI18nValue('setup.finding'), sub: getI18nValue('setup.checking') });
     }
@@ -387,22 +373,19 @@ function _restoreSession({ accessToken, sheetId, expenses }) {
 }
 
 /**
- * Starts a silent refresh when the token is expired or absent.
- * Shows cached expenses immediately if available ('restore'),
- * or just a spinner if there's nothing cached yet ('silent').
+ * Starts a silent token refresh when the token is expired or absent.
+ * Shows cached expenses immediately if available, or just a spinner if not.
+ * Works for both owner (pass sheetId) and guest (omit sheetId) paths.
  *
- * @param {{ sheetId: string, expenses: Array }} session
+ * @param {{ sheetId?: string|null, expenses: Array }} opts
  */
-function _startSilentRestore({ sheetId, expenses }) {
-    STATE.spreadsheetId = sheetId;
-    STATE.authStatus    = 'restoring';
+function _startSilentRestore({ sheetId = null, expenses } = {}) {
+    if (sheetId) STATE.spreadsheetId = sheetId;
+    STATE.authStatus = 'restoring';
     _restoreProfileFromStorage();
 
     showScreen('setup');
-    renderSetupScreen({
-        title: getI18nValue('setup.loading'),
-        sub:   getI18nValue('setup.reading'),
-    });
+    _showLoadingSetup();
 
     if (expenses.length > 0) {
         STATE.expenses = expenses;
@@ -419,59 +402,6 @@ function _restoreProfileFromStorage() {
     if (profile) { STATE.userProfile = profile; updateAvatarUI(); }
 }
 
-function _toUnauthenticated() {
-    STATE.authStatus = 'unauthenticated';
-    setNavEnabled(false);
-    showScreen('auth');
-    renderAuthScreen({ loading: false, error: null, onSignIn: AuthService.signIn });
-    _enableSignInButton();
-}
-
-/**
- * Guest equivalent of _startSilentRestore.
- * Shows setup screen immediately (optionally with cached expenses),
- * then fires a silent token refresh. On success onSignIn → _initGuestSession.
- * On failure falls back to _toGuestAuth so the user can sign in interactively.
- *
- * @param {Array} cachedExpenses
- */
-function _startGuestSilentRestore(cachedExpenses) {
-    STATE.authStatus = 'restoring';
-    _restoreProfileFromStorage();
-
-    showScreen('setup');
-    renderSetupScreen({
-        title: getI18nValue('setup.loading'),
-        sub:   getI18nValue('setup.reading'),
-    });
-
-    if (cachedExpenses.length > 0) {
-        STATE.expenses = cachedExpenses;
-        setNavEnabled(true);
-    } else {
-        setNavEnabled(false);
-    }
-
-    AuthService.silentRefresh();
-}
-
-/**
- * Shows the auth screen configured for guest sign-in.
- * Called on first arrival via access URL, or as a fallback when silent refresh fails.
- */
-function _toGuestAuth() {
-    STATE.authStatus = 'unauthenticated';
-    setNavEnabled(false);
-    showScreen('auth');
-    renderAuthScreen({
-        loading:     false,
-        error:       null,
-        onSignIn:    AuthService.signIn,
-        isGuestMode: true,
-    });
-    _enableSignInButton();
-}
-
-export function _enableSignInButton() {
+export function enableSignInButton() {
     renderAuthScreen({ loading: false, onSignIn: AuthService.signIn });
 }

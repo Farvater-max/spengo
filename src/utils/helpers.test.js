@@ -9,15 +9,18 @@ import {
     uuid,
     todayStr,
     isGoogleEmail,
+    isPermissionError,
+    isAuthError,
+    isSheetOwner,
+    buildAccessUrl,
+    validateShareTarget,
 } from './helpers.js';
 
-// ─── helpers ──────────────────────────────────────────
 const fmt = d =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const todayISO = fmt(new Date());
 
-// ─── uuid ─────────────────────────────────────────────
 describe('uuid', () => {
     test('given no input — when called — then returns a string', () => {
         expect(typeof uuid()).toBe('string');
@@ -41,7 +44,6 @@ describe('uuid', () => {
     });
 });
 
-// ─── todayStr ─────────────────────────────────────────
 describe('todayStr', () => {
     test('given no input — when called — then returns YYYY-MM-DD format', () => {
         expect(todayStr()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -57,7 +59,6 @@ describe('todayStr', () => {
     });
 });
 
-// ─── formatDate ───────────────────────────────────────
 describe('formatDate', () => {
     test('given empty string — when called — then returns empty string', () => {
         expect(formatDate('')).toBe('');
@@ -144,7 +145,6 @@ describe('formatDate', () => {
     });
 });
 
-// ─── formatMoney ──────────────────────────────────────
 describe('formatMoney', () => {
     test('given integer amount — when called — then returns without decimals', () => {
         // given / when
@@ -196,7 +196,6 @@ describe('formatMoney', () => {
     });
 });
 
-// ─── parseAmount ──────────────────────────────────────
 describe('parseAmount', () => {
     test('given integer string — when called — then returns number', () => {
         expect(parseAmount('100')).toBe(100);
@@ -248,7 +247,6 @@ describe('parseAmount', () => {
     });
 });
 
-// ─── sumAmounts ───────────────────────────────────────
 describe('sumAmounts', () => {
     test('given empty array — when called — then returns 0', () => {
         expect(sumAmounts([])).toBe(0);
@@ -300,7 +298,6 @@ describe('sumAmounts', () => {
     });
 });
 
-// ─── isInPeriod ───────────────────────────────────────
 describe('isInPeriod', () => {
     const pastDate = '2000-01-01';
 
@@ -341,7 +338,6 @@ describe('isInPeriod', () => {
     });
 });
 
-// ─── getFilteredExpenses ──────────────────────────────
 describe('getFilteredExpenses', () => {
     const expenses = [
         { id: '1', date: todayISO,     category: 'food',   amount: 100 },
@@ -426,7 +422,7 @@ describe('getFilteredExpenses', () => {
         expect(expenses).toHaveLength(originalLength);
     });
 });
-// ─── sortExpenses ─────────────────────────────────────
+
 describe('sortExpenses', () => {
     const expenses = [
         { id: '1', date: '2024-03-01', amount: 50  },
@@ -477,10 +473,8 @@ describe('sortExpenses', () => {
         expect(expenses).toEqual(original);
     });
 });
-// ─── isGoogleEmail ────────────────────────────────────
-describe('isGoogleEmail', () => {
 
-    // ── valid inputs ──────────────────────────────────
+describe('isGoogleEmail', () => {
 
     test('given gmail address — when called — then returns true', () => {
         expect(isGoogleEmail('user@gmail.com')).toBe(true);
@@ -510,8 +504,6 @@ describe('isGoogleEmail', () => {
         expect(isGoogleEmail('  user@gmail.com  ')).toBe(true);
     });
 
-    // ── non-Google consumer providers (blocklist) ─────
-
     test('given outlook.com address — when called — then returns false', () => {
         expect(isGoogleEmail('user@outlook.com')).toBe(false);
     });
@@ -539,8 +531,6 @@ describe('isGoogleEmail', () => {
     test('given yandex.ru address — when called — then returns false', () => {
         expect(isGoogleEmail('user@yandex.ru')).toBe(false);
     });
-
-    // ── structural invalids ───────────────────────────
 
     test('given empty string — when called — then returns false', () => {
         expect(isGoogleEmail('')).toBe(false);
@@ -605,5 +595,198 @@ describe('isGoogleEmail', () => {
 
     test('given local part with invalid chars — when called — then returns false', () => {
         expect(isGoogleEmail('user name@gmail.com')).toBe(false);
+    });
+});
+
+describe('isPermissionError', () => {
+    test('given error with "403" in message — when called — then returns true', () => {
+        expect(isPermissionError(new Error('Request failed with status 403'))).toBe(true);
+    });
+
+    test('given error with "404" in message — when called — then returns true', () => {
+        expect(isPermissionError(new Error('404 Not Found'))).toBe(true);
+    });
+
+    test('given error with "not found" in message — when called — then returns true', () => {
+        expect(isPermissionError(new Error('Spreadsheet not found'))).toBe(true);
+    });
+
+    test('given error with "401" in message — when called — then returns false', () => {
+        expect(isPermissionError(new Error('401 Unauthorized'))).toBe(false);
+    });
+
+    test('given error with unrelated message — when called — then returns false', () => {
+        expect(isPermissionError(new Error('Network timeout'))).toBe(false);
+    });
+
+    test('given error with no message — when called — then returns false', () => {
+        expect(isPermissionError(new Error())).toBe(false);
+    });
+
+    test('given null — when called — then returns false', () => {
+        expect(isPermissionError(null)).toBe(false);
+    });
+});
+
+describe('isAuthError', () => {
+    test('given error with "401" in message — when called — then returns true', () => {
+        expect(isAuthError(new Error('401 Unauthorized'))).toBe(true);
+    });
+
+    test('given error with "403" in message — when called — then returns true', () => {
+        expect(isAuthError(new Error('403 Forbidden'))).toBe(true);
+    });
+
+    test('given error with "404" in message — when called — then returns false', () => {
+        expect(isAuthError(new Error('404 Not Found'))).toBe(false);
+    });
+
+    test('given error with unrelated message — when called — then returns false', () => {
+        expect(isAuthError(new Error('Network timeout'))).toBe(false);
+    });
+
+    test('given error with no message — when called — then returns false', () => {
+        expect(isAuthError(new Error())).toBe(false);
+    });
+
+    test('given null — when called — then returns false', () => {
+        expect(isAuthError(null)).toBe(false);
+    });
+});
+
+describe('isSheetOwner', () => {
+    test('given guest mode — when called — then returns false regardless of emails', () => {
+        // given
+        const state = { isGuestMode: true };
+        // when / then
+        expect(isSheetOwner(state, 'owner@gmail.com', 'owner@gmail.com')).toBe(false);
+    });
+
+    test('given owner mode and matching emails — when called — then returns true', () => {
+        // given
+        const state = { isGuestMode: false };
+        // when / then
+        expect(isSheetOwner(state, 'owner@gmail.com', 'owner@gmail.com')).toBe(true);
+    });
+
+    test('given owner mode and matching emails with different case — when called — then returns true', () => {
+        // given
+        const state = { isGuestMode: false };
+        // when / then
+        expect(isSheetOwner(state, 'Owner@Gmail.com', 'owner@gmail.com')).toBe(true);
+    });
+
+    test('given owner mode and different emails — when called — then returns false', () => {
+        // given
+        const state = { isGuestMode: false };
+        // when / then
+        expect(isSheetOwner(state, 'owner@gmail.com', 'other@gmail.com')).toBe(false);
+    });
+
+    test('given owner mode and null ownerEmail — when called — then returns true', () => {
+        // given — owner email unknown, assume ownership
+        const state = { isGuestMode: false };
+        // when / then
+        expect(isSheetOwner(state, null, 'user@gmail.com')).toBe(true);
+    });
+
+    test('given owner mode and null myEmail — when called — then returns true', () => {
+        // given — user not yet loaded, assume ownership
+        const state = { isGuestMode: false };
+        // when / then
+        expect(isSheetOwner(state, 'owner@gmail.com', null)).toBe(true);
+    });
+
+    test('given owner mode and both emails null — when called — then returns true', () => {
+        // given
+        const state = { isGuestMode: false };
+        // when / then
+        expect(isSheetOwner(state, null, null)).toBe(true);
+    });
+});
+
+describe('buildAccessUrl', () => {
+    const location = { origin: 'https://app.example.com', pathname: '/index.html' };
+
+    test('given sharedUsers with entries — when called — then returns url with id param', () => {
+        // given
+        const sharedUsers = [{ email: 'a@gmail.com' }];
+        // when
+        const result = buildAccessUrl('sheet-123', sharedUsers, location);
+        // then
+        expect(result).toBe('https://app.example.com/index.html?id=sheet-123');
+    });
+
+    test('given empty sharedUsers — when called — then returns null', () => {
+        // given / when / then
+        expect(buildAccessUrl('sheet-123', [], location)).toBeNull();
+    });
+
+    test('given different spreadsheetId — when called — then embeds correct id', () => {
+        // given
+        const sharedUsers = [{ email: 'a@gmail.com' }];
+        // when
+        const result = buildAccessUrl('abc-456', sharedUsers, location);
+        // then
+        expect(result).toContain('?id=abc-456');
+    });
+});
+
+describe('validateShareTarget', () => {
+    const sharedUsers = [
+        { email: 'alice@gmail.com' },
+        { email: 'bob@company.com' },
+    ];
+    const ownerEmail = 'owner@gmail.com';
+
+    test('given valid new email — when called — then returns null', () => {
+        // given / when / then
+        expect(validateShareTarget('charlie@gmail.com', ownerEmail, sharedUsers)).toBeNull();
+    });
+
+    test('given non-Google email — when called — then returns invalid_email key', () => {
+        // given / when / then
+        expect(validateShareTarget('user@outlook.com', ownerEmail, sharedUsers))
+            .toBe('share.invalid_email');
+    });
+
+    test('given malformed email — when called — then returns invalid_email key', () => {
+        // given / when / then
+        expect(validateShareTarget('notanemail', ownerEmail, sharedUsers))
+            .toBe('share.invalid_email');
+    });
+
+    test('given owner email — when called — then returns already_owner key', () => {
+        // given / when / then
+        expect(validateShareTarget('owner@gmail.com', ownerEmail, sharedUsers))
+            .toBe('share.already_owner');
+    });
+
+    test('given owner email with different case — when called — then returns already_owner key', () => {
+        // given / when / then
+        expect(validateShareTarget('  Owner@Gmail.com  ', ownerEmail, sharedUsers))
+            .toBe('share.already_owner');
+    });
+
+    test('given already-shared email — when called — then returns already_shared key', () => {
+        // given / when / then
+        expect(validateShareTarget('alice@gmail.com', ownerEmail, sharedUsers))
+            .toBe('share.already_shared');
+    });
+
+    test('given already-shared email with different case — when called — then returns already_shared key', () => {
+        // given / when / then
+        expect(validateShareTarget('Alice@Gmail.com', ownerEmail, sharedUsers))
+            .toBe('share.already_shared');
+    });
+
+    test('given null ownerEmail and valid new email — when called — then returns null', () => {
+        // given — owner email not yet known
+        expect(validateShareTarget('charlie@gmail.com', null, sharedUsers)).toBeNull();
+    });
+
+    test('given empty sharedUsers and valid email — when called — then returns null', () => {
+        // given / when / then
+        expect(validateShareTarget('charlie@gmail.com', ownerEmail, [])).toBeNull();
     });
 });
