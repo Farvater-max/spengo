@@ -2,6 +2,7 @@ import { LANG } from '../i18n/localization.js';
 import { parseISO, isSameDay, isSameMonth, isSameWeek, format } from 'date-fns';
 import { ru, enUS, es, pl, cs } from 'date-fns/locale';
 import Big from 'big.js';
+
 const LOCALE_MAP = { ru: 'ru-RU', en: 'en-US', es: 'es-ES', pl: 'pl-PL', cs: 'cs-CZ'};
 const DATE_FNS_LOCALES = {
     'ru-RU': ru,
@@ -10,7 +11,6 @@ const DATE_FNS_LOCALES = {
     'pl-PL': pl,
     'cs-CZ': cs,
 };
-
 
 /**
  * Generates a random UUID v4.
@@ -38,7 +38,7 @@ export function todayStr() {
 /**
  * Formats an ISO date string to a localized string (e.g., "1 Mar").
  * Automatically detects the current language if not provided.
- * * @param {string} dateIsoString - ISO date string (YYYY-MM-DD).
+ * @param {string} dateIsoString - ISO date string (YYYY-MM-DD).
  * @param dateIsoString
  * @param {string} [langKey] - Optional language key ('ru', 'en', 'es').
  * Defaults to global LANG if omitted.
@@ -192,6 +192,7 @@ export function sumAmounts(expenses) {
     const total = expenses.reduce((acc, e) => acc.plus(new Big(e.amount)), new Big(0));
     return Number(total.toFixed(2));
 }
+
 /**
  * Returns a sorted copy of an expenses array without mutating the original.
  *
@@ -221,23 +222,6 @@ export function sortExpenses(expenses, field, dir) {
 
 /**
  * Validates that an email address is a plausible Google account.
- *
- * Google accounts fall into two categories:
- *   1. Gmail addresses        — local part + @gmail.com
- *   2. Google Workspace (GSuite) — any valid email on a custom domain
- *      managed via Google (e.g. user@company.com).
- *
- * Since we cannot know at validation time which custom domains are
- * Google Workspace tenants, we validate the email format strictly and
- * reject known non-Google consumer domains that are commonly mistyped
- * (outlook.com, hotmail.com, yahoo.com, etc.).
- *
- * Rules applied:
- *   - Must be a syntactically valid RFC-5321-ish email
- *   - Local part: 1–64 chars, no leading/trailing dot, no consecutive dots
- *   - Domain: at least one dot, valid TLD (2+ chars), no leading/trailing hyphen per label
- *   - Must NOT be a known non-Google domain (blocklist)
- *
  * @param {string} email - Raw input (will be trimmed + lowercased internally)
  * @returns {boolean}
  */
@@ -294,4 +278,93 @@ export function isGoogleEmail(email) {
     if (NON_GOOGLE_DOMAINS.has(domain)) return false;
 
     return true;
+}
+
+// ─── Error classification ─────────────────────────────────────────────────
+
+/**
+ * Returns true if the error represents an HTTP permission / not-found failure.
+ * Used to decide whether to show "no access" vs a generic network error.
+ *
+ * @param {Error} err
+ * @returns {boolean}
+ */
+export function isPermissionError(err) {
+    const msg = err?.message ?? '';
+    return msg.includes('403') || msg.includes('404') || msg.includes('not found');
+}
+
+/**
+ * Returns true if the error represents an HTTP authentication failure
+ * (token expired / invalid credentials).
+ *
+ * @param {Error} err
+ * @returns {boolean}
+ */
+export function isAuthError(err) {
+    const msg = err?.message ?? '';
+    return msg.includes('401') || msg.includes('403');
+}
+
+// ─── Ownership / sharing helpers ─────────────────────────────────────────
+
+/**
+ * Determines whether the currently signed-in user is the owner of the sheet.
+ *
+ * The user is considered an owner when ALL of the following hold:
+ *   - They are not in guest mode.
+ *   - Either the stored owner email is unknown, the user's email is unknown,
+ *     or the two emails match (case-insensitive).
+ *
+ * @param {{ isGuestMode: boolean }} state          - App state slice.
+ * @param {string|null}              ownerEmail     - Email stored as the sheet owner.
+ * @param {string|null}              myEmail        - Currently signed-in user's email.
+ * @returns {boolean}
+ */
+export function isSheetOwner(state, ownerEmail, myEmail) {
+    if (state.isGuestMode) return false;
+    if (!ownerEmail || !myEmail) return true;
+    return ownerEmail.toLowerCase() === myEmail.toLowerCase();
+}
+
+/**
+ * Builds the shareable guest-access URL for a spreadsheet.
+ * Returns null when there are no shared users yet (nothing to share).
+ *
+ * @param {string}   spreadsheetId
+ * @param {Array}    sharedUsers   - Current list of users the sheet is shared with.
+ * @param {{ origin: string, pathname: string }} [location] - Defaults to window.location.
+ * @returns {string|null}
+ */
+export function buildAccessUrl(spreadsheetId, sharedUsers, location = window.location) {
+    if (!sharedUsers.length) return null;
+    return `${location.origin}${location.pathname}?id=${spreadsheetId}`;
+}
+
+/**
+ * Validates whether a share target email is eligible to be added.
+ *
+ * Checks in order:
+ *   1. Must pass `isGoogleEmail` validation.
+ *   2. Must not be the sheet owner's email.
+ *   3. Must not already be in the shared-users list.
+ *
+ * Returns a string key for the i18n error message, or null when valid.
+ *
+ * @param {string}              email        - Candidate email (will be trimmed + lowercased).
+ * @param {string|null}         ownerEmail   - Current sheet owner email.
+ * @param {Array<{ email: string }>} sharedUsers - Currently shared users.
+ * @returns {'share.invalid_email' | 'share.already_owner' | 'share.already_shared' | null}
+ */
+export function validateShareTarget(email, ownerEmail, sharedUsers) {
+    const trimmed = email.trim().toLowerCase();
+
+    if (!isGoogleEmail(trimmed)) return 'share.invalid_email';
+
+    if (ownerEmail && trimmed === ownerEmail.toLowerCase()) return 'share.already_owner';
+
+    const alreadyShared = sharedUsers.some(u => u.email.toLowerCase() === trimmed);
+    if (alreadyShared) return 'share.already_shared';
+
+    return null;
 }

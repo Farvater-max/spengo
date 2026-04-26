@@ -11,14 +11,11 @@
     --muted:     #6b6b7e;
     --danger:    #ff4d6d;
     --success:   #22d68e;
-
     --r-sm: 12px;
     --r-md: 18px;
     --r-lg: 28px;
-
     --font-display: 'Unbounded', sans-serif;
     --font-body:    'Manrope', sans-serif;
-
     --nav-h: 64px;
     --max-w: 480px;
 }
@@ -734,8 +731,6 @@ html, body {
 }
 .nav-item.active { color: var(--accent); }
 .nav-item svg { width: 22px; height: 22px; }
-
-/* Nav задизейблен когда пользователь не авторизован */
 .nav-item.disabled {
     opacity: 0.3;
     cursor: not-allowed;
@@ -1077,7 +1072,6 @@ html, body {
 .toast.success { border-color: var(--success); color: var(--success); }
 .toast.error   { border-color: var(--danger);  color: var(--danger); }
 
-
 /* ─── LANG DROPDOWN ──────────────────────────────────── */
 .lang-dropdown {
     position: relative;
@@ -1310,10 +1304,6 @@ select.form-input {
     display: block;
     object-fit: contain;
 }
-
-
-
-
 
 /* ─── SECTION HEADER ─────────────────────────────────── */
 .section-header {

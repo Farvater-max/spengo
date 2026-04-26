@@ -5,18 +5,6 @@ import {
 } from '../api/client/sharingClient.js';
 
 /**
- * sharingService.js
- *
- * Business-logic layer for spreadsheet sharing.
- * Sits between the controller and the raw Drive API client.
- *
- * Responsibilities:
- *  - Filter the raw Drive permissions list to the shape the UI needs
- *  - Distinguish owner vs shared users so callers don't parse roles
- *  - Centralise the "writer" role default so it's changed in one place
- */
-
-/**
  * @typedef {Object} SharedUser
  * @property {string} permissionId   - Drive permission ID (used for removal)
  * @property {string} email
@@ -54,14 +42,13 @@ export async function getSharedUsers(accessToken, spreadsheetId) {
     let ownerEmail = null;
     const sharedUsers = [];
 
-    for (const perm of permissions) {
-        // Only handle user-type entries; skip 'anyone', 'domain', etc.
-        if (perm.type !== 'user') continue;
-
-        if (perm.role === 'owner') {
-            ownerEmail = perm.emailAddress ?? null;
-        } else {
-            sharedUsers.push(_toSharedUser(perm));
+    for (const perm of permissions.filter(_isUserPerm)) {
+        switch (perm.role) {
+            case 'owner':
+                ownerEmail = perm.emailAddress ?? null;
+                break;
+            default:
+                sharedUsers.push(_toSharedUser(perm));
         }
     }
 
@@ -85,16 +72,24 @@ export async function unshareSpreadsheet(accessToken, spreadsheetId, permissionI
 // ---------------------------------------------------------------------------
 
 /**
+ * Returns true for user-type permissions only.
+ * Excludes 'anyone', 'domain', and other non-user entries.
+ * @param {{ type: string }} perm
+ * @returns {boolean}
+ */
+const _isUserPerm = (perm) => perm.type === 'user';
+
+/**
  * Maps a raw Drive permission object to the SharedUser shape used by the UI.
- * @param {{ id, emailAddress, role, displayName }} perm
+ * @param {{ id: string, emailAddress?: string, displayName?: string, role: string }} perm
  * @returns {SharedUser}
  */
-function _toSharedUser(perm) {
+function _toSharedUser({ id, emailAddress = '', displayName = '', role }) {
     return {
-        permissionId: perm.id,
-        email:        perm.emailAddress ?? '',
-        displayName:  perm.displayName  ?? '',
-        role:         perm.role,
-        isPending:    !perm.displayName,
+        permissionId: id,
+        email:        emailAddress,
+        displayName,
+        role,
+        isPending:    !displayName,
     };
 }

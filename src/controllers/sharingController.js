@@ -1,5 +1,5 @@
 import { STATE } from '../state.js';
-import { isGoogleEmail } from '../utils/helpers.js';
+import { validateShareTarget, buildAccessUrl } from '../utils/helpers.js';
 import { withToken } from '../services/authService.js';
 import * as SharingService from '../services/sharingService.js';
 import * as Storage from '../services/storageService.js';
@@ -46,14 +46,11 @@ async function _refreshSharedUsers() {
  */
 export async function openShareModal() {
     const existingSharedUsers = Storage.getSharedUsers();
-    const accessUrl = existingSharedUsers.length > 0
-        ? `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`
-        : null;
 
     renderShareModal({
         open:        true,
         sharedUsers: existingSharedUsers,
-        accessUrl,
+        accessUrl:   buildAccessUrl(STATE.spreadsheetId, existingSharedUsers),
         loading:     false,
         onShare:     submitShare,
         onRemove:    removeShare,
@@ -62,13 +59,10 @@ export async function openShareModal() {
 
     try {
         const { sharedUsers } = await _refreshSharedUsers();
-        const accessUrl = sharedUsers.length > 0
-            ? `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`
-            : null;
         renderShareModal({
             open:        true,
             sharedUsers,
-            accessUrl,
+            accessUrl:   buildAccessUrl(STATE.spreadsheetId, sharedUsers),
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,
@@ -91,23 +85,11 @@ export async function openShareModal() {
  */
 export async function submitShare(email) {
     const trimmed = email.trim().toLowerCase();
-
-    if (!isGoogleEmail(trimmed)) {
-        showToast(getI18nValue('share.invalid_email'), 'error');
-        return;
-    }
-
     const ownerEmail = Storage.getSheetOwnerEmail();
-    if (ownerEmail && trimmed === ownerEmail.toLowerCase()) {
-        showToast(getI18nValue('share.already_owner'), 'error');
-        return;
-    }
 
-    const alreadyShared = Storage.getSharedUsers().some(
-        u => u.email.toLowerCase() === trimmed
-    );
-    if (alreadyShared) {
-        showToast(getI18nValue('share.already_shared'), 'error');
+    const validationError = validateShareTarget(trimmed, ownerEmail, Storage.getSharedUsers());
+    if (validationError) {
+        showToast(getI18nValue(validationError), 'error');
         return;
     }
 
@@ -142,7 +124,7 @@ export async function submitShare(email) {
 
     // After a successful share the list will have at least one entry —
     // generate the access URL and show it immediately.
-    const accessUrl = `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`;
+    const accessUrl = buildAccessUrl(STATE.spreadsheetId, [{ email: trimmed }]);
 
     try {
         const { sharedUsers } = await _refreshSharedUsers();
@@ -190,13 +172,10 @@ export async function removeShare(permissionId) {
 
     try {
         const { sharedUsers } = await _refreshSharedUsers();
-        const accessUrl = sharedUsers.length > 0
-            ? `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`
-            : null;
         renderShareModal({
             open:        true,
             sharedUsers,
-            accessUrl,
+            accessUrl:   buildAccessUrl(STATE.spreadsheetId, sharedUsers),
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,
@@ -205,13 +184,10 @@ export async function removeShare(permissionId) {
     } catch {
         const updated = Storage.getSharedUsers().filter(u => u.permissionId !== permissionId);
         Storage.saveSharedUsers(updated);
-        const accessUrl = updated.length > 0
-            ? `${window.location.origin}${window.location.pathname}?id=${STATE.spreadsheetId}`
-            : null;
         renderShareModal({
             open:        true,
             sharedUsers: updated,
-            accessUrl,
+            accessUrl:   buildAccessUrl(STATE.spreadsheetId, updated),
             loading:     false,
             onShare:     submitShare,
             onRemove:    removeShare,
