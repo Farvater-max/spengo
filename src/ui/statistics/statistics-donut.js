@@ -9,6 +9,12 @@ import { withToken } from '../../services/authService.js';
 
 Chart.register(DoughnutController, ArcElement, Tooltip);
 
+// ─── Helpers ──────────────────────────────────────────
+
+function _css(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
 // ─── Module state ─────────────────────────────────────
 
 let _donutInstance = null;
@@ -121,8 +127,8 @@ function drawDonutChart(canvas, sorted, total) {
                 data,
                 backgroundColor: colors,
                 borderWidth: 2,
-                borderColor: '#151518',
-                hoverBorderColor: '#151518',
+                borderColor: _css('--color-surface'),
+                hoverBorderColor: _css('--color-surface'),
                 hoverOffset: 6,
             }],
         },
@@ -134,11 +140,11 @@ function drawDonutChart(canvas, sorted, total) {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#1e1e23',
-                    borderColor: '#2a2a32',
+                    backgroundColor: _css('--color-surface2'),
+                    borderColor: _css('--color-border'),
                     borderWidth: 1,
-                    titleColor: '#6b6b7e',
-                    bodyColor: '#f0f0f5',
+                    titleColor: _css('--color-muted'),
+                    bodyColor: _css('--color-text'),
                     bodyFont:  { family: "'Unbounded', sans-serif", weight: '600', size: 12 },
                     titleFont: { family: "'Manrope', sans-serif", size: 11 },
                     padding: 10,

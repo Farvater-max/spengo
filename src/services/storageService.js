@@ -139,6 +139,8 @@ export function getNumericSheetId() {
 /**
  * Wipes all app data from both storages.
  * Call on sign-out to prevent data leaking to the next user on the same device.
+ * Note: theme preference ('spengo-theme') is intentionally NOT cleared —
+ * it is a device-level UX preference, not user account data.
  */
 export function clearAll() {
     clearSession();

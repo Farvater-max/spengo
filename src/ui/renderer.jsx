@@ -22,6 +22,7 @@ import { BottomNav }          from './components/BottomNav.jsx';
 import { AuthScreen }         from './components/AuthScreen.jsx';
 import { SetupScreen }        from './components/SetupScreen.jsx';
 import { StatsScreen }        from './components/StatsScreen.jsx';
+import { getTheme, toggleTheme, onThemeChange } from '../theme.js';
 
 // ─── Nav state ────────────────────────────────────────
 
@@ -389,6 +390,8 @@ export function renderProfileModal({
             sharedUsers={sharedUsers}
             ownerEmail={ownerEmail}
             isOwner={isOwner}
+            currentTheme={getTheme()}
+            onThemeToggle={() => { toggleTheme(); renderProfileModal({ open, profile, sharedUsers, ownerEmail, isOwner, spreadsheetId, onSignOut }); }}
             onOpenSheet={() => {
                 if (spreadsheetId) {
                     window.open(`https://docs.google.com/spreadsheets/d/${spreadsheetId}`, '_blank');
@@ -486,5 +489,13 @@ export function initReactiveBindings() {
     STATE.subscribe('userProfile', () => {
         renderMainHeader();
         renderStatsHeader();
+    });
+
+    // Re-render charts and profile modal when theme changes
+    onThemeChange(() => {
+        renderChart();
+        renderDonutChart(getPeriod());
+        // If profile modal is currently open, re-render it with new theme
+        renderProfileModal({ open: false });
     });
 }

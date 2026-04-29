@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function() {
+      var t = localStorage.getItem('spengo-theme');
+      if (t === 'light') document.documentElement.dataset.theme = 'light';
+    })();
+  </script>
   <meta charset="UTF-8"/>
   <meta name="description" content="SpenGo Features — fast expense logging, category filters, visual statistics, shared budgets and more. All your data stays in Google Sheets.">
   <meta property="og:type"        content="website">
@@ -315,6 +321,34 @@
       .cta-banner { padding: 28px 20px; }
       .cta-banner h3 { font-size: 16px; }
       .btn-cta { font-size: 13px; padding: 12px 22px; }
+    }
+
+    /* ── Light theme ── */
+    html { transition: background-color .25s ease, color .25s ease; }
+
+    [data-theme="light"] {
+      --bg:       #f5f7f6;
+      --surface:  #ffffff;
+      --surface2: #eaeeed;
+      --border:   #b8ccc8;
+      --accent:   #006753;
+      --text:     #0d1e1c;
+      --muted:    #4a6b64;
+    }
+
+    [data-theme="light"] p  { color: #3a5550; }
+    [data-theme="light"] td { color: #3a5550; }
+
+    [data-theme="light"] .pill      { background: var(--surface2); border-color: var(--border); color: var(--text); }
+        
+    [data-theme="light"] code { background: var(--surface2); color: var(--text); }
+    [data-theme="light"] a    { color: var(--accent); }
+    [data-theme="light"] .cta-banner {
+        background: linear-gradient(135deg, #d4ede6 0%, #eaf4f0 60%);
+        border-color: #00675330;
+    }
+    [data-theme="light"] .btn-cta {
+        color: #ffffff;
     }
   </style>
 </head>

@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function() {
+      var t = localStorage.getItem('spengo-theme');
+      if (t === 'light') document.documentElement.dataset.theme = 'light';
+    })();
+  </script>
   <meta charset="UTF-8"/>
   <meta name="description" content="SpenGo Privacy Policy — how we handle your data, Google API access, and why your expenses stay yours.">
   <meta property="og:type"        content="website">
@@ -207,6 +213,29 @@
       font-size: 13px;
       color: var(--muted);
     }
+
+    /* ── Light theme ── */
+    html { transition: background-color .25s ease, color .25s ease; }
+
+    [data-theme="light"] {
+      --bg:       #f5f7f6;
+      --surface:  #ffffff;
+      --surface2: #eaeeed;
+      --border:   #b8ccc8;
+      --accent:   #006753;
+      --text:     #0d1e1c;
+      --muted:    #4a6b64;
+    }
+
+    [data-theme="light"] p  { color: #3a5550; }
+    [data-theme="light"] td { color: #3a5550; }
+
+    [data-theme="light"] .pill      { background: var(--surface2); border-color: var(--border); color: var(--text); }
+    [data-theme="light"] .pill.good { border-color: #00675340; color: var(--accent); }
+    [data-theme="light"] .pill.bad  { border-color: #ff4d6d40; color: #ff4d6d; }
+
+    [data-theme="light"] code { background: var(--surface2); color: var(--text); }
+    [data-theme="light"] a    { color: var(--accent); }
   </style>
 </head>
 <body>

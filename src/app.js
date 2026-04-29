@@ -5,6 +5,9 @@ import { onAuthReady, onSignIn, onSignOut, onSilentFail, enableSignInButton } fr
 import { restoreCachedExpenses } from './controllers/expenseController.js';
 import { showAuthError, navigate } from './ui/navigation.js';
 import { renderAuthScreen, mountStatsScreen, initReactiveBindings } from './ui/renderer.jsx';
+import { initTheme } from './theme.js';
+
+initTheme();
 
 document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('spengo:navigate', e => navigate(e.detail.name));
