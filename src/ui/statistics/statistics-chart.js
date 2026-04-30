@@ -10,11 +10,18 @@ Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
 // ─── Constants ────────────────────────────────────────
 
+// Bar colors don't change with theme — accent is always lime
 const ACCENT      = '#c8f135';
 const ACCENT_DIM  = '#c8f13560';
 const ACCENT2_DIM = '#7b61ff60';
-const GRID_COLOR  = '#2a2a3230';
-const TEXT_COLOR  = '#6b6b7e';
+
+/**
+ * Reads a CSS custom property from :root at call time.
+ * This way chart colors always reflect the current theme.
+ */
+function _css(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
 
 // ─── Module state ─────────────────────────────────────
 
@@ -172,11 +179,11 @@ async function renderingChartByPeriod(period) {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#1e1e23',
-                    borderColor: '#2a2a32',
+                    backgroundColor: _css('--color-surface2'),
+                    borderColor: _css('--color-border'),
                     borderWidth: 1,
-                    titleColor: TEXT_COLOR,
-                    bodyColor: '#f0f0f5',
+                    titleColor: _css('--color-muted'),
+                    bodyColor: _css('--color-text'),
                     bodyFont:  { family: "'Unbounded', sans-serif", weight: '600', size: 13 },
                     titleFont: { family: "'Manrope', sans-serif", size: 11 },
                     padding: 10,
@@ -190,16 +197,16 @@ async function renderingChartByPeriod(period) {
                     grid:   { display: false },
                     border: { display: false },
                     ticks:  {
-                        color: TEXT_COLOR,
+                        color: _css('--color-muted'),
                         font:  { family: "'Manrope', sans-serif", size: 10, weight: '600' },
                         maxRotation: 0,
                     },
                 },
                 y: {
-                    grid:   { color: GRID_COLOR, drawTicks: false },
+                    grid:   { color: _css('--color-border') + '50', drawTicks: false },
                     border: { display: false, dash: [4, 4] },
                     ticks:  {
-                        color: TEXT_COLOR,
+                        color: _css('--color-muted'),
                         font:  { family: "'Manrope', sans-serif", size: 10 },
                         maxTicksLimit: 4,
                         callback: v => v === 0 ? '0' : formatMoney(v),

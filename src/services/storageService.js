@@ -1,19 +1,5 @@
-const LOCAL_STORAGE = {
-    SHEET_ID:          'spengo_sheet_id',
-    EXPENSES:          'spengo_expenses',
-    LOGIN_HINT:        'google_login_hint',
-    NUMERIC_SHEET_ID:  'spengo_numeric_sheet_id',
-    PROFILE:           'spengo_profile',
-    SHARED_USERS:      'spengo_shared_users',
-    SHEET_OWNER_EMAIL: 'spengo_sheet_owner',
-    GUEST_SHEET_ID:    'spengo_guest_sheet_id',
-};
-
-const SESSION_STORAGE = {
-    ACCESS_TOKEN: 'google_access_token',
-    EXPIRES_AT:   'google_token_expires_at',
-};
-
+import { STORAGE } from '../constants/storage.js';
+import { SESSION_STORAGE } from '../constants/storage.js';
 
 /**
  * Persists a fresh access token and its expiry timestamp.
@@ -57,7 +43,7 @@ export function isTokenExpired() {
  * @param {string} email
  */
 export function saveLoginHint(email) {
-    localStorage.setItem(LOCAL_STORAGE.LOGIN_HINT, email);
+    localStorage.setItem(STORAGE.LOGIN_HINT, email);
 }
 
 /**
@@ -65,7 +51,7 @@ export function saveLoginHint(email) {
  * @returns {string}
  */
 export function getLoginHint() {
-    return localStorage.getItem(LOCAL_STORAGE.LOGIN_HINT) ?? '';
+    return localStorage.getItem(STORAGE.LOGIN_HINT) ?? '';
 }
 
 /**
@@ -73,7 +59,7 @@ export function getLoginHint() {
  * @param {string} spreadsheetId
  */
 export function saveSheetId(spreadsheetId) {
-    localStorage.setItem(LOCAL_STORAGE.SHEET_ID, spreadsheetId);
+    localStorage.setItem(STORAGE.SHEET_ID, spreadsheetId);
 }
 
 /**
@@ -81,7 +67,7 @@ export function saveSheetId(spreadsheetId) {
  * @returns {string|null}
  */
 export function getSheetId() {
-    return localStorage.getItem(LOCAL_STORAGE.SHEET_ID);
+    return localStorage.getItem(STORAGE.SHEET_ID);
 }
 
 /**
@@ -89,7 +75,7 @@ export function getSheetId() {
  * @param {Array} expenses
  */
 export function saveExpenses(expenses) {
-    localStorage.setItem(LOCAL_STORAGE.EXPENSES, JSON.stringify(expenses));
+    localStorage.setItem(STORAGE.EXPENSES, JSON.stringify(expenses));
 }
 
 /**
@@ -99,7 +85,7 @@ export function saveExpenses(expenses) {
  */
 export function getExpenses() {
     try {
-        const raw = localStorage.getItem(LOCAL_STORAGE.EXPENSES);
+        const raw = localStorage.getItem(STORAGE.EXPENSES);
         return raw ? JSON.parse(raw) : [];
     } catch {
         return [];
@@ -124,7 +110,7 @@ export function getStoredSession() {
  * @param {number} numericSheetId
  */
 export function saveNumericSheetId(numericSheetId) {
-    localStorage.setItem(LOCAL_STORAGE.NUMERIC_SHEET_ID, String(numericSheetId));
+    localStorage.setItem(STORAGE.NUMERIC_SHEET_ID, String(numericSheetId));
 }
 
 /**
@@ -132,24 +118,26 @@ export function saveNumericSheetId(numericSheetId) {
  * @returns {number|null}
  */
 export function getNumericSheetId() {
-    const val = localStorage.getItem(LOCAL_STORAGE.NUMERIC_SHEET_ID);
+    const val = localStorage.getItem(STORAGE.NUMERIC_SHEET_ID);
     return val !== null ? Number(val) : null;
 }
 
 /**
  * Wipes all app data from both storages.
  * Call on sign-out to prevent data leaking to the next user on the same device.
+ * Note: theme preference ('spengo-theme') is intentionally NOT cleared —
+ * it is a device-level UX preference, not user account data.
  */
 export function clearAll() {
     clearSession();
-    localStorage.removeItem(LOCAL_STORAGE.SHEET_ID);
-    localStorage.removeItem(LOCAL_STORAGE.EXPENSES);
-    localStorage.removeItem(LOCAL_STORAGE.LOGIN_HINT);
-    localStorage.removeItem(LOCAL_STORAGE.NUMERIC_SHEET_ID);
-    localStorage.removeItem(LOCAL_STORAGE.PROFILE);
-    localStorage.removeItem(LOCAL_STORAGE.SHARED_USERS);
-    localStorage.removeItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL);
-    localStorage.removeItem(LOCAL_STORAGE.GUEST_SHEET_ID);
+    localStorage.removeItem(STORAGE.SHEET_ID);
+    localStorage.removeItem(STORAGE.EXPENSES);
+    localStorage.removeItem(STORAGE.LOGIN_HINT);
+    localStorage.removeItem(STORAGE.NUMERIC_SHEET_ID);
+    localStorage.removeItem(STORAGE.PROFILE);
+    localStorage.removeItem(STORAGE.SHARED_USERS);
+    localStorage.removeItem(STORAGE.SHEET_OWNER_EMAIL);
+    localStorage.removeItem(STORAGE.GUEST_SHEET_ID);
 }
 
 /**
@@ -159,7 +147,7 @@ export function clearAll() {
  */
 export function saveProfile(profile) {
     try {
-        localStorage.setItem(LOCAL_STORAGE.PROFILE, JSON.stringify(profile));
+        localStorage.setItem(STORAGE.PROFILE, JSON.stringify(profile));
     } catch {}
 }
 
@@ -169,7 +157,7 @@ export function saveProfile(profile) {
  */
 export function getProfile() {
     try {
-        const raw = localStorage.getItem(LOCAL_STORAGE.PROFILE);
+        const raw = localStorage.getItem(STORAGE.PROFILE);
         return raw ? JSON.parse(raw) : null;
     } catch {
         return null;
@@ -180,7 +168,7 @@ export function getProfile() {
  * Removes the cached profile from localStorage.
  */
 export function clearProfile() {
-    localStorage.removeItem(LOCAL_STORAGE.PROFILE);
+    localStorage.removeItem(STORAGE.PROFILE);
 }
 
 /**
@@ -189,7 +177,7 @@ export function clearProfile() {
  */
 export function saveSharedUsers(users) {
     try {
-        localStorage.setItem(LOCAL_STORAGE.SHARED_USERS, JSON.stringify(users));
+        localStorage.setItem(STORAGE.SHARED_USERS, JSON.stringify(users));
     } catch {}
 }
 
@@ -199,7 +187,7 @@ export function saveSharedUsers(users) {
  */
 export function getSharedUsers() {
     try {
-        const raw = localStorage.getItem(LOCAL_STORAGE.SHARED_USERS);
+        const raw = localStorage.getItem(STORAGE.SHARED_USERS);
         return raw ? JSON.parse(raw) : [];
     } catch {
         return [];
@@ -211,7 +199,7 @@ export function getSharedUsers() {
  */
 export function saveSheetOwnerEmail(email) {
     try {
-        localStorage.setItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL, email);
+        localStorage.setItem(STORAGE.SHEET_OWNER_EMAIL, email);
     } catch {}
 }
 
@@ -219,7 +207,7 @@ export function saveSheetOwnerEmail(email) {
  * @returns {string|null}
  */
 export function getSheetOwnerEmail() {
-    return localStorage.getItem(LOCAL_STORAGE.SHEET_OWNER_EMAIL) ?? null;
+    return localStorage.getItem(STORAGE.SHEET_OWNER_EMAIL) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -233,7 +221,7 @@ export function getSheetOwnerEmail() {
  */
 export function saveGuestSheetId(sheetId) {
     try {
-        localStorage.setItem(LOCAL_STORAGE.GUEST_SHEET_ID, sheetId);
+        localStorage.setItem(STORAGE.GUEST_SHEET_ID, sheetId);
     } catch {}
 }
 
@@ -242,12 +230,12 @@ export function saveGuestSheetId(sheetId) {
  * @returns {string|null}
  */
 export function getGuestSheetId() {
-    return localStorage.getItem(LOCAL_STORAGE.GUEST_SHEET_ID) ?? null;
+    return localStorage.getItem(STORAGE.GUEST_SHEET_ID) ?? null;
 }
 
 /**
  * Removes the guest sheet ID — call on sign-out to fully exit guest mode.
  */
 export function clearGuestSheetId() {
-    localStorage.removeItem(LOCAL_STORAGE.GUEST_SHEET_ID);
+    localStorage.removeItem(STORAGE.GUEST_SHEET_ID);
 }
