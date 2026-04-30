@@ -94,7 +94,7 @@ export function ProfileModal({
                 </div>
 
                 {/* ── Theme toggle ─────────────────────────────────── */}
-                <div className="profile-row" onClick={onThemeToggle} style={{ cursor: 'pointer' }}>
+                <div className="profile-row" onClick={onThemeToggle} style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
                     <ThemeIcon isLight={isLight} />
                     <span style={{ flex: 1 }}>
                         {isLight ? getI18nValue('profile.dark_theme') : getI18nValue('profile.light_theme')}

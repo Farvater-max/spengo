@@ -22,7 +22,15 @@ import { BottomNav }          from './components/BottomNav.jsx';
 import { AuthScreen }         from './components/AuthScreen.jsx';
 import { SetupScreen }        from './components/SetupScreen.jsx';
 import { StatsScreen }        from './components/StatsScreen.jsx';
-import { getTheme, toggleTheme, onThemeChange } from '../theme.js';
+import { getTheme, toggleTheme, onThemeChange } from './theme.js';
+import {
+    nextSortDir,
+    nextSortField,
+    getSortFieldLabel,
+    getSortLines,
+    buildNavEvent,
+} from '../utils/renderer.utils.js';
+
 
 // ─── Nav state ────────────────────────────────────────
 
@@ -119,8 +127,8 @@ export function renderBottomNav() {
         <BottomNav
             currentScreen={STATE.currentScreen}
             enabled={_navEnabled}
-            onHome={() => window.dispatchEvent(new CustomEvent('spengo:navigate', { detail: { name: 'main' } }))}
-            onStats={() => window.dispatchEvent(new CustomEvent('spengo:navigate', { detail: { name: 'stats' } }))}
+            onHome={() => window.dispatchEvent(buildNavEvent('main'))}
+            onStats={() => window.dispatchEvent(buildNavEvent('stats'))}
             onAdd={openAddModal}
         />
     );
@@ -201,21 +209,19 @@ export function renderSectionHeader() {
     if (!_sectionHeaderRoot) _sectionHeaderRoot = createRoot(container);
 
     function handleDirToggle() {
-        _sortDir = _sortDir === 'desc' ? 'asc' : 'desc';
+        _sortDir = nextSortDir(_sortDir);
         renderSectionHeader();
         renderExpenseList();
     }
 
     function handleFieldCycle() {
-        _sortField = _sortField === 'date' ? 'amount' : 'date';
+        _sortField = nextSortField(_sortField);
         _sortDir   = 'desc';
         renderSectionHeader();
         renderExpenseList();
     }
 
-    const fieldLabel = _sortField === 'date'
-        ? getI18nValue('sort.date')
-        : getI18nValue('sort.amount');
+    const fieldLabel = getSortFieldLabel(_sortField, getI18nValue);
 
     _sectionHeaderRoot.render(
         <div className="section-header">
@@ -234,10 +240,7 @@ export function renderSectionHeader() {
 }
 
 function SortLinesIcon({ dir }) {
-    const isDesc = dir === 'desc';
-    const lines = isDesc
-        ? [{ x2: 13 }, { x2: 9 }, { x2: 5 }]
-        : [{ x2: 5  }, { x2: 9 }, { x2: 13 }];
+    const lines = getSortLines(dir);
     return (
         <svg width="16" height="14" viewBox="0 0 16 14" fill="none"
              xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -495,7 +498,5 @@ export function initReactiveBindings() {
     onThemeChange(() => {
         renderChart();
         renderDonutChart(getPeriod());
-        // If profile modal is currently open, re-render it with new theme
-        renderProfileModal({ open: false });
     });
 }
