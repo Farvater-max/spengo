@@ -12,6 +12,7 @@ import {
     setNavEnabled,
     renderAuthScreen,
     renderSetupScreen,
+    renderAvatarOnboardingPopover,
 } from '../ui/renderer.jsx';
 
 // ─── Auth lifecycle ────────────────────────────────────
@@ -142,7 +143,7 @@ export function onSignOut() {
     Storage.clearGuestSheetId();
 
     STATE.reset();
-    STATE.currentPeriod         = 'day';
+    STATE.currentPeriod         = 'week';
     STATE.currentCategoryFilter = 'all';
     STATE.selectedCat           = null;
 
@@ -263,15 +264,30 @@ function _showLoadingSetup() {
 
 async function _initSpreadsheet() {
     try {
-        await _resolveAndSaveSpreadsheet();
+        const isNew = await _resolveAndSaveSpreadsheet();
         await _loadAndCacheExpenses();
         await _transitionToMain();
         _syncOwnershipInBackground();
+        if (isNew) _showAvatarOnboarding();
     } catch (err) {
         console.error('[SpenGo] _initSpreadsheet failed:', err);
         showToast(getI18nValue('toast.sheet_error') + err.message, 'error');
         showScreen('auth');
     }
+}
+
+/**
+ * Shows the one-time onboarding popover anchored to the avatar icon.
+ * Called only when a brand-new spreadsheet was just created.
+ * No-ops gracefully if the avatar element isn't in the DOM yet.
+ */
+function _showAvatarOnboarding() {
+    const avatarEl = document.querySelector('.header-avatar');
+    if (!avatarEl) return;
+    renderAvatarOnboardingPopover({
+        open:       true,
+        anchorRect: avatarEl.getBoundingClientRect(),
+    });
 }
 
 async function _resolveAndSaveSpreadsheet() {
@@ -293,6 +309,7 @@ async function _resolveAndSaveSpreadsheet() {
 
     STATE.spreadsheetId = spreadsheetId;
     Storage.saveSheetId(spreadsheetId);
+    return isNew;
 }
 
 async function _loadAndCacheExpenses() {
