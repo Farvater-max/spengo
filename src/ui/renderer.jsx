@@ -21,7 +21,8 @@ import { StatsHeader }        from './components/StatsHeader.jsx';
 import { BottomNav }          from './components/BottomNav.jsx';
 import { AuthScreen }         from './components/AuthScreen.jsx';
 import { SetupScreen }        from './components/SetupScreen.jsx';
-import { StatsScreen }        from './components/StatsScreen.jsx';
+import { StatsScreen }               from './components/StatsScreen.jsx';
+import { AvatarOnboardingPopover }   from './components/AvatarOnboardingPopover.jsx';
 import { getTheme, toggleTheme, onThemeChange } from './theme.js';
 import {
     nextSortDir,
@@ -450,6 +451,33 @@ export function renderStatistics() {
     renderStatsHeader();
     renderChart();
     renderDonutChart(getPeriod());
+}
+
+// ─── AvatarOnboardingPopover ──────────────────────────
+
+let _onboardingRoot = null;
+
+/**
+ * Shows or hides the first-time onboarding popover anchored to the avatar.
+ *
+ * @param {{ open: boolean, anchorRect?: DOMRect }} opts
+ */
+export function renderAvatarOnboardingPopover({ open, anchorRect = null } = {}) {
+    const container = document.getElementById('onboarding-popover-root');
+    if (!container) return;
+    if (!_onboardingRoot) _onboardingRoot = createRoot(container);
+
+    if (!open) {
+        _onboardingRoot.render(null);
+        return;
+    }
+
+    _onboardingRoot.render(
+        <AvatarOnboardingPopover
+            anchorRect={anchorRect}
+            onDismiss={() => renderAvatarOnboardingPopover({ open: false })}
+        />
+    );
 }
 
 // ─── Avatar ───────────────────────────────────────────
