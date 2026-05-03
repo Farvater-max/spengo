@@ -145,17 +145,6 @@ export function renderMainHeader() {
 
     _mainHeaderRoot.render(
         <MainHeader
-            currentLang={LANG}
-            onLangChange={lang => {
-                setLang(lang, STATE, () => {
-                    renderUI();
-                    renderStatsHeader();
-                    renderCategorySelectGrid();
-                    renderCategoryEditGrid();
-                    renderSectionHeader();
-                });
-                renderMainHeader();
-            }}
             onAvatarClick={openProfileModal}
             profile={STATE.userProfile}
         />
@@ -387,6 +376,17 @@ export function renderProfileModal({
 
     if (!open) { _profileModalRoot.render(null); return; }
 
+    function handleLangChange(lang) {
+        setLang(lang, STATE, () => {
+            renderUI();
+            renderStatsHeader();
+            renderCategorySelectGrid();
+            renderCategoryEditGrid();
+            renderSectionHeader();
+        });
+        renderProfileModal({ open, profile, sharedUsers, ownerEmail, isOwner, spreadsheetId, onSignOut });
+    }
+
     _profileModalRoot.render(
         <ProfileModal
             profile={profile}
@@ -405,6 +405,8 @@ export function renderProfileModal({
                 renderProfileModal({ open: false });
                 openShareModal();
             }}
+            currentLang={LANG}
+            onLangChange={handleLangChange}
             onSignOut={onSignOut}
             onClose={() => renderProfileModal({ open: false })}
         />

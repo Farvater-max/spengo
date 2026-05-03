@@ -1,5 +1,10 @@
+import { useState, useEffect, useRef } from 'react';
 import { getI18nValue } from '../../i18n/localization.js';
 import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
+
+const LANGS = ['en', 'ru', 'es', 'pl', 'cs'];
+const LANG_FLAGS  = { en: '🇬🇧', ru: '🇷🇺', es: '🇪🇸', pl: '🇵🇱', cs: '🇨🇿' };
+const LANG_LABELS = { en: 'EN', ru: 'RU', es: 'ES', pl: 'PL',  cs: 'CZ' };
 
 export function ProfileModal({
     profile,
@@ -7,10 +12,12 @@ export function ProfileModal({
     onShare,
     onSignOut,
     onClose,
-    sharedUsers  = [],
-    isOwner      = true,
-    currentTheme = 'dark',
+    sharedUsers   = [],
+    isOwner       = true,
+    currentTheme  = 'dark',
     onThemeToggle,
+    currentLang   = 'en',
+    onLangChange,
 }) {
     if (!profile) return null;
 
@@ -91,6 +98,17 @@ export function ProfileModal({
                             {getI18nValue('share.role_writer')}
                         </span>
                     )}
+                </div>
+
+                {/* ── Language ──────────────────────────────────────── */}
+                <div className="profile-row" style={{ cursor: 'default' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+                    </svg>
+                    <span style={{ flex: 1 }}>{getI18nValue('profile.language')}</span>
+                    <LangDropdown current={currentLang} onChange={onLangChange} />
                 </div>
 
                 {/* ── Theme toggle ─────────────────────────────────── */}
@@ -188,5 +206,67 @@ function ShareDotsIcon() {
             <line x1="8.59"  y1="13.51" x2="15.42" y2="17.49"/>
             <line x1="15.41" y1="6.51"  x2="8.59"  y2="10.49"/>
         </svg>
+    );
+}
+
+// ─── LangDropdown ─────────────────────────────────────
+
+function LangDropdown({ current, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!open) return;
+        const handler = e => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        document.addEventListener('touchstart', handler);
+        return () => {
+            document.removeEventListener('mousedown', handler);
+            document.removeEventListener('touchstart', handler);
+        };
+    }, [open]);
+
+    useEffect(() => {
+        if (!open) return;
+        const handler = e => { if (e.key === 'Escape') setOpen(false); };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
+    }, [open]);
+
+    function select(lang) {
+        setOpen(false);
+        if (lang !== current) onChange?.(lang);
+    }
+
+    return (
+        <div className="lang-dropdown" ref={ref}>
+            <button
+                className="lang-dropdown__trigger"
+                onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+            >
+                <span className="lang-dropdown__flag">{LANG_FLAGS[current]}</span> {LANG_LABELS[current]}
+                <span className={`lang-dropdown__arrow${open ? ' open' : ''}`}>▾</span>
+            </button>
+
+            {open && (
+                <ul className="lang-dropdown__menu" role="listbox" style={{ bottom: 'auto', top: 'calc(100% + 4px)' }}>
+                    {LANGS.map(lang => (
+                        <li
+                            key={lang}
+                            role="option"
+                            aria-selected={lang === current}
+                            className={`lang-dropdown__option${lang === current ? ' active' : ''}`}
+                            onMouseDown={e => { e.preventDefault(); select(lang); }}
+                        >
+                            <span className="lang-dropdown__flag">{LANG_FLAGS[lang]}</span> {LANG_LABELS[lang]}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
     );
 }
