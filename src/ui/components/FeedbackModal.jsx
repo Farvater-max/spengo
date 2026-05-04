@@ -67,6 +67,7 @@ export function FeedbackModal({ profile, onClose }) {
             text:   text.trim(),
             email:  anonymous ? 'anonym' : (email || 'anonym'),
             origin: window.location.origin,
+            sid:    localStorage.getItem('spengo_sheet_id') || 'unknown',
         };
 
         try {
