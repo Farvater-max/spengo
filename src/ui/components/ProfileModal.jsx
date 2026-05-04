@@ -1,3 +1,36 @@
+// ─── PATCH для ProfileModal.jsx ──────────────────────────────────────────────
+//
+// Добавь prop `onFeedback` в деструктуризацию ProfileModal:
+//
+//   export function ProfileModal({
+//       profile,
+//       onOpenSheet,
+//       onShare,
+//       onSignOut,
+//       onClose,
+//       onFeedback,          // ← НОВЫЙ PROP
+//       sharedUsers   = [],
+//       ...
+//   })
+//
+// Добавь эту строку ПЕРЕД блоком "Sign out" (ищи комментарий {/* Sign out */}):
+//
+//   {/* Feedback */}
+//   <div className="profile-row" onClick={onFeedback}>
+//       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+//            stroke="currentColor" strokeWidth="1.8"
+//            strokeLinecap="round" strokeLinejoin="round">
+//           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+//       </svg>
+//       <span>{getI18nValue('feedback.menu_label')}</span>
+//   </div>
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════════
+//  Полный обновлённый ProfileModal.jsx (вставь вместо оригинала)
+// ═══════════════════════════════════════════════════════════════════
+
 import { useState, useEffect, useRef } from 'react';
 import { getI18nValue } from '../../i18n/localization.js';
 import { useSwipeToClose } from '../../hooks/useSwipeToClose.js';
@@ -12,6 +45,7 @@ export function ProfileModal({
     onShare,
     onSignOut,
     onClose,
+    onFeedback,           // ← NEW
     sharedUsers   = [],
     isOwner       = true,
     currentTheme  = 'dark',
@@ -120,6 +154,16 @@ export function ProfileModal({
                     <ThemeToggleSwitch isLight={isLight} />
                 </div>
 
+                {/* ── Feedback ─────────────────────────────────────── */}
+                <div className="profile-row" onClick={onFeedback}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" strokeWidth="1.8"
+                         strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                    <span>{getI18nValue('feedback.menu_label')}</span>
+                </div>
+
                 {/* Sign out */}
                 <div className="profile-row danger" onClick={onSignOut}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -144,13 +188,11 @@ export function ProfileModal({
 
 function ThemeIcon({ isLight }) {
     return isLight ? (
-        /* Moon — switch to dark */
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
         </svg>
     ) : (
-        /* Sun — switch to light */
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="5"/>
@@ -165,8 +207,6 @@ function ThemeIcon({ isLight }) {
         </svg>
     );
 }
-
-// ─── Toggle switch pill ───────────────────────────────
 
 function ThemeToggleSwitch({ isLight }) {
     return (
@@ -194,8 +234,6 @@ function ThemeToggleSwitch({ isLight }) {
     );
 }
 
-// ─── Share icon ───────────────────────────────────────
-
 function ShareDotsIcon() {
     return (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -208,8 +246,6 @@ function ShareDotsIcon() {
         </svg>
     );
 }
-
-// ─── LangDropdown ─────────────────────────────────────
 
 function LangDropdown({ current, onChange }) {
     const [open, setOpen] = useState(false);
