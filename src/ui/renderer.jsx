@@ -23,6 +23,7 @@ import { AuthScreen }         from './components/AuthScreen.jsx';
 import { SetupScreen }        from './components/SetupScreen.jsx';
 import { StatsScreen }               from './components/StatsScreen.jsx';
 import { AvatarOnboardingPopover }   from './components/AvatarOnboardingPopover.jsx';
+import { FeedbackModal } from './components/FeedbackModal.jsx';
 import { getTheme, toggleTheme, onThemeChange } from './theme.js';
 import {
     nextSortDir,
@@ -374,9 +375,9 @@ export function renderProfileModal({
     const container = document.getElementById('modal-profile-root');
     if (!container) return;
     if (!_profileModalRoot) _profileModalRoot = createRoot(container);
-
+ 
     if (!open) { _profileModalRoot.render(null); return; }
-
+ 
     function handleLangChange(lang) {
         setLang(lang, STATE, () => {
             renderUI();
@@ -387,7 +388,7 @@ export function renderProfileModal({
         });
         renderProfileModal({ open, profile, sharedUsers, ownerEmail, isOwner, spreadsheetId, onSignOut });
     }
-
+ 
     _profileModalRoot.render(
         <ProfileModal
             profile={profile}
@@ -395,7 +396,10 @@ export function renderProfileModal({
             ownerEmail={ownerEmail}
             isOwner={isOwner}
             currentTheme={getTheme()}
-            onThemeToggle={() => { toggleTheme(); renderProfileModal({ open, profile, sharedUsers, ownerEmail, isOwner, spreadsheetId, onSignOut }); }}
+            onThemeToggle={() => {
+                toggleTheme();
+                renderProfileModal({ open, profile, sharedUsers, ownerEmail, isOwner, spreadsheetId, onSignOut });
+            }}
             onOpenSheet={() => {
                 if (spreadsheetId) {
                     window.open(`https://docs.google.com/spreadsheets/d/${spreadsheetId}`, '_blank');
@@ -405,6 +409,10 @@ export function renderProfileModal({
             onShare={() => {
                 renderProfileModal({ open: false });
                 openShareModal();
+            }}
+            onFeedback={() => {                                          // ← NEW
+                renderProfileModal({ open: false });
+                renderFeedbackModal({ open: true, profile });
             }}
             currentLang={LANG}
             onLangChange={handleLangChange}
@@ -476,6 +484,25 @@ export function renderAvatarOnboardingPopover({ open, anchorRect = null } = {}) 
         <AvatarOnboardingPopover
             anchorRect={anchorRect}
             onDismiss={() => renderAvatarOnboardingPopover({ open: false })}
+        />
+    );
+}
+
+// ─── FeedbackModal ────────────────────────────────────────────────
+ 
+let _feedbackModalRoot = null;
+ 
+export function renderFeedbackModal({ open = false, profile = null } = {}) {
+    const container = document.getElementById('modal-feedback-root');
+    if (!container) return;
+    if (!_feedbackModalRoot) _feedbackModalRoot = createRoot(container);
+ 
+    if (!open) { _feedbackModalRoot.render(null); return; }
+ 
+    _feedbackModalRoot.render(
+        <FeedbackModal
+            profile={profile}
+            onClose={() => renderFeedbackModal({ open: false })}
         />
     );
 }

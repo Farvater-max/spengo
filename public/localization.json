@@ -97,7 +97,20 @@
     "setup.checking_permissions": "Проверяем права к таблице",
     "guest.no_access": "У вашего аккаунта нет доступа к этой таблице. Попросите владельца поделиться доступом заново.",
     "guest.access_denied": "Доступ запрещён. Возможно, владелец отозвал доступ или ссылка недействительна.",
-    "guest.generic_error": "Не удалось загрузить таблицу. Проверьте подключение и попробуйте ещё раз."
+    "guest.generic_error": "Не удалось загрузить таблицу. Проверьте подключение и попробуйте ещё раз.",
+    "feedback.menu_label": "Отправить отзыв",
+    "feedback.title": "Поделитесь своим мнением",
+    "feedback.label_message": "Ваше сообщение",
+    "feedback.placeholder": "Что работает хорошо? Что можно улучшить?",
+    "feedback.label_email": "Ваш email (для ответа)",
+    "feedback.email_notice": "Отправляя форму, вы соглашаетесь, что ваш email может быть использован для ответа.",
+    "feedback.anonymous": "Отправить анонимно",
+    "feedback.send": "Отправить отзыв",
+    "feedback.success_title": "Спасибо!",
+    "feedback.success_body": "Ваш отзыв получен. Спасибо, что нашли время.",
+    "feedback.close": "Закрыть",
+    "feedback.error_generic": "Что-то пошло не так. Попробуйте снова.",
+    "feedback.rate_limit": "Пожалуйста, подождите {s} сек. перед отправкой следующего сообщения."
   },
   "en": {
     "auth.logo": "SpenGo",
@@ -197,7 +210,20 @@
     "setup.checking_permissions": "Checking spreadsheet permissions",
     "guest.no_access": "Your account does not have access to this spreadsheet. Ask the owner to share it with you again.",
     "guest.access_denied": "Access denied. The owner may have revoked access or the link is no longer valid.",
-    "guest.generic_error": "Could not load the spreadsheet. Check your connection and try again."
+    "guest.generic_error": "Could not load the spreadsheet. Check your connection and try again.",
+    "feedback.menu_label": "Send Feedback",
+    "feedback.title": "Share your feedback",
+    "feedback.label_message": "Your message",
+    "feedback.placeholder": "What works well? What could be better?",
+    "feedback.label_email": "Your email (for reply)",
+    "feedback.email_notice": "By submitting you agree that your email may be used to reply to your feedback.",
+    "feedback.anonymous": "Send anonymously",
+    "feedback.send": "Send feedback",
+    "feedback.success_title": "Thank you!",
+    "feedback.success_body": "Your feedback has been received. We appreciate you taking the time.",
+    "feedback.close": "Close",
+    "feedback.error_generic": "Something went wrong. Please try again.",
+    "feedback.rate_limit": "Please wait {s}s before sending another message."
   },
   "es": {
     "auth.logo": "SpenGo",
@@ -297,7 +323,20 @@
     "setup.checking_permissions": "Comprobando permisos de la hoja",
     "guest.no_access": "Tu cuenta no tiene acceso a esta hoja. Pide al propietario que vuelva a compartirla contigo.",
     "guest.access_denied": "Acceso denegado. Es posible que el propietario haya revocado el acceso o que el enlace ya no sea válido.",
-    "guest.generic_error": "No se pudo cargar la hoja. Comprueba tu conexión e inténtalo de nuevo."
+    "guest.generic_error": "No se pudo cargar la hoja. Comprueba tu conexión e inténtalo de nuevo.",
+    "feedback.menu_label": "Enviar comentarios",
+    "feedback.title": "Comparte tu opinión",
+    "feedback.label_message": "Tu mensaje",
+    "feedback.placeholder": "¿Qué funciona bien? ¿Qué se puede mejorar?",
+    "feedback.label_email": "Tu correo electrónico (para responder)",
+    "feedback.email_notice": "Al enviar aceptas que tu correo electrónico pueda utilizarse para responder a tus comentarios.",
+    "feedback.anonymous": "Enviar de forma anónima",
+    "feedback.send": "Enviar comentarios",
+    "feedback.success_title": "¡Gracias!",
+    "feedback.success_body": "Hemos recibido tus comentarios. Gracias por tu tiempo.",
+    "feedback.close": "Cerrar",
+    "feedback.error_generic": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "feedback.rate_limit": "Por favor espera {s}s antes de enviar otro mensaje."
   },
   "pl": {
     "auth.logo": "SpenGo",
@@ -397,7 +436,20 @@
     "setup.checking_permissions": "Sprawdzanie uprawnień do arkusza",
     "guest.no_access": "Twoje konto nie ma dostępu do tego arkusza. Poproś właściciela o ponowne udostępnienie.",
     "guest.access_denied": "Odmowa dostępu. Właściciel mógł cofnąć dostęp lub link jest już nieważny.",
-    "guest.generic_error": "Nie można załadować arkusza. Sprawdź połączenie i spróbuj ponownie."
+    "guest.generic_error": "Nie można załadować arkusza. Sprawdź połączenie i spróbuj ponownie.",
+    "feedback.menu_label": "Wyślij opinię",
+    "feedback.title": "Podziel się opinią",
+    "feedback.label_message": "Twoja wiadomość",
+    "feedback.placeholder": "Co działa dobrze? Co można poprawić?",
+    "feedback.label_email": "Twój email (do odpowiedzi)",
+    "feedback.email_notice": "Wysyłając formularz, zgadzasz się na użycie adresu email do odpowiedzi.",
+    "feedback.anonymous": "Wyślij anonimowo",
+    "feedback.send": "Wyślij opinię",
+    "feedback.success_title": "Dziękujemy!",
+    "feedback.success_body": "Twoja opinia została otrzymana. Dziękujemy za poświęcony czas.",
+    "feedback.close": "Zamknij",
+    "feedback.error_generic": "Coś poszło nie tak. Spróbuj ponownie.",
+    "feedback.rate_limit": "Poczekaj {s}s przed wysłaniem kolejnej wiadomości."
   },
   "cs": {
     "auth.logo": "SpenGo",
@@ -497,6 +549,19 @@
     "setup.checking_permissions": "Kontrolujeme oprávnění k tabulce",
     "guest.no_access": "Váš účet nemá přístup k této tabulce. Požádejte vlastníka, aby vám přístup znovu sdílel.",
     "guest.access_denied": "Přístup odepřen. Vlastník mohl přístup odvolat nebo odkaz již není platný.",
-    "guest.generic_error": "Tabulku se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu."
+    "guest.generic_error": "Tabulku se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.",
+    "feedback.menu_label": "Odeslat zpětnou vazbu",
+    "feedback.title": "Sdílejte svůj názor",
+    "feedback.label_message": "Vaše zpráva",
+    "feedback.placeholder": "Co funguje dobře? Co by se dalo zlepšit?",
+    "feedback.label_email": "Váš email (pro odpověď)",
+    "feedback.email_notice": "Odesláním souhlasíte s použitím vašeho emailu pro odpověď.",
+    "feedback.anonymous": "Odeslat anonymně",
+    "feedback.send": "Odeslat zpětnou vazbu",
+    "feedback.success_title": "Děkujeme!",
+    "feedback.success_body": "Vaše zpětná vazba byla přijata. Děkujeme za váš čas.",
+    "feedback.close": "Zavřít",
+    "feedback.error_generic": "Něco se pokazilo. Zkuste to prosím znovu.",
+    "feedback.rate_limit": "Počkejte prosím {s}s před odesláním další zprávy."
   }
 }

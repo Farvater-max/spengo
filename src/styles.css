@@ -26,6 +26,7 @@
    20. STATS LOADING          — per-canvas spinner overlay
    21. LIGHT THEME            — color token overrides
    22. ONBOARDING POPOVER     — first-time avatar tip
+   23. FEEDBACK MODAL
 
    HOW TO CUSTOMIZE
    ─────────────────────────────────────────────────────────────────
@@ -69,6 +70,9 @@
     --color-accent2-glow3:  #7b61ff25;   /* stronger violet (summary/stats)   */
     --color-accent2-glow4:  #7b61ff28;   /* strongest violet (auth panel)     */
     --color-danger-soft:    #ff4d6d18;   /* danger background tint            */
+    --color-warning:        #ffb400;     /* warning text / icon               */
+    --color-warning-soft:   #ffb40014;   /* warning background tint           */
+    --color-warning-border: #ffb40030;   /* warning border                    */
 
     /* ── On-color & static values ────────────────────── */
     --color-on-accent:   #0d0d0f;     /* text on accent buttons/badges        */
@@ -1601,6 +1605,11 @@ html {
 
     --color-danger-soft:    #ff4d6d12;
 
+    /* ── Warning — darker amber works better on light backgrounds ── */
+    --color-warning:        #8a5e00;     /* dark amber — readable on #fff     */
+    --color-warning-soft:   #a06c0014;   /* warm tint                         */
+    --color-warning-border: #a06c0030;   /* warm border                       */
+
     /* ── Static values ───────────────────────────────── */
     --color-on-accent:   #ffffff;
     --color-bg-desktop:  #e8edeb;   /* slightly deeper for desktop body  */
@@ -1737,4 +1746,35 @@ html {
 .ob-avatar-ring {
     border-color: var(--color-accent) !important;
     box-shadow: 0 0 0 3px var(--color-accent-glow2);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   §23  FEEDBACK MODAL
+   ─────────────────────────────────────────────────────────────────── */
+.feedback-textarea {
+    font-family: var(--font-body);
+    font-size:   15px;
+    min-height:  120px;
+    transition:  border-color var(--transition-fast);
+}
+.feedback-textarea:focus {
+    border-color: var(--color-accent);
+    outline: none;
+}
+ 
+/* Readonly email input */
+.feedback-sheet input[readonly] {
+    opacity: .75;
+    cursor: default;
+    background: var(--color-surface2);
+}
+ 
+/* Anonymous row — tap highlight off on mobile */
+.feedback-anon-row {
+    -webkit-tap-highlight-color: transparent;
+}
+ 
+/* Light-theme textarea border */
+[data-theme="light"] .feedback-textarea:focus {
+    border-color: var(--color-accent);
 }

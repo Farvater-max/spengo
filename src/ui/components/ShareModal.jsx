@@ -97,15 +97,15 @@ export function ShareModal({ sharedUsers = [], loading = false, accessUrl = null
                             padding:      '10px 12px',
                             marginBottom: '16px',
                             borderRadius: 'var(--r-sm)',
-                            background:   'rgba(255, 180, 0, 0.08)',
-                            border:       '1px solid rgba(255, 180, 0, 0.25)',
+                            background:   'var(--color-warning-soft)',
+                            border:       '1px solid var(--color-warning-border)',
                         }}>
-                            <InfoIcon color="#ffb400" />
+                            <InfoIcon color="var(--color-warning)" />
 
                             <p style={{
                                 margin:      0,
                                 fontSize:    '14px',
-                                color:       '#e6b85c',
+                                color:       'var(--color-warning)',
                                 lineHeight:  1.55
                             }}>
                                 {getI18nValue('share.warning')}
