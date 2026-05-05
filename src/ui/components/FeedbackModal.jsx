@@ -13,6 +13,22 @@ function wordCount(text) {
     return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+/**
+ * Returns a stable anonymous ID for this browser.
+ * Generated once via crypto.randomUUID() and persisted in localStorage.
+ * Used as the rate-limit key for anonymous submissions so that
+ * two different Google accounts behind the same NAT are tracked separately.
+ */
+function _getAnonId() {
+    const KEY = 'spengo_anon_id';
+    let id = localStorage.getItem(KEY);
+    if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(KEY, id);
+    }
+    return id;
+}
+
 // ---------------------------------------------------------------------------
 // Icons
 // ---------------------------------------------------------------------------
@@ -67,6 +83,7 @@ export function FeedbackModal({ profile, onClose }) {
             text:   text.trim(),
             email:  anonymous ? 'anonym' : (email || 'anonym'),
             origin: window.location.origin,
+            anonId: anonymous ? _getAnonId() : null,
         };
 
         try {
