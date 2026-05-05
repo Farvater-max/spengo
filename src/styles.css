@@ -43,8 +43,6 @@
 /* ───────────────────────────────────────────────────────────────────
    §1  DESIGN TOKENS
    ─────────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;800&family=Manrope:wght@300;400;500;600&display=swap');
-
 :root {
     /* ── Color palette ───────────────────────────────── */
     --color-bg:         #0d0d0f;   /* page / deepest background    */
