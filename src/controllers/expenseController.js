@@ -5,6 +5,7 @@ import * as Storage from '../services/storageService.js';
 import { getI18nValue } from '../i18n/localization.js';
 import { uuid, todayStr, showToast } from '../utils/helpers.js';
 import { renderAddModal, renderEditModal } from '../ui/renderer.jsx';
+import { clearYearCache } from '../ui/statistics/statistics-chart.js';
 
 // ─── Helpers ──────────────────────────────────────────
 
@@ -57,6 +58,7 @@ export async function submitExpense({ amount, category, comment, date }) {
         await withToken(token =>
             SheetsService.appendExpense(token, STATE.spreadsheetId, expense)
         );
+        clearYearCache(new Date(expense.date).getFullYear());
         _saveExpenses([...STATE.expenses, expense]);
         renderAddModal({ open: false });
         showToast(getI18nValue('toast.added'), 'success');
@@ -93,6 +95,10 @@ export async function updateExpense(id, amount, category, comment, date) {
         await withToken(token =>
             SheetsService.editExpense(token, STATE.spreadsheetId, updated)
         );
+        clearYearCache(new Date(original.date).getFullYear());
+        if (updated.date !== original.date) {
+            clearYearCache(new Date(updated.date).getFullYear());
+        }
         _saveExpenses(STATE.expenses.map(e => e.id === id ? updated : e));
         renderEditModal({ expense: null });
         showToast(getI18nValue('toast.updated'), 'success');
@@ -107,6 +113,8 @@ export async function deleteExpense(id) {
         await withToken(token =>
             SheetsService.deleteExpense(token, STATE.spreadsheetId, id)
         );
+        const deleted = STATE.expenses.find(e => e.id === id);
+        if (deleted) clearYearCache(new Date(deleted.date).getFullYear());
         _saveExpenses(STATE.expenses.filter(e => e.id !== id));
         renderEditModal({ expense: null });
         showToast(getI18nValue('toast.deleted'), 'success');
