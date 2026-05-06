@@ -1,8 +1,3 @@
-/**
- * Статичная структура экрана статистики.
- * Рендерится один раз — канвасы стабильны для Chart.js.
- * Текстовые значения обновляются напрямую через DOM (statistics-chart.js).
- */
 export function StatsScreen() {
     return (
         <div className="stats-screen-inner">
@@ -16,6 +11,15 @@ export function StatsScreen() {
                 </div>
                 <div className="stats-chart-wrap">
                     <canvas id="stats-chart"></canvas>
+                    <div className="stats-chart-empty" id="stats-chart-empty" style={{ display: 'none' }}>
+                        <div className="stats-chart-skeleton">
+                            <div className="stats-chart-skeleton__bar" style={{ height: '55%' }}></div>
+                            <div className="stats-chart-skeleton__bar" style={{ height: '75%' }}></div>
+                            <div className="stats-chart-skeleton__bar" style={{ height: '40%' }}></div>
+                            <div className="stats-chart-skeleton__bar" style={{ height: '65%' }}></div>
+                        </div>
+                        <span className="stats-empty-text stats-chart-empty__text" id="stats-chart-empty-text"></span>
+                    </div>
                 </div>
             </div>
 
@@ -25,7 +29,7 @@ export function StatsScreen() {
                     <canvas id="stats-donut"></canvas>
                     <div className="stats-donut-empty" style={{ display: 'none' }}>
                         <span
-                            style={{ color: 'var(--muted)', fontSize: '13px' }}
+                            className="stats-empty-text"
                             id="stats-donut-empty-text"
                         />
                     </div>

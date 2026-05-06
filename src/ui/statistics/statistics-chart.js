@@ -5,20 +5,21 @@ import { getI18nValue } from '../../i18n/localization.js';
 import { getPeriod, onPeriodChange } from './statistics-state.js';
 import * as SheetsService from '../../services/sheetsService.js';
 import { withToken } from '../../services/authService.js';
+import {
+    getMonday,
+    toIso,
+    getDayLabel,
+    getShortDay,
+    getMonthLabel,
+    buildWeekBarColors,
+    buildPeriodBarColors,
+    filterExpensesByPeriod,
+} from './statistics-utils.js';
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
-// ─── Constants ────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────
 
-// Bar colors don't change with theme — accent is always lime
-const ACCENT      = '#c8f135';
-const ACCENT_DIM  = '#c8f13560';
-const ACCENT2_DIM = '#7b61ff60';
-
-/**
- * Reads a CSS custom property from :root at call time.
- * This way chart colors always reflect the current theme.
- */
 function _css(varName) {
     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
 }
@@ -28,8 +29,9 @@ function _css(varName) {
 let _chartInstance = null;
 
 /**
- * In-memory cache for yearly expenses: { 2024: [...], 2025: [...] }
- * Lives for the session; invalidated externally via clearYearCache().
+ * Cache stores only raw server data. Hot-layer (STATE.expenses) is always
+ * merged on top at read time, so the cache never needs invalidation when
+ * the user adds/edits/deletes expenses within the same session.
  * @type {Object<number, Array>}
  */
 const _yearCache = {};
@@ -37,32 +39,37 @@ const _yearCache = {};
 // ─── Year data loader ─────────────────────────────────
 
 /**
- * Returns expenses for the given year, fetching from Sheets on first access.
- * Hot-layer expenses (STATE.expenses) for the same year are merged in so
- * recently added items are always visible without a second request.
+ * Returns expenses for the given year by merging:
+ *   1. Sheet data (fetched once and cached per year)
+ *   2. Hot-layer from STATE.expenses (always re-read so new/edited/deleted
+ *      expenses are reflected immediately without needing clearYearCache)
  * @param {number} year
  * @returns {Promise<Array>}
  */
 async function _getYearExpenses(year) {
     if (!_yearCache[year]) {
-        const fromSheets = await withToken(token =>
+        // Cache only the raw server data — hot-layer is NOT baked in.
+        _yearCache[year] = await withToken(token =>
             SheetsService.loadExpensesByYear(token, STATE.spreadsheetId, year)
         );
-        // Merge with hot layer to include expenses added this session
-        const prefix = String(year);
-        const hot    = STATE.expenses.filter(e => e.date.startsWith(prefix));
-        const hotIds = new Set(hot.map(e => e.id));
-        _yearCache[year] = [
-            ...fromSheets.filter(e => !hotIds.has(e.id)),
-            ...hot,
-        ];
     }
-    return _yearCache[year];
+
+    // Always re-merge fresh hot-layer so add/edit/delete is instantly visible
+    // in year view without needing clearYearCache() to be called externally.
+    const prefix = String(year);
+    const hot    = STATE.expenses.filter(e => e.date.startsWith(prefix));
+    const hotIds = new Set(hot.map(e => e.id));
+    return [
+        ..._yearCache[year].filter(e => !hotIds.has(e.id)),
+        ...hot,
+    ];
 }
 
 /**
- * Invalidates the cache for a given year.
- * Call after add / edit / delete of an expense so the next year-view re-fetches.
+ * Invalidates the server-data cache for a given year.
+ * Only needed when Sheet data may have changed outside the current session
+ * (e.g. a collaborator added expenses). Within the same session the
+ * hot-layer merge in _getYearExpenses handles freshness automatically.
  * @param {number} year
  */
 export function clearYearCache(year) {
@@ -71,39 +78,48 @@ export function clearYearCache(year) {
 
 // ─── Per-canvas loading overlay ───────────────────────
 
-/**
- * Mounts a spinner overlay inside the parent of the given canvas.
- * Creates it fresh each time so it appears on every new fetch.
- * @param {string} canvasId
- */
 function _showCanvasLoading(canvasId) {
     _hideCanvasLoading(canvasId);
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
-    // Mount on the wrap div (.stats-chart-wrap) which is already position:relative
     const wrap = canvas.closest('.stats-chart-wrap') ?? canvas.parentElement;
     if (!wrap) return;
     const el = document.createElement('div');
     el.id = `${canvasId}-overlay`;
     el.className = 'stats-loading-overlay';
+    const spinner = document.createElement('div');
+    spinner.className = 'stats-spinner';
+    el.appendChild(spinner);
     wrap.appendChild(el);
 }
 
-/**
- * Removes the spinner overlay for the given canvas.
- * @param {string} canvasId
- */
 function _hideCanvasLoading(canvasId) {
     document.getElementById(`${canvasId}-overlay`)?.remove();
 }
 
+// ─── Empty state helpers ──────────────────────────────
+
+function _showChartEmpty(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    canvas.style.display = 'none';
+    const empty = document.getElementById(`${canvasId}-empty`);
+    if (empty) {
+        empty.style.display = 'flex';
+        const txt = document.getElementById(`${canvasId}-empty-text`);
+        if (txt) txt.textContent = getI18nValue('stats.empty');
+    }
+}
+
+function _hideChartEmpty(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (canvas) canvas.style.display = 'block';
+    const empty = document.getElementById(`${canvasId}-empty`);
+    if (empty) empty.style.display = 'none';
+}
+
 // ─── Public API ───────────────────────────────────────
 
-/**
- * Initialises the bar chart: binds period buttons, subscribes to period
- * changes, and renders for the current period.
- * Safe to call multiple times — re-binds buttons and re-renders.
- */
 export async function renderChart() {
     const period = getPeriod();
     if (period === 'year') _showCanvasLoading('stats-chart');
@@ -115,11 +131,6 @@ export async function renderChart() {
     }
 }
 
-/**
- * Updates the totals block (label, amount, transaction count)
- * for the given period.
- * @param {'week' | 'month' | 'year'} period
- */
 export async function updateStatsTotals(period) {
     const now = new Date();
 
@@ -127,11 +138,7 @@ export async function updateStatsTotals(period) {
         ? await _getYearExpenses(now.getFullYear())
         : STATE.expenses;
 
-    const filtered = source.filter(e => {
-        if (period === 'week')  return isInPeriod(e.date, 'week');
-        if (period === 'month') return isInPeriod(e.date, 'month');
-        if (period === 'year')  return new Date(e.date).getFullYear() === now.getFullYear();
-    });
+    const filtered = filterExpensesByPeriod(source, period, isInPeriod, now);
 
     const labelMap = {
         week:  getI18nValue('stats.total_label.week'),
@@ -160,6 +167,13 @@ async function renderingChartByPeriod(period) {
         _chartInstance.destroy();
         _chartInstance = null;
     }
+
+    const allZero = data.every(v => !v || v <= 0);
+    if (allZero) {
+        _showChartEmpty('stats-chart');
+        return;
+    }
+    _hideChartEmpty('stats-chart');
 
     _chartInstance = new Chart(canvas.getContext('2d'), {
         type: 'bar',
@@ -237,37 +251,31 @@ async function buildChartDataByPeriod(period) {
     return { labels: [], data: [], barColors: [] };
 }
 
-/** 7 bars — Mon–Sun of the current week. Today is highlighted. */
 function buildWeekData() {
     const now      = new Date();
-    const monday   = _getMonday(now);
-    const todayIdx = (now.getDay() + 6) % 7; // Mon = 0
+    const monday   = getMonday(now);
+    const todayIdx = (now.getDay() + 6) % 7;
 
     const labels = [], data = [];
-
     for (let i = 0; i < 7; i++) {
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
-        labels.push(_dayLabel(d));
-        data.push(sumAmounts(STATE.expenses.filter(e => e.date === _toIso(d))));
+        labels.push(getDayLabel(d));
+        data.push(sumAmounts(STATE.expenses.filter(e => e.date === toIso(d))));
     }
 
-    const barColors = data.map((_, i) =>
-        i === todayIdx ? ACCENT : ((todayIdx - i) % 2 === 0 ? ACCENT_DIM : ACCENT2_DIM)
-    );
+    const barColors = buildWeekBarColors(data.length, todayIdx);
     return { labels, data, barColors };
 }
 
-/** 4 bars — 3 previous ISO weeks + current week. Current is highlighted. */
 function buildMonthData() {
     const now       = new Date();
-    const curMonday = _getMonday(now);
+    const curMonday = getMonday(now);
     const labels = [], data = [];
 
     for (let i = 3; i >= 0; i--) {
         const weekMonday = new Date(curMonday);
         weekMonday.setDate(curMonday.getDate() - i * 7);
-
         const weekSunday = new Date(weekMonday);
         weekSunday.setDate(weekMonday.getDate() + 6);
 
@@ -277,18 +285,14 @@ function buildMonthData() {
                 return d >= weekMonday && d <= weekSunday;
             })
         );
-
-        labels.push(`${_shortDay(weekMonday)}–${_shortDay(weekSunday)}`);
+        labels.push(`${getShortDay(weekMonday)}–${getShortDay(weekSunday)}`);
         data.push(sum);
     }
 
-    const barColors = data.map((_, i, arr) =>
-        i === arr.length - 1 ? ACCENT : ((arr.length - 1 - i) % 2 === 0 ? ACCENT_DIM : ACCENT2_DIM)
-    );
+    const barColors = buildPeriodBarColors(data.length);
     return { labels, data, barColors };
 }
 
-/** 4 bars — 3 previous months + current month. Current is highlighted. */
 async function buildYearData() {
     const now      = new Date();
     const expenses = await _getYearExpenses(now.getFullYear());
@@ -304,41 +308,10 @@ async function buildYearData() {
                 return ed.getFullYear() === y && ed.getMonth() === m;
             })
         );
-        labels.push(_monthLabel(d));
+        labels.push(getMonthLabel(d));
         data.push(sum);
     }
 
-    const barColors = data.map((_, i, arr) =>
-        i === arr.length - 1 ? ACCENT : ((arr.length - 1 - i) % 2 === 0 ? ACCENT_DIM : ACCENT2_DIM)
-    );
+    const barColors = buildPeriodBarColors(data.length);
     return { labels, data, barColors };
-}
-
-// ─── Date helpers ─────────────────────────────────────
-
-function _getMonday(date) {
-    const d   = new Date(date);
-    const day = d.getDay();
-    d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
-    d.setHours(0, 0, 0, 0);
-    return d;
-}
-
-function _toIso(d) {
-    const y  = d.getFullYear();
-    const m  = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${dd}`;
-}
-
-function _dayLabel(d) {
-    return d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase().slice(0, 2);
-}
-
-function _shortDay(d) {
-    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-}
-
-function _monthLabel(d) {
-    return d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
 }

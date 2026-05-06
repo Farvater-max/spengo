@@ -6,6 +6,11 @@ import { CATEGORIES } from '../../constants/categories.js';
 import { onPeriodChange } from './statistics-state.js';
 import * as SheetsService from '../../services/sheetsService.js';
 import { withToken } from '../../services/authService.js';
+import {
+    filterExpensesByPeriod,
+    groupExpensesByCategory,
+    calcPercentage,
+} from './statistics-utils.js';
 
 Chart.register(DoughnutController, ArcElement, Tooltip);
 
@@ -30,6 +35,9 @@ function _showLoading() {
     const el = document.createElement('div');
     el.id = 'stats-donut-overlay';
     el.className = 'stats-loading-overlay';
+    const spinner = document.createElement('div');
+    spinner.className = 'stats-spinner';
+    el.appendChild(spinner);
     wrap.appendChild(el);
 }
 
@@ -91,20 +99,9 @@ async function buildDonutDataByPeriod(period) {
         expenses = STATE.expenses;
     }
 
-    const filtered = expenses.filter(e => {
-        if (period === 'week')  return isInPeriod(e.date, 'week');
-        if (period === 'month') return isInPeriod(e.date, 'month');
-        if (period === 'year')  return new Date(e.date).getFullYear() === now.getFullYear();
-        return false;
-    });
-
-    const grouped = filtered.reduce((acc, e) => {
-        acc[e.category] = sumAmounts([{ amount: acc[e.category] || 0 }, { amount: e.amount }]);
-        return acc;
-    }, {});
-
-    const sorted = Object.entries(grouped).sort(([, a], [, b]) => b - a);
-    const total  = sumAmounts(filtered);
+    const filtered = filterExpensesByPeriod(expenses, period, isInPeriod, now);
+    const sorted   = groupExpensesByCategory(filtered);
+    const total    = sumAmounts(filtered);
 
     return { sorted, total };
 }
@@ -152,7 +149,7 @@ function drawDonutChart(canvas, sorted, total) {
                     displayColors: false,
                     callbacks: {
                         label: ctx => {
-                            const pct = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
+                            const pct = calcPercentage(ctx.parsed, total);
                             return `${formatMoney(ctx.parsed)}  ·  ${pct}%`;
                         },
                     },
@@ -170,7 +167,7 @@ function drawDonutLegend(sorted, total) {
 
     el.innerHTML = sorted.map(([id, amount]) => {
         const cat = CATEGORIES.find(c => c.id === id);
-        const pct = total > 0 ? Math.round(amount / total * 100) : 0;
+        const pct = calcPercentage(amount, total);
         return `
             <div class="donut-legend-item">
                 <span class="donut-legend-dot" style="background:${cat?.color || '#888'}"></span>

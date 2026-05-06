@@ -8,13 +8,33 @@ SpenGo is a lightweight, mobile-first web application for tracking personal expe
 
 ## Core Features
 
-- Expenses saved directly to user's Google Drive via Google Sheets API
-- Track spending by day, week, or month
+### Expense Tracking
+- Add expenses in seconds with a minimal input flow
+- Edit or delete any entry anytime
+- Filter expenses by category
 - Categories: Food, Transport, Housing, Health, Entertainment, Sport, Clothes, School, Other
-- Visual analytics: bar chart by period and donut breakdown by category
-- Multilingual: English, Russian, Spanish, Polish, Czech
-- Recent expenses cached locally in browser localStorage
-- No ads, no tracking, no servers
+
+### Statistics & Insights
+- Bar chart by period (day / week / month / year)
+- Donut chart showing category breakdown
+- Time frames: Week, Month, Year with navigation between periods
+- Instant updates without page reload
+
+### Data & Privacy
+- Expenses saved directly to user's Google Drive via Google Sheets API
+- No backend servers or databases
+- No ads, no tracking, no analytics collection
+- Uses only minimal OAuth scopes: `spreadsheets` and `drive.file`
+
+### Collaboration
+- Share your Google Sheet with a partner
+- Real-time updates for multiple users
+- Ability to revoke access anytime
+
+### Additional Features
+- Multilingual support: English, Russian, Spanish, Polish, Czech
+- Recent expenses cached locally in browser (localStorage)
+- Fast UI with instant feedback
 
 ## Tech Stack
 
@@ -28,10 +48,10 @@ SpenGo is a lightweight, mobile-first web application for tracking personal expe
 
 ## Pages
 
-- [App](https://webspengo.xyz/): Main expense tracker interface. The homepage includes a three-panel landing layout explaining the app's purpose — expense tracking on the left, sign-in in the center, and statistics overview on the right. All tracking features are available after signing in via Google.
-- [Privacy Policy](https://webspengo.xyz/privacy-policy/): Data usage and privacy information.
-- [Features](https://webspengo.xyz/features/): Features and functionality insights.
+- App: https://webspengo.xyz/
+- Privacy Policy: https://webspengo.xyz/privacy-policy/
+- Features: https://webspengo.xyz/features/
 
 ## Privacy
 
-SpenGo does not collect, store, or share any personal data. All expense data belongs to the user and lives in their own Google account. The app uses only `spreadsheets` and `drive.file` OAuth scopes — the minimum required to function.
+SpenGo does not collect, store, or share any personal data. All expense data belongs to the user and lives in their own Google account.
