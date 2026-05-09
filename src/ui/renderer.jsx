@@ -17,7 +17,7 @@ import { EditExpenseModal }   from './components/EditExpenseModal.jsx';
 import { ProfileModal }       from './components/ProfileModal.jsx';
 import { ShareModal }         from './components/ShareModal.jsx';
 import { MainHeader }         from './components/MainHeader.jsx';
-import { StatsHeader, resetCarousel }        from './components/StatsHeader.jsx';
+import { StatsHeader, centerCarousel }        from './components/StatsHeader.jsx';
 import { BottomNav }          from './components/BottomNav.jsx';
 import { AuthScreen }         from './components/AuthScreen.jsx';
 import { SetupScreen }        from './components/SetupScreen.jsx';
@@ -458,11 +458,14 @@ export function renderShareModal({
 // ─── Statistics ───────────────────────────────────────
 
 export function renderStatistics() {
-    resetCarousel();
     renderStatsHeader();
     renderChart();
     const { year, month } = getSelectedMonth();
     renderDonutChart(year, month);
+    // Center the carousel after React has flushed the render and the
+    // stats screen is visible. setTimeout(0) runs after the current
+    // call stack + paint, so scrollIntoView measures real layout.
+    setTimeout(centerCarousel, 0);
 }
 
 // ─── AvatarOnboardingPopover ──────────────────────────

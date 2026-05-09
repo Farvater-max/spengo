@@ -2,11 +2,14 @@ import { useEffect, useRef } from 'react';
 import { getI18nValue } from '../../i18n/localization.js';
 import { buildCarouselMonths } from '../statistics/statistics-utils.js';
 
-let _carouselReady = false;
+let _scrollToActive = null;
 
-export function resetCarousel() {
-    _carouselReady = false;
+export function centerCarousel() {
+    _scrollToActive?.('auto');
 }
+
+/** @deprecated kept so existing renderer.jsx import doesn't break */
+export function resetCarousel() {}
 
 const MONTH_SHORT = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -34,35 +37,24 @@ export function StatsHeader({
     const curMonth = now.getMonth();
 
     const months    = buildCarouselMonths(12, 12);
-    const trackRef  = useRef(null);
     const activeRef = useRef(null);
 
+    // Register the scroll function so centerCarousel() can call it imperatively.
+    // Updated on every render so activeRef always points to the right element.
     useEffect(() => {
-        const el    = activeRef.current;
-        const track = trackRef.current;
-        if (!el || !track) return;
-
-        const doScroll = () => {
-            const target = el.offsetLeft - track.offsetWidth / 2 + el.offsetWidth / 2;
-
-            if (!_carouselReady) {
-                // First render after navigation — snap instantly, no animation.
-                // _carouselReady is set AFTER the scroll so a second RAF/effect
-                // fired before the flag is set still snaps rather than animates.
-                track.scrollLeft = target;
-                _carouselReady = true;
-            } else {
-                track.scrollTo({ left: target, behavior: 'smooth' });
-            }
+        _scrollToActive = (behavior = 'smooth') => {
+            activeRef.current?.scrollIntoView({
+                behavior,
+                block:  'nearest',
+                inline: 'center',
+            });
         };
+        return () => { _scrollToActive = null; };
+    });
 
-        doScroll();
-        if (track.offsetWidth === 0) {
-            const tid = setTimeout(doScroll, 0);
-            return () => clearTimeout(tid);
-        }
-        
-        doScroll();
+    // Smooth scroll whenever the selected month changes (user tapped a pill).
+    useEffect(() => {
+        _scrollToActive?.('smooth');
     }, [selectedYear, selectedMonth]);
 
     return (
@@ -79,7 +71,7 @@ export function StatsHeader({
             </div>
 
             {/* ── Month carousel ── */}
-            <div className="stats-carousel" ref={trackRef}>
+            <div className="stats-carousel">
                 {months.map(({ year, month }) => {
                     const isActive  = year === selectedYear && month === selectedMonth;
                     const isCurrent = year === curYear && month === curMonth;
