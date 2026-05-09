@@ -241,7 +241,7 @@ html, body {
 
 #screen-stats {
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: clip;     /* clip не создаёт новый scroll-контейнер, в отличие от hidden */
     padding: 0 0 calc(var(--nav-h) + 16px);
     flex: 1;
     min-height: 0;

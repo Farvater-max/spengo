@@ -2,9 +2,6 @@ import { useEffect, useRef } from 'react';
 import { getI18nValue } from '../../i18n/localization.js';
 import { buildCarouselMonths } from '../statistics/statistics-utils.js';
 
-// Module-level flag — survives React re-renders since createRoot reuses the
-// same component instance. Must be explicitly reset each time the user
-// navigates TO the stats screen so the first render always snaps instantly.
 let _carouselReady = false;
 
 export function resetCarousel() {
@@ -15,11 +12,6 @@ const MONTH_SHORT = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
-
-/**
- * Generates a flat list of { year, month } entries spanning
- * `pastMonths` before and `futureMonths` after the current month.
- */
 
 /**
  * @param {{
@@ -50,15 +42,29 @@ export function StatsHeader({
         const track = trackRef.current;
         if (!el || !track) return;
 
-        const target = el.offsetLeft - track.offsetWidth / 2 + el.offsetWidth / 2;
+        const doScroll = () => {
+            const target = el.offsetLeft - track.offsetWidth / 2 + el.offsetWidth / 2;
 
-        if (!_carouselReady) {
-            // First render after navigation — jump instantly, no animation
-            track.scrollLeft = target;
-            _carouselReady = true;
-        } else {
-            track.scrollTo({ left: target, behavior: 'smooth' });
+            if (!_carouselReady) {
+                // First render after navigation — snap instantly, no animation.
+                // _carouselReady is set AFTER the scroll so a second RAF/effect
+                // fired before the flag is set still snaps rather than animates.
+                track.scrollLeft = target;
+                _carouselReady = true;
+            } else {
+                track.scrollTo({ left: target, behavior: 'smooth' });
+            }
+        };
+
+        // When the stats screen is hidden (display:none) all offsets are 0.
+        // Defer one animation frame so the browser has applied layout and
+        // offsetLeft / offsetWidth return real values.
+        if (track.offsetWidth === 0) {
+            const raf = requestAnimationFrame(doScroll);
+            return () => cancelAnimationFrame(raf);
         }
+
+        doScroll();
     }, [selectedYear, selectedMonth]);
 
     return (
