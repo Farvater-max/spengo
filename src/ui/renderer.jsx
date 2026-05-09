@@ -6,7 +6,7 @@ import { openShareModal } from '../controllers/sharingController.js';
 import { openProfileModal } from '../controllers/authController.js';
 import { renderChart } from './statistics/statistics-chart.js';
 import { renderDonutChart } from './statistics/statistics-donut.js';
-import { getPeriod, setPeriod } from './statistics/statistics-state.js';
+import { getSelectedMonth, setSelectedMonth } from './statistics/statistics-state.js';
 import { createRoot } from 'react-dom/client';
 import { ExpenseList }        from './components/ExpenseList.jsx';
 import { CategoryFilter }     from './components/CategoryFilter.jsx';
@@ -17,7 +17,7 @@ import { EditExpenseModal }   from './components/EditExpenseModal.jsx';
 import { ProfileModal }       from './components/ProfileModal.jsx';
 import { ShareModal }         from './components/ShareModal.jsx';
 import { MainHeader }         from './components/MainHeader.jsx';
-import { StatsHeader }        from './components/StatsHeader.jsx';
+import { StatsHeader, resetCarousel }        from './components/StatsHeader.jsx';
 import { BottomNav }          from './components/BottomNav.jsx';
 import { AuthScreen }         from './components/AuthScreen.jsx';
 import { SetupScreen }        from './components/SetupScreen.jsx';
@@ -162,10 +162,12 @@ export function renderStatsHeader() {
     if (!container) return;
     if (!_statsHeaderRoot) _statsHeaderRoot = createRoot(container);
 
+    const { year, month } = getSelectedMonth();
     _statsHeaderRoot.render(
         <StatsHeader
-            currentPeriod={getPeriod()}
-            onPeriodChange={period => { setPeriod(period); renderStatsHeader(); }}
+            selectedYear={year}
+            selectedMonth={month}
+            onMonthChange={(y, m) => { setSelectedMonth(y, m); renderStatsHeader(); }}
             onAvatarClick={openProfileModal}
             profile={STATE.userProfile}
         />
@@ -456,9 +458,11 @@ export function renderShareModal({
 // ─── Statistics ───────────────────────────────────────
 
 export function renderStatistics() {
+    resetCarousel();
     renderStatsHeader();
     renderChart();
-    renderDonutChart(getPeriod());
+    const { year, month } = getSelectedMonth();
+    renderDonutChart(year, month);
 }
 
 // ─── AvatarOnboardingPopover ──────────────────────────
@@ -553,7 +557,8 @@ export function initReactiveBindings() {
 
     // Re-render charts and profile modal when theme changes
     onThemeChange(() => {
+        const { year, month } = getSelectedMonth();
         renderChart();
-        renderDonutChart(getPeriod());
+        renderDonutChart(year, month);
     });
 }
