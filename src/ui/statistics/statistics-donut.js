@@ -1,13 +1,12 @@
 import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
-import { formatMoney, sumAmounts, isInPeriod } from '../../utils/helpers.js';
+import { formatMoney, sumAmounts } from '../../utils/helpers.js';
 import { STATE } from '../../state.js';
 import { getI18nValue } from '../../i18n/localization.js';
 import { CATEGORIES } from '../../constants/categories.js';
-import { onPeriodChange } from './statistics-state.js';
+import { onMonthChange } from './statistics-state.js';
 import * as SheetsService from '../../services/sheetsService.js';
 import { withToken } from '../../services/authService.js';
 import {
-    filterExpensesByPeriod,
     groupExpensesByCategory,
     calcPercentage,
 } from './statistics-utils.js';
@@ -53,16 +52,20 @@ function _hideLoading() {
  * Safe to call multiple times — destroys the previous instance first.
  * @param {'week' | 'month' | 'year'} period
  */
-export async function renderDonutChart(period = 'month') {
+export async function renderDonutChart(year, month) {
     const canvas = document.getElementById('stats-donut');
     if (!canvas) return;
 
     const titleEl = document.getElementById('stats-by-cat-title');
-    if (titleEl) titleEl.textContent = getI18nValue(`stats.by_cat.${period}`);
+    const now = new Date();
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+    if (titleEl) titleEl.textContent = isCurrentMonth
+        ? getI18nValue('stats.by_cat.month')
+        : new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-    if (period === 'year') _showLoading();
+    _showLoading();
     try {
-        const { sorted, total } = await buildDonutDataByPeriod(period);
+        const { sorted, total } = await buildDonutDataByPeriod(year, month);
 
         destroyInstanceHelper();
 
@@ -79,29 +82,42 @@ export async function renderDonutChart(period = 'month') {
     }
 }
 
-// Subscribe once at module load — re-render whenever period changes
-onPeriodChange(async period => renderDonutChart(period));
+// Subscribe once at module load — re-render whenever month changes
+onMonthChange(async ({ year, month }) => renderDonutChart(year, month));
 
 // ─── Data ─────────────────────────────────────────────
 
-async function buildDonutDataByPeriod(period) {
-    const now = new Date();
+async function buildDonutDataByPeriod(year, month) {
+    const now            = new Date();
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
 
     let expenses;
-    if (period === 'year') {
-        // Re-use the same cache owned by statistics-chart via loadExpensesByYear.
-        // We call the service directly here; the chart module owns the cache key
-        // and exposes clearYearCache() for invalidation.
-        expenses = await withToken(token =>
-            SheetsService.loadExpensesByYear(token, STATE.spreadsheetId, now.getFullYear())
-        );
+    if (isCurrentMonth) {
+        expenses = STATE.expenses.filter(e => {
+            const d = new Date(e.date);
+            return d.getFullYear() === year && d.getMonth() === month;
+        });
     } else {
-        expenses = STATE.expenses;
+        const all = await withToken(token =>
+            SheetsService.loadExpensesByYear(token, STATE.spreadsheetId, year)
+        );
+        // Merge with hot-layer edits for this month
+        const hot    = STATE.expenses.filter(e => {
+            const d = new Date(e.date);
+            return d.getFullYear() === year && d.getMonth() === month;
+        });
+        const hotIds = new Set(hot.map(e => e.id));
+        expenses = [
+            ...all.filter(e => {
+                const d = new Date(e.date);
+                return d.getFullYear() === year && d.getMonth() === month && !hotIds.has(e.id);
+            }),
+            ...hot,
+        ];
     }
 
-    const filtered = filterExpensesByPeriod(expenses, period, isInPeriod, now);
-    const sorted   = groupExpensesByCategory(filtered);
-    const total    = sumAmounts(filtered);
+    const sorted = groupExpensesByCategory(expenses);
+    const total  = sumAmounts(expenses);
 
     return { sorted, total };
 }
@@ -188,11 +204,13 @@ function destroyInstanceHelper() {
 }
 
 function showDonutEmpty(canvas) {
-    const card  = canvas.closest('.stats-donut-card');
-    const empty = card?.querySelector('.stats-donut-empty');
-    const txt   = card?.querySelector('#stats-donut-empty-text');
-    if (empty) empty.style.display = 'flex';
-    if (txt)   txt.textContent = getI18nValue('stats.empty');
+    const card   = canvas.closest('.stats-donut-card');
+    const empty  = card?.querySelector('.stats-donut-empty');
+    const txt    = card?.querySelector('#stats-donut-empty-text');
+    const legend = document.getElementById('stats-donut-legend');
+    if (empty)  empty.style.display = 'flex';
+    if (txt)    txt.textContent = getI18nValue('stats.empty');
+    if (legend) legend.innerHTML = '';
     canvas.style.display = 'none';
 }
 

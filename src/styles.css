@@ -1832,3 +1832,141 @@ html {
 [data-theme="light"] .feedback-textarea:focus {
     border-color: var(--color-accent);
 }
+
+
+/* ───────────────────────────────────────────────────────────────────
+   §24  STATS HEADER + MONTH CAROUSEL
+   ─────────────────────────────────────────────────────────────────── */
+
+.stats-header {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Top row: logo + avatar ── */
+.stats-header__top {
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ── Carousel scroll container ── */
+.stats-carousel {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    overscroll-behavior-x: contain;
+    padding: 14px 0 10px;
+    gap: 12px;
+    /* Fade edges to hint at overflowing items */
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 12%,
+        black 88%,
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 12%,
+        black 88%,
+        transparent 100%
+    );
+}
+.stats-carousel::-webkit-scrollbar { display: none; }
+
+/* ── Each item: year label + month button stacked ── */
+.stats-carousel__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    min-width: 62px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Push first/last items so they can scroll to true center */
+.stats-carousel__item:first-child { margin-left: calc(50vw - 31px - 12px); }
+.stats-carousel__item:last-child  { margin-right: calc(50vw - 31px - 12px); }
+
+/* ── Year text — plain, above the button ── */
+.stats-carousel__year {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    line-height: 1;
+    user-select: none;
+    transition: color var(--transition-fast);
+}
+.stats-carousel__item.active .stats-carousel__year {
+    color: var(--color-accent);
+    opacity: .8;
+}
+
+/* ── Month pill — the actual button shape ── */
+.stats-carousel__pill {
+    width: 62px;
+    padding: 9px 0;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface2);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition:
+        background     var(--transition-fast),
+        border-color   var(--transition-fast),
+        transform      var(--transition-fast);
+}
+
+.stats-carousel__item:hover .stats-carousel__pill {
+    border-color: var(--color-accent-border);
+    background: var(--color-surface);
+}
+
+.stats-carousel__item.active .stats-carousel__pill {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    transform: scale(1.07);
+    box-shadow: 0 4px 16px var(--color-accent-hover);
+}
+
+/* ── Month name text inside pill ── */
+.stats-carousel__month {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .1px;
+    color: var(--color-muted);
+    line-height: 1;
+    user-select: none;
+    transition: color var(--transition-fast);
+}
+.stats-carousel__item:hover  .stats-carousel__month { color: var(--color-text); }
+.stats-carousel__item.active .stats-carousel__month { color: var(--color-on-accent); }
+
+/* ── Dot for real current month when not selected ── */
+.stats-carousel__dot {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-accent);
+}
