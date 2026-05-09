@@ -1838,9 +1838,16 @@ html {
    §24  STATS HEADER + MONTH CAROUSEL
    ─────────────────────────────────────────────────────────────────── */
 
+#stats-header-root {
+    width: 100%;
+    min-width: 0;
+}
+
 .stats-header {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    min-width: 0;
 }
 
 /* ── Top row: logo + avatar ── */

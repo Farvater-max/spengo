@@ -56,14 +56,12 @@ export function StatsHeader({
             }
         };
 
-        // When the stats screen is hidden (display:none) all offsets are 0.
-        // Defer one animation frame so the browser has applied layout and
-        // offsetLeft / offsetWidth return real values.
+        doScroll();
         if (track.offsetWidth === 0) {
-            const raf = requestAnimationFrame(doScroll);
-            return () => cancelAnimationFrame(raf);
+            const tid = setTimeout(doScroll, 0);
+            return () => clearTimeout(tid);
         }
-
+        
         doScroll();
     }, [selectedYear, selectedMonth]);
 
