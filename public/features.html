@@ -383,7 +383,7 @@
       <a class="toc-link" href="#edit-delete"><span class="toc-icon">✏️</span>Edit or delete anytime</a>
       <a class="toc-link" href="#donut-chart"><span class="toc-icon">🍩</span>Category breakdown</a>
       <a class="toc-link" href="#filter-category"><span class="toc-icon">🗂️</span>Filter by category</a>
-      <a class="toc-link" href="#time-frames"><span class="toc-icon">📅</span>Week · Month · Year</a>
+      <a class="toc-link" href="#time-frames"><span class="toc-icon">📅</span>Month analytics</a>
       <a class="toc-link" href="#your-sheet"><span class="toc-icon">🔐</span>Your Google Sheet</a>
       <a class="toc-link" href="#share-partner"><span class="toc-icon">🔗</span>Share with a partner</a>
     </div>
@@ -523,17 +523,17 @@
         <div class="section-headline">Bar chart by period</div>
       </div>
     </div>
-    <p>Numbers in a list tell you what you spent. A bar chart tells you when and how your spending behaves over time. SpenGo's statistics screen renders a bar chart for the selected time frame so you can spot patterns and outliers instantly.</p>
+    <p>Numbers in a list tell you what you spent. A bar chart tells you when and how your spending behaves over time. SpenGo's statistics screen renders a bar chart for the selected calendar month so you can spot patterns and outliers instantly.</p>
     <ul class="detail-list">
-      <li>Each bar represents one unit of time — a day within the current week, a week within the month, or a month within the year.</li>
+      <li>The month is split into four fixed week bands — 1–7, 8–14, 15–21, and 22 to end of month.</li>
+      <li>The current week's bar is highlighted in the accent colour; earlier bars are shown in dimmed tones.</li>
       <li>The tallest bar is always the highest-spending period — easy to identify at a glance.</li>
-      <li>Bars are colour-coded by the dominant category of that period, so you can see what drove the spike.</li>
-      <li>Switch between Week, Month, and Year with a single tap — the chart re-renders instantly with no loading delay.</li>
+      <li>Switching months in the carousel re-renders the chart instantly with no loading delay.</li>
     </ul>
     <div class="pill-row">
-      <span class="pill accent">Daily view in Week mode</span>
-      <span class="pill accent">Weekly view in Month mode</span>
-      <span class="pill accent">Monthly view in Year mode</span>
+      <span class="pill accent">4 week bands per month</span>
+      <span class="pill accent">Current week highlighted</span>
+      <span class="pill accent">Instant re-render on month switch</span>
     </div>
   </div>
 
@@ -551,7 +551,7 @@
       <li>Every category with at least one expense in the selected period appears as a coloured segment.</li>
       <li>Percentage labels show exactly how much of your budget each category consumed.</li>
       <li>A ranked list below the chart shows the absolute amount per category, sorted from highest to lowest.</li>
-      <li>The chart updates instantly when you switch between Week, Month, and Year — no refresh needed.</li>
+      <li>The chart updates instantly when you switch months in the carousel — no refresh needed.</li>
     </ul>
     <div class="pill-row">
       <span class="pill accent">Percentage labels</span>
@@ -560,26 +560,26 @@
     </div>
   </div>
 
-  <!-- 8. Week Month Year -->
+  <!-- 8. Month carousel -->
   <div class="section" id="time-frames">
     <div class="section-head">
       <div class="section-emoji">📅</div>
       <div class="section-meta">
         <h2>Statistics insights</h2>
-        <div class="section-headline">Week · Month · Year</div>
+        <div class="section-headline">Month analytics</div>
       </div>
     </div>
-    <p>Different questions need different time windows. Are you overspending this week? How did this month compare to last? SpenGo's time-frame selector lets you answer all of them without navigating away from the stats screen.</p>
+    <p>Scrolling through your spending history should feel natural, not like filling out a form. Switch to any past month and instantly see the full picture: total spent, a bar chart broken into week bands, and a category breakdown. No date pickers, no exports — just tap a month and the data is there.</p>
     <ul class="detail-list">
-      <li>Week — shows the current 7-day window; great for catching short-term overspending early.</li>
-      <li>Month — tracks the current calendar month; useful for monthly budget goals.</li>
-      <li>Year — shows all 12 months of the current year; reveals seasonal spending patterns.</li>
-      <li>Tap the back and forward arrows to step through previous periods — compare this month vs. last month with one tap.</li>
-      <li>Both the bar chart and the donut chart update together when you change the time frame or navigate to a different period.</li>
+      <li>Open any past month to see its total spending, week-by-week bar chart, and category breakdown.</li>
+      <li>Both the bar chart and donut chart update together — the full picture in one tap.</li>
+      <li>The current month opens by default; past months are always one swipe away.</li>
+      <li>Each month shows the year label so you always know exactly where you are in time.</li>
     </ul>
     <div class="pill-row">
-      <span class="pill accent">Navigate to past periods</span>
-      <span class="pill accent">Bar + donut sync automatically</span>
+      <span class="pill accent">Any month, instantly</span>
+      <span class="pill accent">Bar chart + category breakdown</span>
+      <span class="pill accent">No exports or date pickers needed</span>
     </div>
   </div>
 
