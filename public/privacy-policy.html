@@ -405,6 +405,16 @@
         <td data-label="Contents">Email address of the spreadsheet owner</td>
         <td data-label="Purpose">Allows the app to show the correct owner/guest state in the profile screen without an extra API call. Cleared on sign-out.</td>
       </tr>
+      <tr>
+        <td data-label="Key"><code>spengo-theme</code></td>
+        <td data-label="Contents"><code>"dark"</code> or <code>"light"</code></td>
+        <td data-label="Purpose">Persists your chosen colour theme across sessions. Cleared when you clear browser site data.</td>
+      </tr>
+      <tr>
+        <td data-label="Key"><code>spengo_anon_id</code></td>
+        <td data-label="Contents">A randomly generated UUID (e.g. <code>7576dd17-…</code>)</td>
+        <td data-label="Purpose">Anonymous identifier used solely to enforce a rate limit on the in-app feedback form. Never linked to your identity or transmitted to any server — evaluated client-side only.</td>
+      </tr>
       </tbody>
     </table>
     <p style="margin-top:14px;"><strong>Browser sessionStorage:</strong> Your OAuth access token and its expiry timestamp are stored in <code>sessionStorage</code> for the duration of your browser session. This data is automatically cleared when the tab or browser is closed.</p>
