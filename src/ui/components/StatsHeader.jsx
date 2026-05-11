@@ -36,7 +36,7 @@ export function StatsHeader({
     const curYear  = now.getFullYear();
     const curMonth = now.getMonth();
 
-    const months    = buildCarouselMonths(12, 12);
+    const months    = buildCarouselMonths(6, 6);
     const activeRef = useRef(null);
 
     // Register the scroll function so centerCarousel() can call it imperatively.
@@ -75,6 +75,7 @@ export function StatsHeader({
                 {months.map(({ year, month }) => {
                     const isActive  = year === selectedYear && month === selectedMonth;
                     const isCurrent = year === curYear && month === curMonth;
+                    const isFuture  = year > curYear || (year === curYear && month > curMonth);
 
                     return (
                         <button
@@ -84,8 +85,10 @@ export function StatsHeader({
                                 'stats-carousel__item',
                                 isActive  ? 'active'  : '',
                                 isCurrent ? 'current' : '',
+                                isFuture  ? 'future'  : '',
                             ].filter(Boolean).join(' ')}
-                            onClick={() => onMonthChange(year, month)}
+                            onClick={() => !isFuture && onMonthChange(year, month)}
+                            disabled={isFuture}
                         >
                             <span className="stats-carousel__year">{year}</span>
                             <span className="stats-carousel__pill">
