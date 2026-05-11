@@ -369,6 +369,7 @@ html, body {
     height: auto;
     display: block;
     object-fit: cover;
+    aspect-ratio: 702 / 1158;
 }
 
 .auth-showcase {
@@ -395,6 +396,7 @@ html, body {
     height: auto;
     display: block;
     object-fit: contain;
+    aspect-ratio: 1523 / 865;
 }
 
 /* ── Auth card (sign-in CTA) ── */

@@ -24,7 +24,7 @@ export function AuthScreen({ onSignIn, loading, error }) {
                     <div className="auth-panel-badge">Track expenses</div>
 
                     <div className="auth-panel-screenshot">
-                        <img src="/home.webp" alt="SpenGo home screen" />
+                        <img src="/home.webp" alt="SpenGo home screen" width="702" height="1158" />
                     </div>
 
                     <div className="auth-feature-block">
@@ -66,7 +66,7 @@ export function AuthScreen({ onSignIn, loading, error }) {
                     <p className="auth-tagline">{getI18nValue('auth.tagline')}</p>
 
                     <div className="auth-showcase">
-                        <img src="/main.webp" alt="SpenGo expense tracker" className="main-image" fetchPriority="high" />
+                        <img src="/main.webp" alt="SpenGo expense tracker" className="main-image" fetchPriority="high" width="1523" height="865" />
                     </div>
 
                     <div className="auth-feature-block">
@@ -127,7 +127,7 @@ export function AuthScreen({ onSignIn, loading, error }) {
                     <div className="auth-panel-badge">Statistics insights</div>
 
                     <div className="auth-panel-screenshot">
-                        <img src="/stats.webp" alt="SpenGo statistics screen" />
+                        <img src="/stats.webp" alt="SpenGo statistics screen" width="632" height="1132" />
                     </div>
 
                     <div className="auth-feature-block">
