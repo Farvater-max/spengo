@@ -122,12 +122,12 @@ export function getActiveBandIndex(year, month, now = new Date()) {
  * Generates a flat list of { year, month } entries spanning
  * `pastMonths` before and `futureMonths` after the current month.
  *
- * @param {number} [pastMonths=12]
- * @param {number} [futureMonths=12]
+ * @param {number} [pastMonths=6]
+ * @param {number} [futureMonths=6]
  * @param {Date}   [now]  injectable for testing
  * @returns {Array<{ year: number, month: number }>}
  */
-export function buildCarouselMonths(pastMonths = 12, futureMonths = 12, now = new Date()) {
+export function buildCarouselMonths(pastMonths = 6, futureMonths = 6, now = new Date()) {
     const result = [];
     for (let i = -pastMonths; i <= futureMonths; i++) {
         const d = new Date(now.getFullYear(), now.getMonth() + i, 1);

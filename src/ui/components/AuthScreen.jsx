@@ -131,10 +131,10 @@ export function AuthScreen({ onSignIn, loading, error }) {
                     </div>
 
                     <div className="auth-feature-block">
-                        <h3 className="auth-feature-title"><span className="auth-feature-icon">📊</span>Bar chart by period</h3>
+                        <h3 className="auth-feature-title"><span className="auth-feature-icon">📊</span>Bar chart by month</h3>
                         <p className="auth-feature-desc">
-                            See your daily spending laid out as a bar chart for the current week,
-                            month, or year — spot patterns and outliers at a glance.{' '}
+                            Your month splits into four week bands — see exactly which
+                            week you overspent and how the pattern shifts month to month.{' '}
                             <a href="/features/#bar-chart" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
@@ -149,10 +149,10 @@ export function AuthScreen({ onSignIn, loading, error }) {
                     </div>
 
                     <div className="auth-feature-block">
-                        <h3 className="auth-feature-title"><span className="auth-feature-icon">📅</span>Week · Month · Year</h3>
+                        <h3 className="auth-feature-title"><span className="auth-feature-icon">📅</span>Month analytics</h3>
                         <p className="auth-feature-desc">
-                            Switch between time frames in one tap. Track short-term habits or
-                            review your annual spending — the choice is yours.{' '}
+                            Tap any month in the carousel to instantly see its total,
+                            week-by-week chart and category breakdown — no exports needed.{' '}
                             <a href="/features/#time-frames" className="auth-feature-link">Learn more →</a>
                         </p>
                     </div>
