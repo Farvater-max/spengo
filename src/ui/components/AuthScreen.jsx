@@ -60,9 +60,7 @@ export function AuthScreen({ onSignIn, loading, error }) {
             <div className="auth-panel auth-panel--center">
                 <div className="auth-panel-inner auth-panel-inner--center">
 
-                    <h1 className="visually-hidden">SpenGo</h1>
-
-                    <h1 className="auth-logo">{getI18nValue('auth.logo')}</h1>
+                    <p className="auth-logo">{getI18nValue('auth.logo')}</p>
                     <p className="auth-tagline">{getI18nValue('auth.tagline')}</p>
 
                     <div className="auth-showcase">
