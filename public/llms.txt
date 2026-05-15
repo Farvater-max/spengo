@@ -12,7 +12,7 @@ SpenGo is a lightweight, mobile-first web application for tracking personal expe
 - Add expenses in seconds with a minimal input flow
 - Edit or delete any entry anytime
 - Filter expenses by category
-- Categories: Food, Transport, Housing, Health, Entertainment, Sport, Clothes, School, Other
+- Categories: Food, Transport, Housing, Health, Entertainment, Sport, Clothes, Education, Other
 
 ### Statistics & Insights
 - Bar chart by period (day / week / month / year)
@@ -51,6 +51,7 @@ SpenGo is a lightweight, mobile-first web application for tracking personal expe
 - App: https://webspengo.xyz/
 - Privacy Policy: https://webspengo.xyz/privacy-policy/
 - Features: https://webspengo.xyz/features/
+- Articles: https://webspengo.xyz/articles/
 
 ## Privacy
 

@@ -44,7 +44,7 @@ export function updateCategoryLabels() {
         fun:       'cat.fun',
         sport:     'cat.sport',
         clothes:   'cat.clothes',
-        school:    'cat.school',
+        education: 'cat.education',
         other:     'cat.other',
     };
     CATEGORIES.forEach(cat => {
