@@ -169,6 +169,24 @@ describe('getMonthBands', () => {
             expect(b.label.length).toBeGreaterThan(0);
         });
     });
+
+    test('label starts with short month name on the start day only', () => {
+        const bands = getMonthBands(2025, 4); // May
+        expect(bands[0].label).toBe('May 1–7');
+        expect(bands[1].label).toBe('May 8–14');
+        expect(bands[2].label).toBe('May 15–21');
+        expect(bands[3].label).toBe('May 22–31');
+    });
+
+    test('label end day matches last day of month for February', () => {
+        const bands = getMonthBands(2025, 1); // February 2025 = 28 days
+        expect(bands[3].label).toBe('Feb 22–28');
+    });
+
+    test('label end day is 31 for January', () => {
+        const bands = getMonthBands(2025, 0); // January
+        expect(bands[3].label).toBe('Jan 22–31');
+    });
 });
 
 // ─── getActiveBandIndex ───────────────────────────────

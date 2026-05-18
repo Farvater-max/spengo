@@ -37,15 +37,18 @@ export function applyTranslations(state = null, onLangChange = null) {
 
 export function updateCategoryLabels() {
     const map = {
-        food:      'cat.food',
-        transport: 'cat.transport',
-        home:      'cat.home',
-        health:    'cat.health',
-        fun:       'cat.fun',
-        sport:     'cat.sport',
-        clothes:   'cat.clothes',
-        education: 'cat.education',
-        other:     'cat.other',
+        food:           'cat.food',
+        transport:      'cat.transport',
+        home:           'cat.home',
+        health:         'cat.health',
+        fun:            'cat.fun',
+        sport:          'cat.sport',
+        clothes:        'cat.clothes',
+        education:      'cat.education',
+        travel:         'cat.travel',
+        eating:         'cat.eating_out',
+        subscriptions:  'cat.subscriptions',
+        other:          'cat.other',
     };
     CATEGORIES.forEach(cat => {
         if (map[cat.id]) cat.label = getI18nValue(map[cat.id]);
