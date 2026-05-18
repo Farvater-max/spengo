@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function() {
+      var t = localStorage.getItem('spengo-theme');
+      if (t === 'light') document.documentElement.dataset.theme = 'light';
+    })();
+  </script>
+  <meta charset="UTF-8"/>
+  <meta name="description" content="Learn how to add and track expenses in SpenGo step by step — from Google sign-in to category charts. A complete guide to the expense logging flow in this free Google Sheets-based tracker.">
+  <meta property="og:type"        content="article">
+  <meta property="og:url"         content="https://webspengo.xyz/blog/spengo-expense-tracker-how-to-add-expenses/">
+  <meta property="og:title"       content="How to Add and Track Expenses in SpenGo — Complete Guide">
+  <meta property="og:description" content="Step-by-step walkthrough of the expense logging flow in SpenGo: sign in, add an expense, pick a category, sync to Google Sheets, and read your first chart.">
+  <meta property="og:image"       content="https://webspengo.xyz/ogimage.png">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="How to Add and Track Expenses in SpenGo — Complete Guide">
+  <meta name="twitter:description" content="Step-by-step guide to expense logging in SpenGo. Every tap explained.">
+  <meta name="twitter:image"       content="https://webspengo.xyz/ogimage.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>How to Add and Track Expenses in SpenGo: Complete Guide — SpenGo Blog</title>
+  <link rel="canonical" href="https://webspengo.xyz/blog/spengo-expense-tracker-how-to-add-expenses/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap"></noscript>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How to Add and Track Expenses in SpenGo: Complete Guide",
+    "description": "Step-by-step guide to adding and tracking expenses in SpenGo — from Google sign-in to category breakdown charts.",
+    "url": "https://webspengo.xyz/blog/spengo-expense-tracker-how-to-add-expenses/",
+    "datePublished": "2026-05-18",
+    "dateModified": "2026-05-18",
+    "author": { "@type": "Organization", "name": "SpenGo", "url": "https://webspengo.xyz/" },
+    "publisher": { "@type": "Organization", "name": "SpenGo", "url": "https://webspengo.xyz/" },
+    "image": "https://webspengo.xyz/ogimage.png",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://webspengo.xyz/blog/spengo-expense-tracker-how-to-add-expenses/" },
+    "keywords": "expense tracker, track expenses, personal finance app, Google Sheets expense tracker, how to track expenses, expense logging, free expense tracker"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I add an expense in SpenGo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Tap the + button in the bottom navigation, enter the amount, choose a category from the icon grid, optionally add a note, then tap Add. The expense appears instantly and syncs to your Google Sheet in the background."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Where does SpenGo store my expenses?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "All expenses are stored directly in a Google Spreadsheet in your own Google Drive. SpenGo has no backend server or database — your data never leaves your Google account."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I edit or delete an expense after saving it?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Tap the pencil icon on any expense row to open the edit panel. You can change the amount, category, note, or date. To delete, tap the trash icon inside the edit panel."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does it take to log an expense in SpenGo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Under five seconds for a typical entry: tap +, type the amount, tap a category, tap Add. The note is optional and skipping it saves even more time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does SpenGo work offline?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Partially. You can add expenses while offline — they appear in your list immediately and are cached locally. The sync to your Google Sheet happens automatically once you are back online."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is SpenGo free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. SpenGo is completely free — no subscription, no premium tier, no ads. The only requirement is a Google account."
+        }
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      --bg:       #0d0d0f;
+      --surface:  #151518;
+      --surface2: #1e1e23;
+      --border:   #2a2a32;
+      --accent:   #c8f135;
+      --text:     #f0f0f5;
+      --muted:    #6b6b7e;
+      --r-md:     18px;
+      --r-lg:     28px;
+      --font-display: 'Unbounded', sans-serif;
+      --font-body:    'Manrope', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    html, body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-body); font-size: 15px; line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; }
+
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      color: var(--muted); text-decoration: none;
+      font-family: var(--font-body); font-size: 14px; transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--text); }
+
+    .logo {
+      font-family: var(--font-display); font-size: 18px; font-weight: 600;
+      color: var(--accent); margin-left: auto; text-decoration: none;
+    }
+
+    .article-header { margin-bottom: 40px; }
+
+    .article-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+    .tag {
+      display: inline-flex; align-items: center;
+      background: var(--surface2); border: 1px solid #c8f13540;
+      border-radius: 100px; padding: 3px 12px;
+      font-size: 11px; font-family: var(--font-display); font-weight: 600;
+      color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em;
+    }
+
+    .meta-item { font-size: 12px; color: var(--muted); }
+    .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); }
+
+    h1 {
+      font-family: var(--font-display); font-size: 24px; font-weight: 600;
+      color: var(--text); line-height: 1.3; margin-bottom: 16px;
+    }
+
+    .article-lead {
+      font-size: 16px; color: #b8b8cc; line-height: 1.75;
+      border-left: 3px solid var(--accent); padding-left: 20px; margin-top: 4px;
+    }
+
+    /* TOC */
+    .toc {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 24px; margin-bottom: 40px;
+    }
+    .toc-title {
+      font-family: var(--font-display); font-size: 11px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px;
+    }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .toc-list a {
+      display: flex; align-items: center; gap: 10px;
+      color: #b0b0c0; text-decoration: none; font-size: 14px; padding: 3px 0; transition: color 0.2s;
+    }
+    .toc-list a:hover { color: var(--accent); }
+    .toc-num { font-family: var(--font-display); font-size: 11px; color: var(--accent); font-weight: 600; min-width: 20px; }
+
+    /* Article body text */
+    .article-body h2 {
+      font-family: var(--font-display); font-size: 16px; font-weight: 600;
+      color: var(--text); line-height: 1.35; margin-bottom: 14px; scroll-margin-top: 24px;
+    }
+    .article-body p { font-size: 15px; color: #b4b4c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-body p strong { color: var(--text); font-weight: 600; }
+    .article-body a { color: var(--accent); text-decoration: none; }
+    .article-body a:hover { text-decoration: underline; }
+
+    /* Step block */
+    .step-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 28px 26px; margin-bottom: 16px; scroll-margin-top: 24px;
+    }
+    .step-block-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+    .step-num-badge {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: #c8f13515; border: 1px solid #c8f13530;
+      font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--accent); flex-shrink: 0;
+    }
+    .step-block-meta { flex: 1; min-width: 0; }
+    .step-block-label {
+      font-family: var(--font-display); font-size: 10px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;
+    }
+    .step-block h2 { margin-bottom: 0; }
+    .step-block p { font-size: 15px; color: #b4b4c8; line-height: 1.8; margin-bottom: 12px; }
+    .step-block p strong { color: var(--text); }
+    .step-block a { color: var(--accent); text-decoration: none; }
+    .step-block a:hover { text-decoration: underline; }
+    .step-block p:last-child { margin-bottom: 0; }
+
+    /* Detail list */
+    .detail-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+    .detail-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-size: 14px; color: #b0b0c0; line-height: 1.7;
+    }
+    .detail-list li::before {
+      content: ''; display: block; width: 6px; height: 6px;
+      border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 8px;
+    }
+    .detail-list li strong { color: var(--text); }
+    .detail-list a { color: var(--accent); text-decoration: none; }
+    .detail-list a:hover { text-decoration: underline; }
+
+    /* Callout */
+    .callout {
+      background: #c8f13509; border: 1px solid #c8f13525; border-radius: var(--r-md);
+      padding: 16px 20px; margin: 20px 0; font-size: 14px; color: #b8b8cc; line-height: 1.7;
+    }
+    .callout strong { color: var(--accent); }
+    .callout a { color: var(--accent); text-decoration: none; }
+    .callout a:hover { text-decoration: underline; }
+
+    /* Category grid */
+    .category-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .cat-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 100px; padding: 5px 14px; font-size: 13px; color: #b0b0c0;
+    }
+    .cat-pill span { font-size: 15px; }
+
+    /* Separator */
+    .section-sep { height: 1px; background: var(--border); margin: 36px 0; }
+
+    /* FAQ */
+    .faq-section-title {
+      font-family: var(--font-display); font-size: 11px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+    .faq-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 24px 26px; margin-bottom: 12px;
+    }
+    .faq-block h3 {
+      font-family: var(--font-display); font-size: 14px; font-weight: 600;
+      color: var(--text); line-height: 1.4; margin-bottom: 10px;
+    }
+    .faq-block p { font-size: 14px; color: #b0b0c0; line-height: 1.75; margin-bottom: 0; }
+    .faq-block p strong { color: var(--text); }
+    .faq-block a { color: var(--accent); text-decoration: none; }
+    .faq-block a:hover { text-decoration: underline; }
+
+    /* CTA — matches articles.html exactly */
+    .cta-banner {
+      background: linear-gradient(135deg, #1a1f0e 0%, #151518 60%);
+      border: 1px solid #c8f13530; border-radius: var(--r-lg);
+      padding: 36px 28px; margin-top: 40px; text-align: center;
+    }
+    .cta-banner h2 {
+      font-family: var(--font-display); font-size: 20px; font-weight: 600;
+      color: var(--text); margin-bottom: 10px; text-transform: none; letter-spacing: normal;
+    }
+    .cta-banner p {
+      font-size: 14px; color: var(--muted);
+      max-width: 420px; margin: 0 auto 24px; line-height: 1.7;
+    }
+    .btn-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #0d0d0f;
+      font-family: var(--font-display); font-size: 13px; font-weight: 600;
+      text-decoration: none; padding: 12px 28px; border-radius: 100px;
+      transition: filter 0.2s, transform 0.15s;
+    }
+    .btn-cta:hover { filter: brightness(1.12); transform: translateY(-1px); text-decoration: none; }
+    .btn-cta svg { flex-shrink: 0; }
+
+    /* Related links */
+    .related-links {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 24px; margin-top: 24px; margin-bottom: 32px;
+    }
+    .related-title {
+      font-family: var(--font-display); font-size: 11px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px;
+    }
+    .related-item {
+      display: flex; align-items: center; gap: 12px; padding: 10px 0;
+      border-bottom: 1px solid var(--border); text-decoration: none; color: var(--text);
+      font-size: 14px; transition: color 0.2s;
+    }
+    .related-item:last-child { border-bottom: none; }
+    .related-item:hover { color: var(--accent); }
+    .related-item svg { flex-shrink: 0; color: var(--muted); }
+    .related-arrow { margin-left: auto; color: var(--muted); }
+
+    /* Footer */
+    .footer {
+      font-size: 13px; color: var(--muted); text-align: center;
+      padding-top: 24px; border-top: 1px solid var(--border);
+    }
+    .footer a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer a:hover { color: var(--text); }
+
+    p { color: #b0b0c0; font-size: 14px; line-height: 1.75; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <a href="/blog/" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      All articles
+    </a>
+    <a href="/" class="logo">SpenGo</a>
+  </header>
+
+  <!-- ── Article header ── -->
+  <div class="article-header">
+    <div class="article-meta">
+      <span class="tag">Guide</span>
+      <div class="meta-dot"></div>
+      <span class="meta-item">May 18, 2026</span>
+      <div class="meta-dot"></div>
+      <span class="meta-item">7 min read</span>
+    </div>
+
+    <h1>How to Add and Track Expenses in SpenGo: Complete Step-by-Step Guide</h1>
+
+    <p class="article-lead">
+      Tracking personal expenses only works if adding them takes no effort. SpenGo is a free expense tracker built on Google Sheets — no servers, no bank connections, no setup forms. Open the app, sign in with Google, and your first expense can be logged in under a minute. Here's the complete flow, every step explained.
+    </p>
+  </div>
+
+  <!-- ── Table of Contents ── -->
+  <nav class="toc" aria-label="Table of contents">
+    <div class="toc-title">In this article</div>
+    <ol class="toc-list">
+      <li><a href="#step-signin"><span class="toc-num">01</span> Sign in with Google</a></li>
+      <li><a href="#step-setup"><span class="toc-num">02</span> First-time setup: your Google Sheet</a></li>
+      <li><a href="#step-add"><span class="toc-num">03</span> Opening the Add Expense panel</a></li>
+      <li><a href="#step-amount"><span class="toc-num">04</span> Entering the amount</a></li>
+      <li><a href="#step-category"><span class="toc-num">05</span> Choosing a spending category</a></li>
+      <li><a href="#step-note"><span class="toc-num">06</span> Adding an optional note</a></li>
+      <li><a href="#step-confirm"><span class="toc-num">07</span> Confirming and syncing to Google Sheets</a></li>
+      <li><a href="#step-list"><span class="toc-num">08</span> Viewing and filtering your expense list</a></li>
+      <li><a href="#step-edit"><span class="toc-num">09</span> Editing or deleting an entry</a></li>
+      <li><a href="#step-stats"><span class="toc-num">10</span> Reading your first expense statistics</a></li>
+      <li><a href="#faq"><span class="toc-num">—</span> Frequently asked questions</a></li>
+    </ol>
+  </nav>
+
+  <!-- ── Article body ── -->
+  <div class="article-body">
+
+    <p>Most personal finance advice starts with budgets and ends with spreadsheets nobody updates after week two. The research backs this up: <a href="https://www.nerdwallet.com/finance/learn/tracking-monthly-expenses" target="_blank" rel="noopener">consistent expense tracking is the foundation of any budget that sticks</a> — but only if the act of recording a purchase takes less friction than the purchase itself.</p>
+
+    <p>SpenGo is a <strong>free personal expense tracker</strong> that uses your own Google Sheets spreadsheet as a database — no proprietary backend, no ads, no third-party storage. Below is the complete flow, from opening the app to reading your first spending breakdown.</p>
+
+    <div class="section-sep"></div>
+
+    <!-- Step 1 -->
+    <div class="step-block" id="step-signin">
+      <div class="step-block-head">
+        <div class="step-num-badge">01</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">Getting started</div>
+          <h2>Sign in with Google</h2>
+        </div>
+      </div>
+      <p>Open SpenGo at <a href="/">webspengo.xyz</a>. The first screen is the authentication screen — no forms, no email, no password to create. The only option is <strong>Sign in with Google</strong>.</p>
+      <p>Tap it. A standard <a href="https://developers.google.com/identity/protocols/oauth2" target="_blank" rel="noopener">Google OAuth 2.0</a> popup appears. Pick your Google account, review the permissions, and confirm. SpenGo requests the minimum necessary scopes:</p>
+      <ul class="detail-list">
+        <li><strong>spreadsheets</strong> — to read and write expense rows to your Google Sheet.</li>
+        <li><strong>drive.file</strong> — to create the SpenGo spreadsheet in your Drive. This scope only covers files SpenGo itself creates — not your entire Drive.</li>
+      </ul>
+      <div class="callout">
+        <strong>Privacy first:</strong> SpenGo never handles your Google credentials. The OAuth flow runs entirely on Google's infrastructure. The app only receives a short-lived access token scoped to those two permissions. You can revoke it anytime from <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>.
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-block" id="step-setup">
+      <div class="step-block-head">
+        <div class="step-num-badge">02</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">One-time setup</div>
+          <h2>First-time setup: your Google Sheet</h2>
+        </div>
+      </div>
+      <p>After signing in, SpenGo checks whether a spreadsheet named <strong>"SpenGo"</strong> already exists in your Google Drive. On a first visit it doesn't — so SpenGo creates it automatically via the <a href="https://developers.google.com/sheets/api" target="_blank" rel="noopener">Google Sheets API v4</a>.</p>
+      <p>A brief setup screen shows while this runs. Once done, the sheet is ready with four column headers:</p>
+      <ul class="detail-list">
+        <li><strong>Date</strong> — the day the expense happened (set automatically to today).</li>
+        <li><strong>Amount</strong> — the number you log.</li>
+        <li><strong>Category</strong> — one of 12 preset spending categories.</li>
+        <li><strong>Note</strong> — an optional free-text label you write yourself.</li>
+      </ul>
+      <p>Every expense you add appears as a new row in this spreadsheet. You can open it anytime in Google Sheets on any device — export it, back it up, or share it with a partner. It's a standard spreadsheet, fully under your control.</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-block" id="step-add">
+      <div class="step-block-head">
+        <div class="step-num-badge">03</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">The core action</div>
+          <h2>Opening the Add Expense panel</h2>
+        </div>
+      </div>
+      <p>You're now on the main screen of the expense tracker. In the centre of the bottom navigation bar is the <strong>+ button</strong>. Tap it.</p>
+      <p>The "Add Expense" panel slides up from the bottom of the screen. It has three fields arranged top to bottom: amount, category, note. The layout is intentionally linear — there's no decision about where to start, which is why logging stays fast.</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-block" id="step-amount">
+      <div class="step-block-head">
+        <div class="step-num-badge">04</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">Field 1</div>
+          <h2>Entering the amount</h2>
+        </div>
+      </div>
+      <p>The amount field is focused automatically when the panel opens — the keyboard appears without any extra tap on mobile. Type the number. Decimals work: 4.50, 12.99, 130.00.</p>
+      <p>There is no currency selector. SpenGo stores the raw number; your Google Sheet provides the currency context. Whatever unit you use — euros, dollars, złoty — just type it. The app doesn't enforce a format.</p>
+      <div class="callout">
+        <strong>Tip:</strong> Precision matters less than consistency. If your coffee cost €2.80 but you paid €3, log either. <a href="https://www.nerdwallet.com/finance/learn/tracking-monthly-expenses" target="_blank" rel="noopener">Research on expense tracking habits</a> consistently shows: the habit of recording is what generates useful data, not the rounding.
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-block" id="step-category">
+      <div class="step-block-head">
+        <div class="step-num-badge">05</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">Field 2</div>
+          <h2>Choosing a spending category</h2>
+        </div>
+      </div>
+      <p>Below the amount field is a visual icon grid with all 12 expense categories. Tap one. No dropdown, no search, no typing. The categories cover the full range of everyday personal spending:</p>
+      <div class="category-grid">
+        <div class="cat-pill"><span>🍔</span> Food</div>
+        <div class="cat-pill"><span>🚌</span> Transport</div>
+        <div class="cat-pill"><span>🏠</span> Housing</div>
+        <div class="cat-pill"><span>💊</span> Health</div>
+        <div class="cat-pill"><span>🎬</span> Entertainment</div>
+        <div class="cat-pill"><span>🏀</span> Sport</div>
+        <div class="cat-pill"><span>👕</span> Clothes</div>
+        <div class="cat-pill"><span>📚</span> Education</div>
+        <div class="cat-pill"><span>🍕</span> Eating out</div>
+        <div class="cat-pill"><span>✈️</span> Travel</div>
+        <div class="cat-pill"><span>⭐</span> Subscriptions</div>
+        <div class="cat-pill"><span>📦</span> Other</div>
+      </div>
+      <p>The selected category highlights in the accent colour. Tap a different one to switch — no confirm step needed. These categories map naturally to the <a href="https://www.unfcu.org/financial-wellness/50-30-20-rule/" target="_blank" rel="noopener">50/30/20 budgeting rule</a>: needs (Housing, Health, Transport), wants (Entertainment, Eating out, Travel), and recurring costs (Subscriptions, Clothes). Once you start tracking by category, the breakdown shows exactly which bucket is overrunning your budget.</p>
+      <p>If nothing fits precisely, use <strong>Other</strong> and put the detail in the note field.</p>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-block" id="step-note">
+      <div class="step-block-head">
+        <div class="step-num-badge">06</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">Field 3 — optional</div>
+          <h2>Adding an optional note</h2>
+        </div>
+      </div>
+      <p>The note field is the last field in the panel. It's completely optional — skip it by going straight to Add. But if you want to remember <em>what</em> a purchase was — "Zara jacket", "monthly Netflix", "train to Barcelona" — type it here.</p>
+      <p>Notes appear as a small label under the category name in your expense list. They're also stored in the Note column of your Google Sheet, fully searchable and filterable in Google Sheets itself.</p>
+      <ul class="detail-list">
+        <li>Keep notes short and specific — they're scannable labels, not sentences.</li>
+        <li>Notes are fully editable after saving, so don't worry about wording now.</li>
+        <li>For recurring costs, consistent note names ("Spotify", "Gym", "Rent") make monthly comparisons far more useful later.</li>
+      </ul>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-block" id="step-confirm">
+      <div class="step-block-head">
+        <div class="step-num-badge">07</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">Saving</div>
+          <h2>Confirming and syncing to Google Sheets</h2>
+        </div>
+      </div>
+      <p>Amount filled in, category tapped, note written (or skipped) — tap <strong>Add</strong>. Two things happen simultaneously:</p>
+      <ul class="detail-list">
+        <li><strong>Immediate UI update:</strong> the new expense appears at the top of your list instantly. The panel closes and the main screen returns. The app uses an optimistic UI pattern — it doesn't wait for a network response to show you the result.</li>
+        <li><strong>Background sync to Google Sheets:</strong> SpenGo calls the Google Sheets API v4 to append a new row with today's date, your amount, category name, and note. This typically completes within one or two seconds on a normal connection.</li>
+      </ul>
+      <div class="callout">
+        <strong>Offline behaviour:</strong> If you're offline when you tap Add, the entry still appears in your list immediately. SpenGo caches recent expenses in the browser's localStorage. The sync to your Google Sheet retries automatically once connectivity is restored.
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step-block" id="step-list">
+      <div class="step-block-head">
+        <div class="step-num-badge">08</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">The main screen</div>
+          <h2>Viewing and filtering your expense list</h2>
+        </div>
+      </div>
+      <p>The main screen shows all logged expenses in a scrollable list, newest first by default. Each row shows the category icon, category name, note (if any), amount, and date — everything you need at a glance without opening the entry.</p>
+      <p>Above the list, a summary card shows your total for the current period. Switch between <strong>today, this week, or this month</strong> using the period selector in the header.</p>
+      <p>Below the summary is a horizontal filter row with all 12 category icons. Tap any to show only those expenses; tap again to clear. The filter works across all time periods and combines with the sort controls (newest first, oldest first, highest amount first). For example: filter by Subscriptions + sort by amount to instantly see which recurring charge costs the most each month.</p>
+    </div>
+
+    <!-- Step 9 -->
+    <div class="step-block" id="step-edit">
+      <div class="step-block-head">
+        <div class="step-num-badge">09</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">Fixing mistakes</div>
+          <h2>Editing or deleting an expense entry</h2>
+        </div>
+      </div>
+      <p>Logged the wrong amount? Wrong category? Tap the <strong>pencil icon</strong> on any expense row. The Edit panel opens pre-filled with the current values.</p>
+      <ul class="detail-list">
+        <li>Change the <strong>amount</strong> — clear the field and type a new number.</li>
+        <li>Tap a different <strong>category</strong> to reassign the expense.</li>
+        <li>Edit or remove the <strong>note</strong>.</li>
+        <li>Change the <strong>date</strong> — useful if you forgot to log something yesterday or last week.</li>
+      </ul>
+      <p>Tap <strong>Save</strong>. The change syncs to your Google Sheet immediately, overwriting the original row. To permanently delete an entry, tap the trash icon inside the edit panel and confirm.</p>
+    </div>
+
+    <!-- Step 10 -->
+    <div class="step-block" id="step-stats">
+      <div class="step-block-head">
+        <div class="step-num-badge">10</div>
+        <div class="step-block-meta">
+          <div class="step-block-label">Your first insight</div>
+          <h2>Reading your first expense statistics</h2>
+        </div>
+      </div>
+      <p>After logging a handful of expenses across different categories, tap the <strong>Statistics tab</strong> in the bottom navigation. This is where tracking pays off visually.</p>
+      <p>The statistics screen shows two charts for the selected month:</p>
+      <ul class="detail-list">
+        <li><strong>Bar chart by week:</strong> spending split across four fixed bands — weeks 1–7, 8–14, 15–21, and 22 to end of month. The current week is highlighted. At a glance you can see whether you front-load spending at the start of the month or ramp up towards the end.</li>
+        <li><strong>Donut chart by category:</strong> a percentage breakdown of where your money went. If Food accounts for 42% of your monthly spending and you didn't realise it, the donut makes that undeniable. A ranked list below shows the absolute amount per category, highest to lowest.</li>
+      </ul>
+      <p>Use the month carousel to navigate to any past month. Both charts update instantly — no loading, no refresh. This is the core insight that <a href="https://www.scotiabank.com/ca/en/personal/advice-plus/features/posts.monthly-expenses.html" target="_blank" rel="noopener">financial advisors consistently emphasise</a>: patterns in your spending only become visible once you see them plotted over time. <a href="https://www.bpi-aia.com.ph/en/about-us/articles/building-my-wealth/5-reasons-why-you-should-track-your-daily-expenses-and-how" target="_blank" rel="noopener">People who track daily expenses make measurably better financial decisions</a> — not because they earn more, but because awareness changes behaviour.</p>
+      <div class="callout">
+        <strong>When does statistics get useful?</strong> After two to three weeks of consistent logging. The first chart will be partial — that's fine. Every expense you add today makes next month's picture more complete and actionable.
+      </div>
+    </div>
+
+    <div class="section-sep"></div>
+
+    <h2 style="font-family: var(--font-display); font-size: 17px; font-weight: 600; margin-bottom: 14px;">The complete flow in under five seconds</h2>
+
+    <p>The core loop of SpenGo as a <strong>personal expense tracker</strong>: tap <strong>+</strong> → type amount → tap category → tap <strong>Add</strong>. Everything else — notes, edits, statistics, shared budgets — is optional and available when you need it.</p>
+
+    <p>Want to go deeper? The <a href="/features/">full features overview</a> covers partner sharing, the complete category list, and how all the statistics work in detail. If you have questions about how your data is stored and who can see it, the <a href="/privacy-policy/">privacy policy</a> is written in plain language — no legalese.</p>
+
+    <div class="section-sep"></div>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="faq-section-title">Frequently asked questions</div>
+
+      <div class="faq-block">
+        <h3>How do I add an expense in SpenGo?</h3>
+        <p>Tap the <strong>+ button</strong> in the bottom navigation bar. Enter the amount, tap a category from the icon grid, optionally add a note, then tap <strong>Add</strong>. The expense appears at the top of your list instantly and syncs to your Google Sheet in the background.</p>
+      </div>
+
+      <div class="faq-block">
+        <h3>Where does SpenGo store my expense data?</h3>
+        <p>All expenses are stored in a Google Spreadsheet inside your own Google Drive. SpenGo has no backend server or proprietary database. Your data goes directly from your browser to Google's servers via the <a href="https://developers.google.com/sheets/api" target="_blank" rel="noopener">Google Sheets API</a> — it never passes through SpenGo infrastructure.</p>
+      </div>
+
+      <div class="faq-block">
+        <h3>Can I edit or delete an expense after saving?</h3>
+        <p>Yes. Tap the <strong>pencil icon</strong> on any row in the expense list to open the edit panel. You can change the amount, category, note, or date. To delete an entry, tap the trash icon inside the edit panel and confirm. All changes sync to your Google Sheet immediately.</p>
+      </div>
+
+      <div class="faq-block">
+        <h3>How long does it take to log an expense?</h3>
+        <p>Under <strong>five seconds</strong> for a typical entry: tap +, type the amount, tap a category, tap Add. The note is optional — skipping it saves another second. The keyboard focuses the amount field automatically, so there's no wasted tap on mobile.</p>
+      </div>
+
+      <div class="faq-block">
+        <h3>Does SpenGo work offline?</h3>
+        <p>Partially. You can add expenses while offline — they appear in your list immediately and are cached locally in the browser. The sync to your Google Sheet happens automatically once you're back online. Recent entries are also viewable from the local cache when offline.</p>
+      </div>
+
+      <div class="faq-block">
+        <h3>Is SpenGo free to use?</h3>
+        <p>Yes. SpenGo is completely <strong>free</strong> — no subscription, no premium tier, no ads. The only requirement is a Google account to sign in and store your expense data in Google Sheets.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ── CTA — matches articles.html exactly ── -->
+  <div class="cta-banner">
+    <h2>Start tracking your expenses today</h2>
+    <p>SpenGo is free, serverless, and stores everything in your own Google Sheets. Your first expense can be logged in under a minute.</p>
+    <a class="btn-cta" href="/">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/>
+        <path d="M10 8l6 4-6 4V8z" fill="currentColor" stroke="none"/>
+      </svg>
+      Start tracking for free
+    </a>
+  </div>
+
+  <!-- ── Related ── -->
+  <div class="related-links">
+    <div class="related-title">Continue reading</div>
+    <a class="related-item" href="/features/">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      All SpenGo features — sharing, charts, categories
+      <svg class="related-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+    <a class="related-item" href="/blog/">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      More articles on the SpenGo blog
+      <svg class="related-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+    <a class="related-item" href="/privacy-policy/">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      Privacy policy — how your data is stored
+      <svg class="related-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+
+  <footer class="footer">
+    © 2026 SpenGo ·
+    <a href="/blog/">Blog</a> ·
+    <a href="/privacy-policy/">Privacy Policy</a> ·
+    <a href="/features/">Features</a> ·
+    <a href="/articles/">Articles</a> ·
+    <a href="/">Back to app</a>
+  </footer>
+
+</div>
+</body>
+</html>

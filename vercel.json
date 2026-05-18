@@ -13,7 +13,17 @@
     { "source": "/features",        "destination": "/features.html" },
     { "source": "/features/",       "destination": "/features.html" },
     { "source": "/articles",        "destination": "/articles.html" },
-    { "source": "/articles/",       "destination": "/articles.html" }
+    { "source": "/articles/",       "destination": "/articles.html" },
+    { "source": "/blog",            "destination": "/blog.html" },
+    { "source": "/blog/",           "destination": "/blog.html" },
+    {
+      "source": "/blog/spengo-expense-tracker-how-to-add-expenses",
+      "destination": "/blog/spengo-expense-tracker-how-to-add-expenses.html"
+    },
+    {
+      "source": "/blog/spengo-expense-tracker-how-to-add-expenses/",
+      "destination": "/blog/spengo-expense-tracker-how-to-add-expenses.html"
+    }
   ],
   "headers": [
     {

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function() {
+      var t = localStorage.getItem('spengo-theme');
+      if (t === 'light') document.documentElement.dataset.theme = 'light';
+    })();
+  </script>
+  <meta charset="UTF-8"/>
+  <meta name="description" content="SpenGo Blog — practical guides on expense tracking, budgeting, and building smarter money habits. Written by the SpenGo team.">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://webspengo.xyz/blog/">
+  <meta property="og:title"       content="SpenGo Blog — Expense Tracking Guides & Money Tips">
+  <meta property="og:description" content="Practical guides on expense tracking, budgeting rules, and building smarter financial habits — written by the SpenGo team.">
+  <meta property="og:image"       content="https://webspengo.xyz/ogimage.png">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="SpenGo Blog — Expense Tracking Guides">
+  <meta name="twitter:description" content="Practical guides on expense tracking and budgeting from the SpenGo team.">
+  <meta name="twitter:image"       content="https://webspengo.xyz/ogimage.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog — SpenGo</title>
+  <link rel="canonical" href="https://webspengo.xyz/blog/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap"></noscript>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "SpenGo Blog",
+    "url": "https://webspengo.xyz/blog/",
+    "description": "Practical guides on expense tracking, budgeting, and building smarter money habits.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "SpenGo",
+      "url": "https://webspengo.xyz/"
+    }
+  }
+  </script>
+  <style>
+    :root {
+      --bg:       #0d0d0f;
+      --surface:  #151518;
+      --surface2: #1e1e23;
+      --border:   #2a2a32;
+      --accent:   #c8f135;
+      --text:     #f0f0f5;
+      --muted:    #6b6b7e;
+      --r-md:     18px;
+      --r-lg:     28px;
+      --font-display: 'Unbounded', sans-serif;
+      --font-body:    'Manrope', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-family: var(--font-body);
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--text); }
+    .back-btn svg { flex-shrink: 0; }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-left: auto;
+      text-decoration: none;
+    }
+
+    /* ── Title block ── */
+    .title-block { margin-bottom: 48px; }
+
+    .title-eyebrow {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.65;
+    }
+
+    /* ── Article card ── */
+    .post-card {
+      display: block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px 28px 24px;
+      margin-bottom: 16px;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .post-card:hover {
+      border-color: #c8f13550;
+      transform: translateY(-2px);
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .post-tag {
+      display: inline-flex;
+      align-items: center;
+      background: var(--surface2);
+      border: 1px solid #c8f13540;
+      border-radius: 100px;
+      padding: 3px 12px;
+      font-size: 11px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .post-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .post-read-time {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    .post-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 10px;
+      transition: color 0.2s;
+    }
+    .post-card:hover .post-title { color: var(--accent); }
+
+    .post-excerpt {
+      font-size: 14px;
+      color: #b0b0c0;
+      line-height: 1.75;
+      margin-bottom: 16px;
+    }
+
+    .post-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .read-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── "From the web" section ── */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 40px 0 24px;
+    }
+
+    .section-divider-label {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+    }
+
+    .section-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* External article card (smaller) */
+    .ext-card {
+      display: block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 20px 22px;
+      margin-bottom: 12px;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .ext-card:hover { border-color: #c8f13530; }
+
+    .ext-card-inner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .ext-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 4px;
+      transition: color 0.2s;
+    }
+    .ext-card:hover .ext-title { color: var(--accent); }
+
+    .ext-source {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .ext-arrow {
+      flex-shrink: 0;
+      color: var(--muted);
+      margin-top: 2px;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .ext-card:hover .ext-arrow { color: var(--accent); transform: translateX(3px); }
+
+    /* ── CTA ── */
+    .cta-banner {
+      background: linear-gradient(135deg, #1a1f0a 0%, #151518 60%, #0f1a0a 100%);
+      border: 1px solid #c8f13530;
+      border-radius: var(--r-lg);
+      padding: 36px 32px;
+      text-align: center;
+      margin-top: 48px;
+      margin-bottom: 32px;
+    }
+
+    .cta-banner h2 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .cta-banner p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #0d0d0f;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 100px;
+      transition: filter 0.2s, transform 0.15s;
+    }
+    .btn-cta:hover { filter: brightness(1.12); transform: translateY(-1px); text-decoration: none; }
+    .btn-cta svg { flex-shrink: 0; }
+
+    /* ── Footer ── */
+    .footer {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <a href="/" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      Back to app
+    </a>
+    <a href="/" class="logo">SpenGo</a>
+  </header>
+
+  <div class="title-block">
+    <div class="title-eyebrow">SpenGo Blog</div>
+    <h1>Guides, tips &amp; insights on personal finance</h1>
+    <p class="subtitle">Practical articles on expense tracking, budgeting strategies, and building smarter money habits — written by the SpenGo team.</p>
+  </div>
+
+  <!-- ── OWN ARTICLES ── -->
+  <a class="post-card" href="/blog/spengo-expense-tracker-how-to-add-expenses/">
+    <div class="post-meta">
+      <span class="post-tag">Guide</span>
+      <span class="post-date">May 2026</span>
+      <span class="post-read-time">6 min read</span>
+    </div>
+    <div class="post-title">SpenGo Expense Tracker: Start a New Life from Your Personal Counting</div>
+    <p class="post-excerpt">A full walkthrough of how expense logging works in SpenGo — from opening the app to seeing your first category breakdown. Every tap, every field, every sync explained.</p>
+    <div class="post-footer">
+      <span class="read-link">
+        Read article
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </span>
+    </div>
+  </a>
+
+  <!-- ── DIVIDER: From the web ── -->
+  <div class="section-divider">
+    <div class="section-divider-line"></div>
+    <div class="section-divider-label">From around the web</div>
+    <div class="section-divider-line"></div>
+  </div>
+
+  <a class="ext-card" href="https://www.unfcu.org/financial-wellness/50-30-20-rule/" target="_blank" rel="noopener">
+    <div class="ext-card-inner">
+      <div>
+        <div class="ext-title">Budgeting Basics: The 50/30/20 Rule Explained</div>
+        <div class="ext-source">UNFCU Financial Wellness · 4 min read</div>
+      </div>
+      <svg class="ext-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17L17 7M17 7H7M17 7v10"/>
+      </svg>
+    </div>
+  </a>
+
+  <a class="ext-card" href="https://www.nerdwallet.com/finance/learn/tracking-monthly-expenses" target="_blank" rel="noopener">
+    <div class="ext-card-inner">
+      <div>
+        <div class="ext-title">How to Track Your Monthly Expenses: 8 Tips to Try</div>
+        <div class="ext-source">NerdWallet · 6 min read</div>
+      </div>
+      <svg class="ext-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17L17 7M17 7H7M17 7v10"/>
+      </svg>
+    </div>
+  </a>
+
+  <a class="ext-card" href="https://www.superprof.com/blog/make-smart-financial-choices/" target="_blank" rel="noopener">
+    <div class="ext-card-inner">
+      <div>
+        <div class="ext-title">The Ultimate Guide to Spending Money Wisely</div>
+        <div class="ext-source">Superprof · 7 min read</div>
+      </div>
+      <svg class="ext-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17L17 7M17 7H7M17 7v10"/>
+      </svg>
+    </div>
+  </a>
+
+  <a class="ext-card" href="https://www.scotiabank.com/ca/en/personal/advice-plus/features/posts.monthly-expenses.html" target="_blank" rel="noopener">
+    <div class="ext-card-inner">
+      <div>
+        <div class="ext-title">7 Steps to Cut Back on Monthly Expenses</div>
+        <div class="ext-source">Scotiabank Advice+ · 5 min read</div>
+      </div>
+      <svg class="ext-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17L17 7M17 7H7M17 7v10"/>
+      </svg>
+    </div>
+  </a>
+
+  <a class="ext-card" href="https://www.bpi-aia.com.ph/en/about-us/articles/building-my-wealth/5-reasons-why-you-should-track-your-daily-expenses-and-how" target="_blank" rel="noopener">
+    <div class="ext-card-inner">
+      <div>
+        <div class="ext-title">5 Reasons Why You Should Track Your Daily Expenses</div>
+        <div class="ext-source">BPI AIA Financial Wellness · 5 min read</div>
+      </div>
+      <svg class="ext-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17L17 7M17 7H7M17 7v10"/>
+      </svg>
+    </div>
+  </a>
+
+  <!-- ── CTA ── -->
+  <div class="cta-banner">
+    <h2>Ready to start tracking your expenses?</h2>
+    <p>SpenGo is free, serverless, and stores everything in your own Google Sheets. Start in under a minute.</p>
+    <a class="btn-cta" href="/">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/>
+        <path d="M10 8l6 4-6 4V8z" fill="currentColor" stroke="none"/>
+      </svg>
+      Start tracking for free
+    </a>
+  </div>
+
+  <footer class="footer">
+    © 2026 SpenGo ·
+    <a href="/privacy-policy/">Privacy Policy</a> ·
+    <a href="/features/">Features</a> ·
+    <a href="/articles/">Articles</a> ·
+    <a href="/">Back to app</a>
+  </footer>
+
+</div>
+</body>
+</html>
