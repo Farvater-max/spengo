@@ -93,7 +93,7 @@ export function getMonthBands(year, month) {
     ].map(([startDay, endDay]) => ({
         from:  new Date(year, month, startDay),
         to:    new Date(year, month, endDay, 23, 59, 59, 999),
-        label: `${getShortDay(new Date(year, month, startDay))}–${getShortDay(new Date(year, month, endDay))}`,
+        label: `${getShortDay(new Date(year, month, startDay))}–${endDay}`,
     }));
 }
 

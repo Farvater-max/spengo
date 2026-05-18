@@ -280,7 +280,7 @@ async function _buildMonthData(year, month) {
                 return d >= from && d <= to;
             })
         );
-        labels.push(`${getShortDay(from)}–${getShortDay(new Date(year, month, endDay))}`);
+        labels.push(`${getShortDay(from)}–${endDay}`);
         data.push(sum);
     }
 
